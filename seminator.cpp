@@ -128,6 +128,7 @@ int main(int argc, char* argv[])
     bool deterministic_first_component = false;
     bool optimize = true;
     bool cy_alg = false;
+    bool cd_check = false;
     unsigned preferred_output = TGBA;
     std::string path_to_file;
     for (int i = 1; i < argc; i++)
@@ -136,6 +137,10 @@ int main(int argc, char* argv[])
         if (arg.compare("--cd") == 0)
         {
             deterministic_first_component = true;
+        }
+        else if (arg.compare("--is-cd") == 0)
+        {
+            cd_check = true;
         }
         else if (arg.compare("-s0") == 0)
         {
@@ -182,13 +187,14 @@ int main(int argc, char* argv[])
 
             std::cout << " Transformation options: " << std::endl;
             std::cout << "   -+\t\tmake sure the first component of the result is deterministic" << std::endl;
-            std::cout << "   -o\t\tuses spot optimization algorithms to try to minimize the resulting automaton" << std::endl;
+            std::cout << "   -s0\t\tdisables spot automata reductions algorithms" << std::endl;
             std::cout << "  --cy\t\tsimulate the CY[88] algorithm (preceeded by degeneralization to NBA)" << std::endl;
 
             std::cout << " Output options: " << std::endl;
             std::cout << "  --tgba\t\tprefer TGBA output" << std::endl;
             std::cout << "  --tba\t\tprefer TBA output" << std::endl;
             std::cout << "  --ba\t\tprefer BA output" << std::endl;
+            std::cout << "  --is-cd\t\toutputs 1 if the input automaton is cut-deterministic, 0 otherwise; does not transform the input automaton" << std::endl;
 
             std::cout << std::endl;
 
@@ -235,6 +241,10 @@ int main(int argc, char* argv[])
     spot::twa_graph_ptr result;
     try
     {
+        if (cd_check) {
+            std::cout << is_cut_deterministic(aut) << std::endl;
+            return 0;
+        }
         if (cy_alg)
         {
             aut = spot::degeneralize(aut);
@@ -372,7 +382,7 @@ spot::twa_graph_ptr buchi_to_semi_deterministic_buchi(spot::twa_graph_ptr& aut, 
             copy_buchi(result, aut, &sdict, &todo, names);
 
             // Now we can strip the automata of its acceptance.
-            spot::strip_acceptance_here(result);
+            //spot::strip_acceptance_here(result);
         }
         else
         {
@@ -600,7 +610,7 @@ void copy_buchi(spot::twa_graph_ptr aut, spot::const_twa_graph_ptr to_copy, stat
         copy_todo.pop();
         for (auto& e: to_copy->out(s))
         {
-            aut->new_edge(e.src, e.dst, e.cond, e.acc);
+            aut->new_edge(e.src, e.dst, e.cond);
             if (!seen[e.dst])
                 push_state(e.dst);
 
