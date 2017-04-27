@@ -103,14 +103,11 @@ static const unsigned TGBA = 0;
 static const unsigned TBA = 1;
 static const unsigned BA = 2;
 
+static const std::string VERSION_TAG = "v1.1.0";
+
 int main(int argc, char* argv[])
 {
-    // First, we set the flags of the tool.
-    // -t specifies the tool to use transition-based acceptance, producing SDTBA
-    // -+ specifies the tool to generate a fully deterministic first component of the result automata
-    // -f INPUT_FILE gives us the input automata we want to process from a file
-    // --cy simulates CY construction (first -> NBA and then the main algorithm).
-    // [automata] gives us the input automata we want to process from command line
+    // Setting up the configurations flags for the user.
 
     std::string automata_from_cin;
     if (!isatty(fileno(stdin)))
@@ -129,6 +126,9 @@ int main(int argc, char* argv[])
     bool optimize = true;
     bool cy_alg = false;
     bool cd_check = false;
+    bool via_tgba = false;
+    bool via_tba = false;
+    bool via_sba = false;
     unsigned preferred_output = TGBA;
     std::string path_to_file;
     for (int i = 1; i < argc; i++)
@@ -137,6 +137,18 @@ int main(int argc, char* argv[])
         if (arg.compare("--cd") == 0)
         {
             deterministic_first_component = true;
+        }
+        else if (arg.compare("--via-sba") == 0)
+        {
+            via_sba = true;
+        }
+        else if (arg.compare("--via-tba") == 0)
+        {
+            via_tba = true;
+        }
+        else if (arg.compare("--via-tgba") == 0)
+        {
+            via_tgba = true;
         }
         else if (arg.compare("--is-cd") == 0)
         {
@@ -178,7 +190,7 @@ int main(int argc, char* argv[])
         else if (arg.compare("--help") == 0)
         {
             std::cout << "Usage: seminator [OPTION...] [FILENAME]" << std::endl;
-            std::cout << "The tool is used to transform a TGBA into an equivalent semi-deterministic TBA." << std::endl;
+            std::cout << "The tool is used to transform a TGBA into an equivalent semi-(or cut-)deterministic TBA." << std::endl;
 
             std::cout << std::endl;
 
@@ -186,15 +198,38 @@ int main(int argc, char* argv[])
             std::cout << "   -f FILENAME\ttransform the automaton in FILENAME" << std::endl;
 
             std::cout << " Transformation options: " << std::endl;
-            std::cout << "   -+\t\tmake sure the first component of the result is deterministic" << std::endl;
-            std::cout << "   -s0\t\tdisables spot automata reductions algorithms" << std::endl;
+            std::cout << "  --cd\t\tmake sure the first component of the result is deterministic" << std::endl;
             std::cout << "  --cy\t\tsimulate the CY[88] algorithm (preceeded by degeneralization to NBA)" << std::endl;
+            std::cout << "  --via-tgba\tthe standard algorithm which proceeds by transforming" <<
+                std::endl << "\t\tthe input automaton as is" << std::endl;
+            std::cout << "  --via-tba\tthe input automaton is first degeneralized into a TBA" <<
+                std::endl << "\t\tbefore being transformed" << std::endl;
+            std::cout << "  --via-sba\tthe input automaton is first degeneralized into a BA" <<
+                std::endl << "\t\tbefore being transformed" << std::endl;
+            std::cout << "   -s0\t\tdisables spot automata reductions algorithms" << std::endl;
 
             std::cout << " Output options: " << std::endl;
-            std::cout << "  --tgba\t\tprefer TGBA output" << std::endl;
+            std::cout << "  --tgba\tprefer TGBA output" << std::endl;
             std::cout << "  --tba\t\tprefer TBA output" << std::endl;
             std::cout << "  --ba\t\tprefer BA output" << std::endl;
-            std::cout << "  --is-cd\t\toutputs 1 if the input automaton is cut-deterministic, 0 otherwise; does not transform the input automaton" << std::endl;
+            std::cout << "  --is-cd\toutputs 1 if the input automaton is cut-deterministic," <<
+                std::endl << "\t\t0 otherwise; does not transform the input automaton" << std::endl;
+
+            std::cout << " Miscellaneous options: " << std::endl;
+            std::cout << "  --help\tprint this help" << std::endl;
+            std::cout << "  --version\tprint program version" << std::endl;
+
+            std::cout << std::endl;
+
+            return 1;
+        }
+        else if (arg.compare("--version") == 0)
+        {
+            std::cout << "Seminator (" << VERSION_TAG << ")" << std::endl;
+
+            std::cout << "License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>." << std::endl;
+            std::cout << "This is free software: you are free to change and redistribute it." << std::endl;
+            std::cout << "There is NO WARRANTY, to the extent permitted by law." << std::endl;
 
             std::cout << std::endl;
 
@@ -250,16 +285,34 @@ int main(int argc, char* argv[])
             aut = spot::degeneralize(aut);
             result = buchi_to_semi_deterministic_buchi(aut, deterministic_first_component, optimize, preferred_output);
         }
+        else if (via_sba) {
+            aut = spot::degeneralize(aut);
+            result = buchi_to_semi_deterministic_buchi(aut, deterministic_first_component, optimize, preferred_output);
+        }
+        else if (via_tba) {
+            aut = spot::degeneralize_tba(aut);
+            result = buchi_to_semi_deterministic_buchi(aut, deterministic_first_component, optimize, preferred_output);
+        }
+        else if (via_tgba) {
+            result = buchi_to_semi_deterministic_buchi(aut, deterministic_first_component, optimize, preferred_output);
+        }
         else
         {
             auto res1 = buchi_to_semi_deterministic_buchi(aut, deterministic_first_component, optimize, preferred_output);
-            auto degen_aut = spot::degeneralize_tba(aut);
-            auto res2 = buchi_to_semi_deterministic_buchi(degen_aut, deterministic_first_component, optimize, preferred_output);
+            auto tba_aut = spot::degeneralize_tba(aut);
+            auto res2 = buchi_to_semi_deterministic_buchi(tba_aut, deterministic_first_component, optimize, preferred_output);
             result = res1;
             if (res2->num_states() < res1->num_states())
             {
                 result = res2;
             }
+            auto nba_aut = spot::degeneralize(aut);
+            auto res3 = buchi_to_semi_deterministic_buchi(nba_aut, deterministic_first_component, optimize, preferred_output);
+            if (res3->num_states() < result->num_states())
+            {
+                result = res3;
+            }
+
         }
         spot::print_hoa(std::cout, result) << '\n';
         return 0;
@@ -340,18 +393,6 @@ spot::twa_graph_ptr buchi_to_semi_deterministic_buchi(spot::twa_graph_ptr& aut, 
     }
     else
     {
-        /*
-        // Purge dead and unreachable states.
-        aut->purge_dead_states();
-
-        // Names of the new states for printing purposes.
-        std::vector<std::string>* names = new std::vector<std::string>();
-
-        // Make sure we copy all the atomic propositions, so that when aut seize to exists, the resulting
-        // automata will still be okay.
-        result->copy_ap_of(aut);
-        */
-
         // Keeps a dictionary giving us a relationship between pairs of sets of states and states in the result automata.
         state_dictionary sdict;
         // List of states we still need to go through.
@@ -380,9 +421,6 @@ spot::twa_graph_ptr buchi_to_semi_deterministic_buchi(spot::twa_graph_ptr& aut, 
         {
             // Make a copy of the given automata to the result.
             copy_buchi(result, aut, &sdict, &todo, names);
-
-            // Now we can strip the automata of its acceptance.
-            //spot::strip_acceptance_here(result);
         }
         else
         {
