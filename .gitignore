@@ -1,0 +1,10 @@
+__pycache__
+.ipynb_checkpoints
+# Generated files
+formulae/literature*.ltl
+formulae/random*.ltl
+formulae/tmp.ltl
+lcr-*
+owl-*
+*.o
+seminator
