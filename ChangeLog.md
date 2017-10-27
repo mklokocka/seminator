@@ -1,4 +1,7 @@
 ## [Unpublished]
+### Added
+* SCC-aware optimization: States of the deterministic component are constraint to follow states from one SCC of the input automaton only.
+
 ### Changed
 * Jump to the deterministic component to level 0 after reading mark with the highest number (previously after mark 0).
 
