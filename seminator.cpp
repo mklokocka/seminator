@@ -478,6 +478,7 @@ spot::twa_graph_ptr buchi_to_semi_deterministic_buchi(spot::twa_graph_ptr& aut, 
             }
         }
 
+        spot::scc_info si(aut);
         spot::acc_cond::mark_t accepting_set = result->set_buchi();
         result->prop_state_acc(false);
 
@@ -500,6 +501,8 @@ spot::twa_graph_ptr buchi_to_semi_deterministic_buchi(spot::twa_graph_ptr& aut, 
             {
                 for (auto& edge : aut->out(state))
                 {
+                    if (si.scc_of(edge.dst) == si.scc_of(state))
+                    {
                     std::vector<bdd> minterm_conds = edge_condition_to_minterms(allap, edge.cond, &minterms);
 
                     for(auto& minterm_cond : minterm_conds)
@@ -513,17 +516,21 @@ spot::twa_graph_ptr buchi_to_semi_deterministic_buchi(spot::twa_graph_ptr& aut, 
                     }
                 }
             }
+            }
             if (p != q)
             {
                 for (auto& state : p)
                 {
                     for (auto& edge : aut->out(state))
                     {
+                        if (si.scc_of(edge.dst) == si.scc_of(state))
+                        {
                         std::vector<bdd> minterm_conds = edge_condition_to_minterms(allap, edge.cond, &minterms);
 
                         for(auto& minterm_cond : minterm_conds)
                         {
                             p_map[minterm_cond].insert(edge.dst);
+                            }
                         }
                     }
                 }
