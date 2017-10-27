@@ -103,7 +103,7 @@ static const unsigned TGBA = 0;
 static const unsigned TBA = 1;
 static const unsigned BA = 2;
 
-static const std::string VERSION_TAG = "v1.1.0";
+static const std::string VERSION_TAG = "v1.1.0dev";
 
 int main(int argc, char* argv[])
 {
@@ -654,7 +654,7 @@ void copy_buchi(spot::twa_graph_ptr aut, spot::const_twa_graph_ptr to_copy, stat
 
             // If e is an accepting transition from set 0, we create an edge to the second component.
             // In the case the automata accepts everything, we move from every state.
-            if (e.acc.has(0) || all)
+            if (e.acc.has(to_copy->acc().num_sets()-1) || all)
             {
                 state_set new_set{e.dst};
                 state_set empty_set;

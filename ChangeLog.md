@@ -1,0 +1,19 @@
+## [Unpublished]
+### Changed
+* Jump to the deterministic component to level 0 after reading mark with the highest number (previously after mark 0).
+
+## [1.1.0] - 2017-05-02
+### Added
+* Check for automata cut-determinism
+* `--via_tgba`, `--via_tba`, and `--via_sba` options for different pipelines of translations:
+  - `--via_tgba`: TGBA -> sdBA (default)
+  - `--via_tba`: TGBA -> TBA -> sdBA
+  - `--via_sba`: TGBA -> SBA -> sdBA
+* Use all three ways and choose the best result.
+### Changed
+* Use Spot's simplifications by default.
+* Use `-s0` to disable Spot's simplifications instead of `-o` to enable them.
+
+## [1.0.0] - 2017-01-25
+### Added
+* Seminator translates input transition-based generalized Büchi automaton into a semi-deterministic or cut-deterministic Büchi automaton. 
