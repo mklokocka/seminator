@@ -1,5 +1,5 @@
 LTL2LDBA_NAME=ltl2ldba-0.9
-OWL_VERSION=1.0.0
+OWL_VERSION=1.1.0
 OWL_NAME=owl-$OWL_VERSION
 
 #if [ ! -f $LTL2LDBA_NAME/bin/ltl2ldba ]; then
