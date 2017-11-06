@@ -1,9 +1,13 @@
 ## [Unpublished]
 ### Added
 * SCC-aware optimization: States of the deterministic component are constraint to follow states from one SCC of the input automaton only.
+* Scatter plots in pdf are now available in the repo.
 
 ### Changed
 * Jump to the deterministic component to level 0 after reading mark with the highest number (previously after mark 0).
+* Evaluation now uses Pandas to create the tables.
+* Evaluation now uses Owl v. 1.1.0 for comparison.
+* Seminator now compiles with C++14 standard.
 
 ## [1.1.0] - 2017-05-02
 ### Added

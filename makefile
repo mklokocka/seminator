@@ -18,8 +18,8 @@
 CC=gcc
 CXX=g++
 RM=rm -f
-CPPFLAGS=-std=c++11 -g -I/usr/local/include
-LDFLAGS=-std=c++11 -g -lstdc++
+CPPFLAGS=-std=c++14 -g -I/usr/local/include
+LDFLAGS=-std=c++14 -g -lstdc++
 LDLIBS=-L/usr/local/lib -lspot -lbddx
 
 SRCS=seminator.cpp
