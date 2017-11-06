@@ -33,6 +33,9 @@ However, both Owl and Seminator evolved since the paper was published
 so new in this version of scripts you will find comparison with the
 current version of Seminator and a recent version of Owl.
 
+If the preview of the notebooks on gitHub does not work, use 
+[Jupyter nbviewer](https://nbviewer.jupyter.org/github/mklokocka/seminator/blob/master/Experimental_evaluation.ipynb) instead
+
 ### Requirements
 
 If you would like to run the notebook by yourself, you need to have the 
