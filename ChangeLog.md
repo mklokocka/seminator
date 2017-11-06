@@ -1,3 +1,5 @@
+## [Unpublished]
+
 ## [1.2.0] - 2017-11-06
 ### Added
 * SCC-aware optimization: States of the deterministic component are constraint to follow states from one SCC of the input automaton only.
@@ -21,6 +23,10 @@
 * Use Spot's simplifications by default.
 * Use `-s0` to disable Spot's simplifications instead of `-o` to enable them.
 
-## [1.0.0] - 2017-01-25
+## 1.0.0 - 2017-01-25
 ### Added
 * Seminator translates input transition-based generalized Büchi automaton into a semi-deterministic or cut-deterministic Büchi automaton. 
+
+[Unpublished]: https://github.com/mklokocka/seminator/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/mklokocka/seminator/compare/v1.1.0...v1.2.0
+[1.1.0]: https://github.com/mklokocka/seminator/compare/v1.0.0...v1.1.0
