@@ -1,4 +1,4 @@
-## [Unpublished]
+## [1.2.0] - 2017-11-06
 ### Added
 * SCC-aware optimization: States of the deterministic component are constraint to follow states from one SCC of the input automaton only.
 * Scatter plots in pdf are now available in the repo.
