@@ -178,7 +178,7 @@ class LtlcrossRunner(object):
         hoa = stdout.decode('utf-8')
         return hoa_to_spot(hoa)
 
-    def cummulative(self, col="states"):
+    def cummulative(self, col="states", tools=None):
         """Returns table with cummulative numbers of given ``col``.
 
         Parameters
@@ -186,7 +186,9 @@ class LtlcrossRunner(object):
         col : String
             One of the followed columns (``states`` default)
         """
-        return self.values[col].dropna().sum()
+        if tools is None:
+            return self.values[col].dropna().sum()            
+        return self.values[col][tools].dropna().sum()
 
     def smaller_than(self, tool1, tool2,
                      restrict=True,
