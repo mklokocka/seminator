@@ -26,7 +26,7 @@ lit$set <- 'literature formulae'
 rand$set <- 'random formulae'
 all <- rbind(lit, rand)
 
-all <- tidyr::separate(all, tool, into=c('output','tool','simpl'))
+all <- tidyr::separate(all, tool, into=c('output','tool','simpl'), sep="[^[:alnum:]^[-]]+")
 all$tool <- as.factor(all$tool)
 all$output <- as.factor(all$output)
 
@@ -70,6 +70,20 @@ ggplot(sd, aes(y=nba2ldba,x=seminator,colour=type,shape=type)) +
 
 
 ggsave(filename = 'nba_sem.pdf', width=10, height=5.1)
+
+colnames(all)[5] <- "twostep"
+ggplot(all, aes(y=twostep,x=seminator,colour=type,shape=type)) +
+  geom_abline(slope=1,intercept=0) + # theme_classic() +
+  geom_jitter(width = 0.02, height = 0.02, alpha=.8, size=2.5) +
+  scale_x_log10(breaks=c(1,10,100,1000)) + scale_y_log10() +
+  scale_colour_brewer(palette = "Set1", direction=-1,type = qualitative) +
+  scale_shape_manual(values=c(16,17,15,18)) +
+  coord_fixed() + facet_grid(output ~ set) +
+  theme(legend.margin=margin(2,-2,2,2,"mm"),
+        plot.margin=margin(0,0,0,0,"mm"),
+        legend.position = c(.5,.41))
+
+ggsave(filename = '2step_sem.pdf', width=10, height=8.1)
 
 #graph(ggplot(lit, aes(x=cd.ltl2ldba.no,y=cd.seminator.no,colour=type,shape=type)))
 # ggsave(filename = 'cd_ltl_sem.pdf')
