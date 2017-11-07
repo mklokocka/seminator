@@ -1,0 +1,3 @@
+F(a & (!d U (b & !d & (d R (c | d)))))
+F(a & Fb & ((c & X((!b U d) & (b R (!d | Ge)))) R !b))
+F(a & (!c U (b & !c & X((!c U d) & (c R (!d | Ge))))))

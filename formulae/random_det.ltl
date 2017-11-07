@@ -1,0 +1,100 @@
+a | Gb
+Fa
+X((Ga | Fb) R X!b)
+a & GFb
+(Fa & (a U X(b | !c))) | (G!a & (!a R X(!b & c)))
+G((a & G!b) | (!a & Fb))
+a
+Fa & XX(!a | GFb)
+G(a & b) | XG!a
+Ga & XGb
+Ga
+a | Xb
+(!a & X!a & ((b & Gc) | (!b & F!c))) | ((a | Xa) & ((b & F!c) | (!b & Gc)))
+XX((a & XF!b) | (!a & XGb))
+G(a & b) | (F!a & F!b)
+X(a & Fb)
+(a & XGb) | (!a & XF!b)
+XGa
+GFa
+Fa & GF(a | b)
+a | GF(!a | b)
+Fa | (GFb & (a R b))
+Ga U b
+a & Fb
+Ga | ((b | c) & Xc)
+Ga | XGb
+(a & ((a & (F!b R (c & !d))) | (!a & (Gb U (!c | d))))) | (!a & ((a & (Gb U (!c | d))) | (!a & (F!b R (c & !d)))))
+X((a & XXF!b) | (!a & XXGb))
+X(Fa | XFb)
+F(a & Xb)
+a | (b & c) | G!c
+a U b
+Xa | (b & Gc)
+Fa | XXGb
+((Fa & XXF!b) | (G!a & XXGb)) U ((a & X!c) | (!a & Xc))
+Fa | XFb
+(Xa & (b U !c)) | (X!a & (!b R c))
+((a & XG!b) | (!a & XFb)) & ((c & Fb) | (!c & G!b))
+Xa
+((a | !b) & G!a) | (!a & b & Fa)
+XFa
+Ga R b
+XXGa
+X(Xa R Fa)
+(a | Xb) U (a | Xa)
+G(GFa U b)
+(a & F!b) | (!a & Gb)
+(!a | XX!b) U X(b U a)
+F(a | b | (c U (!d & (a U d))))
+X((!a & Xa & (!a R b)) | ((a U !b) & (a | X!a)))
+(a & ((b | X(b M !c)) R (!a | d))) | (!a & ((!b & X(!b W c)) U (a & !d)))
+(a | b) & XG!b
+F!a | X(b & Xa)
+a | X(Ga | F(a & Fb))
+G((!a & GFa) | (a & FG!a))
+a | XFb
+Fa | Xb | (c & Xd)
+G(G(a | G!a) U b)
+F(a | G!a)
+(a & ((b & G!a) | (!b & Fa))) | (!a & ((b & Fa) | (!b & G!a)))
+G(a | G(b | Fc))
+X(Xa | (c R d) | (!a & Xb))
+(a | b) R Fa
+X(Ga | (b & X!c) | (!b & Xc))
+a | (b & (!c | (c & d))) | F!d
+((a & (a U b)) | (!a & (!a R !b))) R a
+G(a & Xa & (b U c))
+(Ga & (b | (!c & F!b))) | (!b & F!a & ((c & F!b) | (!c & Gb)))
+(Gc & Fa) | (F!c & G!a) | X(a U (b U !c))
+Fa | XG((b & Xb) | (!b & X!b))
+F((a & XX!a) | (!a & XXa))
+XG(a & Fb)
+a & X(a W b)
+a | (b & (G!c | (c & XFc))) | (!b & ((c & XG!c) | (!c & XFc)))
+(a & !b) | XF!c | (c R b)
+a | G(X(b R c) U (Gc | (!a & F!c)))
+X(a U b)
+a | XF!a
+G(XGa & ((!b & c) | Gb))
+((((a & b) | (!a & !b)) & G!c) | (((!a & b) | (a & !b)) & Fc)) R b
+F(a | b | X(!c | (!b & c)))
+X(a U (!a & Fb & XXc))
+F(!a | Ga)
+a | Fb | G(b U c)
+Ga | XXFb
+(a | (G!b U c)) & (d | XFb)
+X((G!a & ((!a & b & Fa) | (!b & (a | G!a)))) | (Fa & ((b & (a | G!a)) | (!a & !b & Fa))))
+a | (b & c) | Xc
+(((!a & b) | (a & !b)) & ((Xb & (!b R !c)) | (X!b & (b U c)))) | (((a & b) | (!a & !b)) & ((Xb & (b U c)) | (X!b & (!b R !c))))
+X(Fa & GFb)
+X(Ga | Xb)
+X(Fa | (b U (c & Xc)))
+Gb & Fa
+XXFa
+Fa & ((b U c) | XX(c & Gd))
+(a & b) | (!a & !b) | ((c R a) R b)
+a & ((Xb R Fb) U c)
+G(a U b)
+a | X(a M Gb)
+(a | !b) & XG(a | !b | Gb)
