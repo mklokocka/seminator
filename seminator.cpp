@@ -103,7 +103,7 @@ static const unsigned TGBA = 0;
 static const unsigned TBA = 1;
 static const unsigned BA = 2;
 
-static const std::string VERSION_TAG = "v1.1.0dev";
+static const std::string VERSION_TAG = "v1.2.0";
 
 int main(int argc, char* argv[])
 {
