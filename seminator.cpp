@@ -460,7 +460,7 @@ spot::twa_graph_ptr buchi_to_semi_deterministic_buchi(spot::twa_graph_ptr& aut, 
                         // If e is an accepting transition from the hightest set,
                         // we create an edge to the second component.
                         // In the case the automata accepts everything, we move from every state.
-                        if (e.acc.has(to_copy->acc().num_sets()-1) || all)
+                        if (edge.acc.has(num_of_acc_sets-1) || all)
                         {
                             state_set new_set{edge.dst};
                             state_set empty_set;
