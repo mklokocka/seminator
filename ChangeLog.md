@@ -1,4 +1,6 @@
 ## [Unpublished]
+### Fixes
+* jumps to the deterministic component after seeing highest mark (instead of 0) also for cut-deterministic automata
 
 ## [1.2.0] - 2017-11-06
 ### Added
@@ -25,7 +27,7 @@
 
 ## 1.0.0 - 2017-01-25
 ### Added
-* Seminator translates input transition-based generalized Büchi automaton into a semi-deterministic or cut-deterministic Büchi automaton. 
+* Seminator translates input transition-based generalized Büchi automaton into a semi-deterministic or cut-deterministic Büchi automaton.
 
 [Unpublished]: https://github.com/mklokocka/seminator/compare/v1.2.0...HEAD
 [1.2.0]: https://github.com/mklokocka/seminator/compare/v1.1.0...v1.2.0

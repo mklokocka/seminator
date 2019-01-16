@@ -103,7 +103,7 @@ static const unsigned TGBA = 0;
 static const unsigned TBA = 1;
 static const unsigned BA = 2;
 
-static const std::string VERSION_TAG = "v1.2.0";
+static const std::string VERSION_TAG = "v1.2.0dev";
 
 int main(int argc, char* argv[])
 {
@@ -457,9 +457,10 @@ spot::twa_graph_ptr buchi_to_semi_deterministic_buchi(spot::twa_graph_ptr& aut, 
                             states_cond_map[minterm_cond].insert(edge.dst);
                         }
 
-                        // If e is an accepting transition from set 0, we create an edge to the second component.
+                        // If e is an accepting transition from the hightest set,
+                        // we create an edge to the second component.
                         // In the case the automata accepts everything, we move from every state.
-                        if (edge.acc.has(0) || all)
+                        if (e.acc.has(to_copy->acc().num_sets()-1) || all)
                         {
                             state_set new_set{edge.dst};
                             state_set empty_set;
@@ -659,7 +660,8 @@ void copy_buchi(spot::twa_graph_ptr aut, spot::const_twa_graph_ptr to_copy, stat
             if (!seen[e.dst])
                 push_state(e.dst);
 
-            // If e is an accepting transition from set 0, we create an edge to the second component.
+            // If e is an accepting transition from the highest set,
+            // we create an edge to the second component.
             // In the case the automata accepts everything, we move from every state.
             if (e.acc.has(to_copy->acc().num_sets()-1) || all)
             {
