@@ -102,6 +102,7 @@ public:
 static const unsigned TGBA = 0;
 static const unsigned TBA = 1;
 static const unsigned BA = 2;
+bool jump_enter = false;
 
 static const std::string VERSION_TAG = "v1.2.0dev";
 
@@ -153,6 +154,10 @@ int main(int argc, char* argv[])
         else if (arg.compare("--is-cd") == 0)
         {
             cd_check = true;
+        }
+        else if (arg.compare("--jump-enter") == 0)
+        {
+            jump_enter = true;
         }
         else if (arg.compare("-s0") == 0)
         {
@@ -206,6 +211,7 @@ int main(int argc, char* argv[])
                 std::endl << "\t\tbefore being transformed" << std::endl;
             std::cout << "  --via-sba\tthe input automaton is first degeneralized into a BA" <<
                 std::endl << "\t\tbefore being transformed" << std::endl;
+            std::cout << "  --jump-enter\tjump to deterministic component also when freshly entering an accepting SCC" << std::endl;
             std::cout << "   -s0\t\tdisables spot automata reductions algorithms" << std::endl;
 
             std::cout << " Output options: " << std::endl;
@@ -233,7 +239,7 @@ int main(int argc, char* argv[])
 
             std::cout << std::endl;
 
-            return 1;
+            return 0;
         }
         else
         {
@@ -436,6 +442,7 @@ spot::twa_graph_ptr buchi_to_semi_deterministic_buchi(spot::twa_graph_ptr& aut, 
             int initial_state = powerset_set_to_state(result, &powerset_sdict, &powerset_todo, names, initial_state_set);
 
             result->set_init_state(initial_state);
+            spot::scc_info si(aut);
 
             while (!powerset_todo.empty())
             {
@@ -460,7 +467,13 @@ spot::twa_graph_ptr buchi_to_semi_deterministic_buchi(spot::twa_graph_ptr& aut, 
                         // If e is an accepting transition from the hightest set,
                         // we create an edge to the second component.
                         // In the case the automata accepts everything, we move from every state.
-                        if (edge.acc.has(num_of_acc_sets-1) || all)
+                        // Jump on entering accepting scc if required
+                        unsigned u = si.scc_of(state);
+                        unsigned v = si.scc_of(edge.dst);
+
+                        if (edge.acc.has(num_of_acc_sets-1) || all ||
+                          (jump_enter && u != v && si.is_accepting_scc(v))
+                        )
                         {
                             state_set new_set{edge.dst};
                             state_set empty_set;
@@ -631,6 +644,7 @@ void copy_buchi(spot::twa_graph_ptr aut, spot::const_twa_graph_ptr to_copy, stat
     {
         throw mismatched_bdd_dict_exception();
     }
+    spot::scc_info si(to_copy);
 
     bool all = to_copy->acc().is_all();
 
@@ -663,7 +677,13 @@ void copy_buchi(spot::twa_graph_ptr aut, spot::const_twa_graph_ptr to_copy, stat
             // If e is an accepting transition from the highest set,
             // we create an edge to the second component.
             // In the case the automata accepts everything, we move from every state.
-            if (e.acc.has(to_copy->acc().num_sets()-1) || all)
+            // Jump on entering accepting scc if required
+            unsigned u = si.scc_of(e.src);
+            unsigned v = si.scc_of(e.dst);
+
+            if (e.acc.has(to_copy->acc().num_sets()-1) || all ||
+              (jump_enter && u != v && si.is_accepting_scc(v))
+            )
             {
                 state_set new_set{e.dst};
                 state_set empty_set;
