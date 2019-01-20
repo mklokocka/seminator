@@ -1,11 +1,13 @@
 ## [Unpublished]
 ### Added
 * Option `--jump-enter` to jump to deterministic component also when freshly entering an accepting SCC
+* Option `--jump-always` to jump to deterministic component always for transitions leading to some accepting SCC
 
 ### Changed
 #### Evaluation
-* Use the new version of owl for comparison (18.06-rc2)
+* Use the new version of owl for comparison (18.06)
 * Also compare Seminator with the `--jump-enter` option
+* Also compare Seminator with the `--jump-always` option
 
 ### Fixes
 * jumps to the deterministic component after seeing highest mark (instead of 0) also for cut-deterministic automata
