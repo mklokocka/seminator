@@ -57,7 +57,7 @@ unsigned sets_to_state(spot::twa_graph_ptr aut, state_dictionary* sdict, todo_li
 unsigned powerset_set_to_state(spot::twa_graph_ptr aut, powerset_state_dictionary* sdict, powerset_todo_list* todo, std::vector<std::string>* names, state_set states);
 bool is_cut_deterministic(const spot::twa_graph_ptr& aut, std::set<unsigned>* non_det_states = nullptr);
 void determinize_first_component(spot::twa_graph_ptr result, spot::twa_graph_ptr aut, std::set<unsigned> to_determinize);
-
+bool jump_condition(spot::const_twa_graph_ptr, spot::twa_graph::edge_storage_t);
 /**
  * Class representing an exception thrown when the algorithm is not run on a proper SBwA automata.
  */
@@ -448,7 +448,6 @@ spot::twa_graph_ptr buchi_to_semi_deterministic_buchi(spot::twa_graph_ptr& aut, 
             int initial_state = powerset_set_to_state(result, &powerset_sdict, &powerset_todo, names, initial_state_set);
 
             result->set_init_state(initial_state);
-            spot::scc_info si(aut);
 
             while (!powerset_todo.empty())
             {
@@ -470,18 +469,7 @@ spot::twa_graph_ptr buchi_to_semi_deterministic_buchi(spot::twa_graph_ptr& aut, 
                             states_cond_map[minterm_cond].insert(edge.dst);
                         }
 
-                        // If e is an accepting transition from the hightest set,
-                        // we create an edge to the second component.
-                        // In the case the automata accepts everything, we move from every state.
-                        // Jump on entering accepting scc if required (--jump-enter)
-                        // Jump on each transition into an accepting SCC (--jump-always)
-                        unsigned u = si.scc_of(state);
-                        unsigned v = si.scc_of(edge.dst);
-
-                        if (edge.acc.has(num_of_acc_sets-1) || all ||
-                          (jump_enter && u != v && si.is_accepting_scc(v)) ||
-                          (jump_always && si.is_accepting_scc(v))
-                        )
+                        if (jump_condition(aut, edge))
                         {
                             state_set new_set{edge.dst};
                             state_set empty_set;
@@ -652,9 +640,6 @@ void copy_buchi(spot::twa_graph_ptr aut, spot::const_twa_graph_ptr to_copy, stat
     {
         throw mismatched_bdd_dict_exception();
     }
-    spot::scc_info si(to_copy);
-
-    bool all = to_copy->acc().is_all();
 
     aut->new_states(to_copy->num_states());
 
@@ -682,18 +667,7 @@ void copy_buchi(spot::twa_graph_ptr aut, spot::const_twa_graph_ptr to_copy, stat
             if (!seen[e.dst])
                 push_state(e.dst);
 
-            // If e is an accepting transition from the highest set,
-            // we create an edge to the second component.
-            // In the case the automata accepts everything, we move from every state.
-            // Jump on entering accepting scc if required (--jump-enter)
-            // Jump on each transition into an accepting SCC (--jump-always)
-            unsigned u = si.scc_of(e.src);
-            unsigned v = si.scc_of(e.dst);
-
-            if (e.acc.has(to_copy->acc().num_sets()-1) || all ||
-              (jump_enter && u != v && si.is_accepting_scc(v)) ||
-              (jump_always && si.is_accepting_scc(v))
-            )
+            if (jump_condition(to_copy, e))
             {
                 state_set new_set{e.dst};
                 state_set empty_set;
@@ -975,9 +949,9 @@ void determinize_first_component(spot::twa_graph_ptr result, spot::twa_graph_ptr
         sup_map sup;
         // Record occurrences of all guards
         for (auto& t: aut->edges())
-        sup.emplace(t.cond);
+          sup.emplace(t.cond);
         for (auto& i: sup)
-        allap &= bdd_support(i);
+          allap &= bdd_support(i);
     }
 
     // Creating a dictionary of minterms
@@ -1087,4 +1061,32 @@ void determinize_first_component(spot::twa_graph_ptr result, spot::twa_graph_ptr
 
     result->set_named_prop("state-names", names);
     result->merge_edges();
+}
+
+/**
+* Returns whether a cut transition (jump to the deterministic component) for the
+* current edge should be created.
+*
+* @param[in] aut                The input automaton_stream_parser
+* @param[in] e                  The edge beeing processed
+* @return True if some jump condition is satisfied
+*
+* Currently, 4 conditions trigger the jump:
+*  1. If the input automaton is safety (accepts all)
+*  2. If the edge has the highest mark
+*  3. If we freshly enter accepting scc (--jump-enter only)
+*  4. If e leads to accepting SCC (--jump-always only)
+*/
+bool jump_condition(spot::const_twa_graph_ptr aut, spot::twa_graph::edge_storage_t e) {
+  spot::scc_info si(aut);
+  unsigned u = si.scc_of(e.src);
+  unsigned v = si.scc_of(e.dst);
+  bool accept_all(aut->acc().is_all());
+  unsigned highest_mark(aut->acc().num_sets() - 1);
+
+  return (
+    e.acc.has(highest_mark) || accept_all || // 1 || 2
+    (jump_enter && u != v && si.is_accepting_scc(v)) || // 3
+    (jump_always && si.is_accepting_scc(v)) // 4
+  );
 }
