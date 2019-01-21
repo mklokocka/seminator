@@ -21,7 +21,6 @@
 #include <spot/twaalgos/hoa.hh>
 #include <spot/twaalgos/dot.hh>
 #include <spot/twaalgos/stripacc.hh>
-//#include <spot/twaalgos/powerset.hh>
 #include <spot/twaalgos/degen.hh>
 #include <spot/twaalgos/isdet.hh>
 #include <spot/twaalgos/sccinfo.hh>
@@ -272,11 +271,6 @@ int main(int argc, char* argv[])
     }
 }
 
-/**
- * The semi-determinization algorithm as thought of by F. Blahoudek, J. Strejcek and M. Kretinsky.
- *
- * @param[in] aut TGBA to transform to a semi-deterministic TBA.
- */
 spot::twa_graph_ptr buchi_to_semi_deterministic_buchi(spot::twa_graph_ptr& aut, bool deterministic_first_component, bool optimization, unsigned output)
 {
     // Remove dead and unreachable states and prune accepting conditions in non-accepting SCCs.
@@ -360,6 +354,52 @@ spot::twa_graph_ptr buchi_to_semi_deterministic_buchi(spot::twa_graph_ptr& aut, 
         else
         {
             // We need to create the powerset construction for the first part of the automaton.
+            spot::power_map pm;
+            auto res = spot::tgba_powerset(aut, pm);
+
+            get_powerset_names(res, names, pm);
+            res->set_named_prop("state-names", names);
+
+            std::cout << "Original automaton:" << std::endl;
+            spot::print_hoa(std::cout, aut);
+            std::cout << std::endl;
+
+            std::cout << "After powerset:" << std::endl;
+            spot::print_hoa(std::cout, res);
+            std::cout << std::endl;
+            std::cout << std::endl;
+
+            // Iterate over edges of the original automaton and based on them,
+            // add cut-transitions into the new automaton.
+            for (auto& edge : aut->edges())
+            {
+              if (jump_condition(aut, edge))
+              {
+                std::cout << edge.src << ':' << edge.dst << edge.acc << std::endl;
+                // create the target state
+                state_set new_set{edge.dst};
+                state_set empty_set;
+                // int new_state = sets_to_state(res, &sdict, &todo, names, 0, empty_set, new_set);
+                // std::cout << new_state << std::endl;
+
+                // // Now add the cut transition to all states that contain edge.src
+                // for (unsigned s = 0; s < pm.map_.size(); ++s) {
+                //   const power_state* current_states = &pm.states_of(s);
+                //   if (current_states->count(edge.src)) {
+                //     std::cout << "Adding " << s << "->" << new_state << std::endl;
+                //     res->new_edge(s, new_state, edge.cond);
+                //   }
+                //
+                // }
+              }
+            }
+            //
+            // std::cout << std::endl;
+            // std::cout << "Result automaton:" << std::endl;
+            // spot::print_hoa(std::cout, res);
+            // std::cout << std::endl;
+            //
+            names = new std::vector<std::string>();
 
             // Keeps a dictionary giving us a relationship between pairs of sets of states and states in the result automata.
             powerset_state_dictionary powerset_sdict;
@@ -547,16 +587,6 @@ spot::twa_graph_ptr buchi_to_semi_deterministic_buchi(spot::twa_graph_ptr& aut, 
     return result;
 }
 
-/**
- * Helper function to copy all the states and transitions of an automaton to another one.
- * Doesn't keep any flags besides state Buchi acceptance. Both automata need to have the same dictionary.
- *
- * @param[out] aut          Automata to copy to.
- * @param[in]  to_copy      Automata to copy from.
- * @param[in, out] sdict    Dictionary of states in second component to their number.
- * @param[in, out] todo     Todo for generating the second component.
- * @param[out] names        Names of the states for printing purposes.
- */
 void copy_buchi(spot::twa_graph_ptr aut, spot::const_twa_graph_ptr to_copy, state_dictionary* sdict, todo_list* todo, std::vector<std::string>* names)
 {
     if (aut->get_dict() != to_copy->get_dict())
@@ -603,14 +633,6 @@ void copy_buchi(spot::twa_graph_ptr aut, spot::const_twa_graph_ptr to_copy, stat
     aut->set_init_state(to_copy->get_init_state_number());
 }
 
-/**
- * Helper function to convert an edge condition to a vector of all the different minterms.
- *
- * @param[in] allap         All atomic propositions used through out the automata.
- * @param[in] cond          Edge condition.
- * @param[in, out] minterms A map of edge conditions to minterms that we have already found.
- * @return Vector of minterms.
- */
 std::vector<bdd> edge_condition_to_minterms(bdd allap, bdd cond, std::map<bdd, std::vector<bdd>, spot::bdd_less_than>* minterms)
 {
     if (!(*minterms)[cond].empty())
@@ -630,17 +652,6 @@ std::vector<bdd> edge_condition_to_minterms(bdd allap, bdd cond, std::map<bdd, s
     }
 }
 
-/**
- * Helper function that pairs two sets of states an already existing (or new, in the case it does not exist) state in the new automata.
- *
- * @param[in,out] aut The new automata.
- * @param[in,out] sdict Dictionary keeping track of the relationship between pair of sets of states and new states in the new automata.
- * @param[out]    todo Vector of states we have to go through next.
- * @param[out]    names Vector of names that we keep to name the states of the new automata.
- * @param[in]     left Left set of states.
- * @param[in]     right Right set of states.
- * @return Returns a number of the state that either already existed or was created a new representing the pair of sets of states from the old automata.
- */
 unsigned sets_to_state(spot::twa_graph_ptr aut, state_dictionary* sdict, todo_list* todo, std::vector<std::string>* names, int k, state_set left, state_set right)
 {
     std::tuple<int, state_set, state_set> set_pair (k, left, right);
@@ -671,16 +682,6 @@ unsigned sets_to_state(spot::twa_graph_ptr aut, state_dictionary* sdict, todo_li
     }
 }
 
-/**
- * Helper function that pairs a set of states an already existing (or new, in the case it does not exist) state in the powerset construction of an automata.
- *
- * @param[in,out] aut The powerset automata.
- * @param[in,out] sdict Dictionary keeping track of the relationship between pair of sets of states and new states in the new automata.
- * @param[out]    todo Vector of states we have to go through next.
- * @param[out]    names Vector of names that we keep to name the states of the new automata.
- * @param[in]     states Left set of states.
- * @return Returns a number of the state that either already existed or was created a new representing the pair of sets of states from the old automata.
- */
 unsigned powerset_set_to_state(spot::twa_graph_ptr aut, powerset_state_dictionary* sdict, powerset_todo_list* todo, std::vector<std::string>* names, state_set states)
 {
     try {
@@ -703,13 +704,6 @@ unsigned powerset_set_to_state(spot::twa_graph_ptr aut, powerset_state_dictionar
     }
 }
 
-/**
- * A function that checks whether a given automaton is cut-deterministic.
- *
- * @param[in] aut               The automata to check for cut-determinism.
- * @param[out] non_det_states   Vector of the states that block cut-determinism.
- * @return Whether the automaton is cut-deterministic or not.
- */
 bool is_cut_deterministic(const spot::twa_graph_ptr& aut, std::set<unsigned>* non_det_states)
 {
     unsigned UNKNOWN = 0;
@@ -986,20 +980,6 @@ void determinize_first_component(spot::twa_graph_ptr result, spot::twa_graph_ptr
     result->merge_edges();
 }
 
-/**
-* Returns whether a cut transition (jump to the deterministic component) for the
-* current edge should be created.
-*
-* @param[in] aut                The input automaton_stream_parser
-* @param[in] e                  The edge beeing processed
-* @return True if some jump condition is satisfied
-*
-* Currently, 4 conditions trigger the jump:
-*  1. If the input automaton is safety (accepts all)
-*  2. If the edge has the highest mark
-*  3. If we freshly enter accepting scc (--jump-enter only)
-*  4. If e leads to accepting SCC (--jump-always only)
-*/
 bool jump_condition(spot::const_twa_graph_ptr aut, spot::twa_graph::edge_storage_t e) {
   spot::scc_info si(aut);
   unsigned u = si.scc_of(e.src);
@@ -1012,4 +992,26 @@ bool jump_condition(spot::const_twa_graph_ptr aut, spot::twa_graph::edge_storage
     (jump_enter && u != v && si.is_accepting_scc(v)) || // 3
     (jump_always && si.is_accepting_scc(v)) // 4
   );
+}
+
+void get_powerset_names(aut_ptr aut, state_names* names, spot::power_map pm)
+{
+  power_state state;
+  for (unsigned src_num = 0; src_num < aut->num_states(); ++src_num) {
+    state = pm.states_of(src_num);
+    names->emplace_back(powerset_name(state));
+  }
+}
+
+std::string powerset_name(power_state state)
+{
+  std::stringstream ss;
+  ss << "{";
+  for (auto state: state)
+    ss << state << ',';
+  //Remove the last comma
+  ss.seekp(-1,ss.cur);
+  ss << "}";
+
+  return ss.str();
 }
