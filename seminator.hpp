@@ -30,6 +30,7 @@
 #include <spot/misc/bddlt.hh>
 #include <spot/twaalgos/sccinfo.hh>
 #include <spot/twaalgos/powerset.hh>
+#include <spot/twaalgos/hoa.hh>
 
 static const std::string VERSION_TAG = "v1.2.0dev";
 
@@ -40,7 +41,8 @@ bool jump_enter = false;
 bool jump_always = false;
 
 typedef std::set<unsigned> state_set;
-typedef std::map<std::tuple<int, state_set, state_set>, unsigned> state_dictionary;
+typedef std::tuple<int, state_set, state_set> breakpoint_state;
+typedef std::map<breakpoint_state, unsigned> state_dictionary;
 typedef std::tuple<int, state_set, state_set, unsigned> todo_state;
 typedef std::vector<todo_state> todo_list;
 typedef std::map<state_set, unsigned> powerset_state_dictionary;
@@ -51,7 +53,10 @@ typedef std::map<unsigned,unsigned> state_map;
 typedef spot::const_twa_graph_ptr const_aut_ptr;
 typedef spot::twa_graph_ptr aut_ptr;
 typedef typename spot::power_map::power_state power_state;
-typedef std::vector<std::string> state_names;
+typedef std::vector<std::string>* state_names;
+
+typedef std::vector<unsigned> state_vect;
+typedef spot::twa_graph::edge_storage_t spot_edge;
 
 
 
@@ -137,7 +142,7 @@ bool is_cut_deterministic(const spot::twa_graph_ptr& aut, std::set<unsigned>* no
 *  3. If we freshly enter accepting scc (--jump-enter only)
 *  4. If e leads to accepting SCC (--jump-always only)
 */
-bool jump_condition(spot::const_twa_graph_ptr, spot::twa_graph::edge_storage_t);
+bool jump_condition(const_aut_ptr, spot_edge);
 
 /**
 * Returns a string in the form `{s1, s2, s3}` where si is a reference to the input_aut
@@ -145,13 +150,54 @@ bool jump_condition(spot::const_twa_graph_ptr, spot::twa_graph::edge_storage_t);
 std::string powerset_name(power_state);
 
 /**
-* Returns the names of the automaton `aut` build by the `tgba_powerset`
+* Sets the names of the automaton `aut` build by the `tgba_powerset`
 *
 * @param aut The result of `spot::tgba_powerset`
-* @param names pointer to vector of strings where to copy the names
 * @param pm power_map filled by `spot::tgba_powerset`
 */
-void get_powerset_names(aut_ptr, state_names* ,spot::power_map);
+state_names set_powerset_names(aut_ptr, spot::power_map);
+
+// Simple and PowerSet in 1st component,
+// BreakPoint and PowerSet in 2nd component
+enum class State_type {SIMPLE1,PS1,BP2,PS2};
+
+class bp_twa {
+  public:
+    bp_twa(const_aut_ptr src_aut, bool cut_det) :
+    src_(src_aut),
+    sdict_(new state_dictionary()),
+    cut_det_(cut_det),
+    pm_(spot::power_map()) {
+      if (cut_det) {
+        res_ = spot::tgba_powerset(src_, pm_);
+        names_ = set_powerset_names(res_, pm_);
+
+        std::cout << "After powerset:" << std::endl;
+        spot::print_hoa(std::cout, res_);
+        std::cout << std::endl;
+        std::cout << std::endl;
+
+        create_cut_transitions();
+      } else {
+        res_ = spot::make_twa_graph(src_->get_dict());
+        // TODO copy_buchi
+      }
+    }
+
+    const_aut_ptr src_aut();
+    aut_ptr res_aut();
+
+    void create_cut_transitions();
+
+  private:
+    const_aut_ptr src_;
+    aut_ptr res_;
+    state_dictionary * sdict_;
+    state_names names_;
+    bool cut_det_;
+    spot::power_map pm_;
+
+};
 
 
 /**

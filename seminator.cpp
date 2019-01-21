@@ -18,7 +18,6 @@
 #include <seminator.hpp>
 
 #include <spot/parseaut/public.hh>
-#include <spot/twaalgos/hoa.hh>
 #include <spot/twaalgos/dot.hh>
 #include <spot/twaalgos/stripacc.hh>
 #include <spot/twaalgos/degen.hh>
@@ -353,53 +352,11 @@ spot::twa_graph_ptr buchi_to_semi_deterministic_buchi(spot::twa_graph_ptr& aut, 
         }
         else
         {
-            // We need to create the powerset construction for the first part of the automaton.
-            spot::power_map pm;
-            auto res = spot::tgba_powerset(aut, pm);
-
-            get_powerset_names(res, names, pm);
-            res->set_named_prop("state-names", names);
-
-            std::cout << "Original automaton:" << std::endl;
-            spot::print_hoa(std::cout, aut);
+            bp_twa res_bp(aut, true);
             std::cout << std::endl;
-
-            std::cout << "After powerset:" << std::endl;
-            spot::print_hoa(std::cout, res);
-            std::cout << std::endl;
-            std::cout << std::endl;
-
-            // Iterate over edges of the original automaton and based on them,
-            // add cut-transitions into the new automaton.
-            for (auto& edge : aut->edges())
-            {
-              if (jump_condition(aut, edge))
-              {
-                std::cout << edge.src << ':' << edge.dst << edge.acc << std::endl;
-                // create the target state
-                state_set new_set{edge.dst};
-                state_set empty_set;
-                // int new_state = sets_to_state(res, &sdict, &todo, names, 0, empty_set, new_set);
-                // std::cout << new_state << std::endl;
-
-                // // Now add the cut transition to all states that contain edge.src
-                // for (unsigned s = 0; s < pm.map_.size(); ++s) {
-                //   const power_state* current_states = &pm.states_of(s);
-                //   if (current_states->count(edge.src)) {
-                //     std::cout << "Adding " << s << "->" << new_state << std::endl;
-                //     res->new_edge(s, new_state, edge.cond);
-                //   }
-                //
-                // }
-              }
-            }
-            //
-            // std::cout << std::endl;
-            // std::cout << "Result automaton:" << std::endl;
-            // spot::print_hoa(std::cout, res);
-            // std::cout << std::endl;
-            //
-            names = new std::vector<std::string>();
+            std::cout << "Result automaton produced by class bp_twa:" << std::endl;
+            spot::print_hoa(std::cout, res_bp.res_aut());
+            std::cout << std::endl << std::endl << std::endl;
 
             // Keeps a dictionary giving us a relationship between pairs of sets of states and states in the result automata.
             powerset_state_dictionary powerset_sdict;
@@ -994,13 +951,16 @@ bool jump_condition(spot::const_twa_graph_ptr aut, spot::twa_graph::edge_storage
   );
 }
 
-void get_powerset_names(aut_ptr aut, state_names* names, spot::power_map pm)
+state_names set_powerset_names(aut_ptr aut, spot::power_map pm)
 {
+  auto result = state_names (new std::vector<std::string>);
   power_state state;
   for (unsigned src_num = 0; src_num < aut->num_states(); ++src_num) {
     state = pm.states_of(src_num);
-    names->emplace_back(powerset_name(state));
+    result->emplace_back(powerset_name(state));
   }
+  aut->set_named_prop("state-names", result);
+  return result;
 }
 
 std::string powerset_name(power_state state)
@@ -1014,4 +974,43 @@ std::string powerset_name(power_state state)
   ss << "}";
 
   return ss.str();
+}
+
+
+/// bp_twa
+const_aut_ptr
+bp_twa::src_aut() {
+  return src_;
+}
+
+aut_ptr
+bp_twa::res_aut() {
+  return res_;
+}
+
+void
+bp_twa::create_cut_transitions() {
+  todo_list todo;
+  for (auto& edge : src_->edges())
+  {
+    if (jump_condition(src_, edge))
+    {
+      // create the target state
+      state_set new_set{edge.dst};
+      state_set empty_set;
+      int new_state = sets_to_state(res_, sdict_, &todo, names_, 0, empty_set, new_set);
+
+      if (cut_det_) {
+        // Now add the cut transition to all states that contain edge.src
+        for (unsigned s = 0; s < pm_.map_.size(); ++s) {
+          const power_state* current_states = &pm_.states_of(s);
+          if (current_states->count(edge.src)) {
+            res_->new_edge(s, new_state, edge.cond);
+          }
+        }
+      } else {
+        res_->new_edge(edge.src, new_state, edge.cond);
+      }
+    }
+  }
 }
