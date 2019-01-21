@@ -8,3 +8,6 @@ lcr-*
 owl-*
 *.o
 seminator
+
+# RStudio and R tmp files
+data/.R*

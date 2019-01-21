@@ -18,7 +18,7 @@
 CC=gcc
 CXX=g++
 RM=rm -f
-CPPFLAGS=-std=c++14 -g -I/usr/local/include
+CPPFLAGS=-std=c++14 -g -I/usr/local/include -I.
 LDFLAGS=-std=c++14 -g -lstdc++
 LDLIBS=-L/usr/local/lib -lspot -lbddx
 
@@ -31,7 +31,7 @@ seminator: $(OBJS) ; $(CXX) $(LDFLAGS) -o seminator $(OBJS) $(LDLIBS)
 
 seminator.o: seminator.cpp
 
-clean: ; $(RM) $(OBJS)
+clean: ; $(RM) $(OBJS) seminator.hpp.gch
 
 distclean: clean ; $(RM) seminator
 
