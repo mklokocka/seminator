@@ -149,14 +149,6 @@ bool jump_condition(const_aut_ptr, spot_edge);
 */
 std::string powerset_name(power_state);
 
-/**
-* Sets the names of the automaton `aut` build by the `tgba_powerset`
-*
-* @param aut The result of `spot::tgba_powerset`
-* @param pm power_map filled by `spot::tgba_powerset`
-*/
-state_names set_powerset_names(aut_ptr, spot::power_map);
-
 // Simple and PowerSet in 1st component,
 // BreakPoint and PowerSet in 2nd component
 enum class State_type {SIMPLE1,PS1,BP2,PS2};
@@ -170,18 +162,17 @@ class bp_twa {
     pm_(spot::power_map()) {
       if (cut_det) {
         res_ = spot::tgba_powerset(src_, pm_);
-        names_ = set_powerset_names(res_, pm_);
+        set_powerset_names();
 
         std::cout << "After powerset:" << std::endl;
         spot::print_hoa(std::cout, res_);
         std::cout << std::endl;
         std::cout << std::endl;
-
-        create_cut_transitions();
       } else {
         res_ = spot::make_twa_graph(src_->get_dict());
         // TODO copy_buchi
       }
+      create_cut_transitions();
     }
 
     const_aut_ptr src_aut();
@@ -193,9 +184,17 @@ class bp_twa {
     const_aut_ptr src_;
     aut_ptr res_;
     state_dictionary * sdict_;
-    state_names names_;
+    state_names names_ = new std::vector<std::string>;
     bool cut_det_;
     spot::power_map pm_;
+
+    /**
+    * Sets the names of the automaton `aut` build by the `tgba_powerset`
+    *
+    * @param aut The result of `spot::tgba_powerset`
+    * @param pm power_map filled by `spot::tgba_powerset`
+    */
+    void set_powerset_names();
 
 };
 

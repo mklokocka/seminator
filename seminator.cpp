@@ -951,18 +951,6 @@ bool jump_condition(spot::const_twa_graph_ptr aut, spot::twa_graph::edge_storage
   );
 }
 
-state_names set_powerset_names(aut_ptr aut, spot::power_map pm)
-{
-  auto result = state_names (new std::vector<std::string>);
-  power_state state;
-  for (unsigned src_num = 0; src_num < aut->num_states(); ++src_num) {
-    state = pm.states_of(src_num);
-    result->emplace_back(powerset_name(state));
-  }
-  aut->set_named_prop("state-names", result);
-  return result;
-}
-
 std::string powerset_name(power_state state)
 {
   std::stringstream ss;
@@ -1013,4 +1001,15 @@ bp_twa::create_cut_transitions() {
       }
     }
   }
+}
+
+void
+bp_twa::set_powerset_names()
+{
+  power_state state;
+  for (unsigned src_num = 0; src_num < res_->num_states(); ++src_num) {
+    state = pm_.states_of(src_num);
+    names_->emplace_back(powerset_name(state));
+  }
+  res_->set_named_prop("state-names", names_);
 }
