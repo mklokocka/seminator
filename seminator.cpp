@@ -979,8 +979,43 @@ bp_twa::res_aut() {
   return res_;
 }
 
+state_names
+bp_twa::names() {
+  return names_;
+}
+
+unsigned
+bp_twa::add_cut_transition(unsigned from, unsigned to, bdd cond) {
+  auto edge = res_->new_edge(from, to, cond);
+  cut_trans_.emplace_back(edge);
+  return edge;
+}
+
+unsigned
+bp_twa::bp_state(breakpoint_state values) {
+  unsigned result;
+  if (sdict_->count(values) == 0) {
+    // create a new state
+    result = res_->new_state();
+    (*sdict_)[values] = result;
+    //TODO add to bp2 states
+
+    // Assign the proper name of the form P, Q, k
+    state_set p = std::get<1>(values);
+    state_set q = std::get<2>(values);
+    int level   = std::get<0>(values);
+    std::stringstream name;
+    name << powerset_name(p) << " , " << powerset_name(q) << " , " << level;
+    names_->emplace_back(name.str());
+  }  else {
+    // return the existing one
+    result = sdict_->at(values);
+  }
+  return result;
+}
+
 void
-bp_twa::create_cut_transitions() {
+bp_twa::create_all_cut_transitions() {
   todo_list todo;
   for (auto& edge : src_->edges())
   {
@@ -988,19 +1023,20 @@ bp_twa::create_cut_transitions() {
     {
       // create the target state
       state_set new_set{edge.dst};
-      state_set empty_set;
-      int new_state = sets_to_state(res_, sdict_, &todo, names_, 0, empty_set, new_set);
+      // (level, P=new_set, Q=∅)
+      breakpoint_state dest(0, new_set, empty_set);
+      int target_state = bp_state(dest);
 
       if (cut_det_) {
-        // Now add the cut transition to all states that contain edge.src
+        // in cDBA, add cut-edge from each state that contains edge.src
         for (unsigned s = 0; s < pm_.map_.size(); ++s) {
           const power_state* current_states = &pm_.states_of(s);
           if (current_states->count(edge.src)) {
-            res_->new_edge(s, new_state, edge.cond);
+            add_cut_transition(s, target_state, edge.cond);
           }
         }
-      } else {
-        res_->new_edge(edge.src, new_state, edge.cond);
+      } else {// in sDBA add (s, cond, dest)
+        add_cut_transition(edge.src, target_state, edge.cond);
       }
     }
   }

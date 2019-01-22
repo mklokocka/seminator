@@ -173,13 +173,46 @@ class bp_twa {
         res_ = spot::make_twa_graph(src_->get_dict());
         // TODO copy_buchi
       }
-      create_cut_transitions();
+      create_all_cut_transitions();
     }
 
     const_aut_ptr src_aut();
     aut_ptr res_aut();
+    state_names names();
 
-    void create_cut_transitions();
+    /**
+    * \brief Returns state for given value.
+    *
+    * In case such breakpoint_state does not exists, creates one.
+    *
+    * @param[in] bp_state (breakpoint_state = <level, state, state>)
+    *                                           int , unsigned....
+    * returns    state (unsigned)
+    */
+    unsigned bp_state(breakpoint_state);
+
+    /**
+    * \brief Creates cut transitions after the first component was build.
+    *
+    * Iterates over the edges of the original automaton and if
+    * `jump-condition()` is `true` it iterates over the states of the
+    * sd-automaton (res_) and add a corresponding cut-transitions to those
+    * that qualify:
+    *   - for edge.src                      for sDBA
+    *   - for states that include edge.src  for cDBA
+    */
+    void create_all_cut_transitions();
+
+    /**
+    * \brief Create new cut transition and store it in `cut_trans`
+    *
+    * @param[in] from (unsigned[state]) State in 1st component
+    * @param[in] to (unsigned[state])   State in 2nd component
+    * @param[in] cond (bdd)             Label of the cut-transition
+    *
+    * @return    (unsigned) the index of newly created edge in res_aut
+    */
+    unsigned add_cut_transition(unsigned, unsigned, bdd);
 
   private:
     const_aut_ptr src_;
@@ -188,6 +221,7 @@ class bp_twa {
     state_names names_ = new std::vector<std::string>;
     bool cut_det_;
     spot::power_map pm_;
+    std::vector<unsigned> cut_trans_ = std::vector<unsigned>();
 
     /**
     * Sets the names of the automaton `aut` build by the `tgba_powerset`
