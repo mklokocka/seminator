@@ -23,15 +23,18 @@ LDFLAGS=-std=c++14 -g -lstdc++
 LDLIBS=-L/usr/local/lib -lspot -lbddx
 
 SRCS=seminator.cpp
+HEADERS=$(SRCS:.cpp=.hpp) types.hpp
 OBJS=$(SRCS:.cpp=.o)
 
 all: seminator
 
-seminator: $(OBJS) ; $(CXX) $(LDFLAGS) -o seminator $(OBJS) $(LDLIBS)
+seminator: $(OBJS) $(HEADERS)
+	$(CXX) $(LDFLAGS) -o seminator $(OBJS) $(LDLIBS)
 
-seminator.o: seminator.cpp
+%.o: %.cpp %.hpp
+	$(CXX) $(CPPFLAGS) -o $@ -c $<
 
-clean: ; $(RM) $(OBJS) seminator.hpp.gch
+clean: ; $(RM) $(OBJS)
 
 distclean: clean ; $(RM) seminator
 

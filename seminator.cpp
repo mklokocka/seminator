@@ -996,7 +996,9 @@ bp_twa::bp_state(breakpoint_state values) {
   unsigned result;
   if (sdict_->count(values) == 0) {
     // create a new state
+    assert(bpdict_->size() == res_->num_states());
     result = res_->new_state();
+    bpdict_->emplace_back(values);
     (*sdict_)[values] = result;
     //TODO add to bp2 states
 
@@ -1046,7 +1048,7 @@ void
 bp_twa::set_powerset_names()
 {
   power_state state;
-  for (unsigned src_num = 0; src_num < res_->num_states(); ++src_num) {
+  for (state_t src_num = 0; src_num < res_->num_states(); ++src_num) {
     state = pm_.states_of(src_num);
     names_->emplace_back(powerset_name(state));
   }
