@@ -37,6 +37,7 @@ static const std::string VERSION_TAG = "v1.2.0dev";
 static const unsigned TGBA = 0;
 static const unsigned TBA = 1;
 static const unsigned BA = 2;
+
 bool jump_enter = false;
 bool jump_always = false;
 
@@ -58,7 +59,7 @@ typedef std::vector<std::string>* state_names;
 typedef std::vector<unsigned> state_vect;
 typedef spot::twa_graph::edge_storage_t spot_edge;
 
-
+static const state_set empty_set;
 
 
 /**
@@ -192,7 +193,7 @@ class bp_twa {
     * Sets the names of the automaton `aut` build by the `tgba_powerset`
     *
     * @param aut The result of `spot::tgba_powerset`
-    * @param pm power_map filled by `spot::tgba_powerset`
+    * @param pm  Power_map filled by `spot::tgba_powerset`
     */
     void set_powerset_names();
 

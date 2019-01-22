@@ -953,6 +953,9 @@ bool jump_condition(spot::const_twa_graph_ptr aut, spot::twa_graph::edge_storage
 
 std::string powerset_name(power_state state)
 {
+  if (state.size() == 0)
+    return "∅";
+
   std::stringstream ss;
   ss << "{";
   for (auto state: state)
