@@ -15,17 +15,16 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#include <iostream>
 #include <utility>
 
 #include <stdexcept>
 #include <unistd.h>
 
+#include <powerset.hpp>
 #include <types.hpp>
 
 #include <spot/misc/bddlt.hh>
 #include <spot/twaalgos/sccinfo.hh>
-#include <spot/twaalgos/hoa.hh>
 
 static const std::string VERSION_TAG = "v1.2.0dev";
 
@@ -134,11 +133,6 @@ bool is_cut_deterministic(const spot::twa_graph_ptr& aut, std::set<unsigned>* no
 */
 bool jump_condition(const_aut_ptr, spot_edge);
 
-/**
-* Returns a string in the form `{s1, s2, s3}` where si is a reference to the input_aut
-*/
-std::string powerset_name(power_state);
-
 // Simple and PowerSet in 1st component,
 // BreakPoint and PowerSet in 2nd component
 enum class State_type {SIMPLE1,PS1,BP2,PS2};
@@ -151,6 +145,7 @@ class bp_twa {
     cut_det_(cut_det),
     pm_(spot::power_map()),
     h_(src_->num_sets() - 1),
+    psb_(new powerset_builder(src_)) {
       if (cut_det) {
         res_ = spot::tgba_powerset(src_, pm_);
         set_powerset_names();
@@ -218,6 +213,8 @@ class bp_twa {
     spot::power_map pm_;
     std::vector<unsigned> cut_trans_ = std::vector<unsigned>();
 
+    powerset_builder* psb_;
+
     // The highest mark
     unsigned h_;
 
@@ -228,7 +225,6 @@ class bp_twa {
     * @param pm  Power_map filled by `spot::tgba_powerset`
     */
     void set_powerset_names();
-
 };
 
 

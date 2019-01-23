@@ -22,11 +22,14 @@
 #include <tuple>
 #include <map>
 #include <set>
+#include <iostream>
 #include <bddx.h>
 #include <spot/misc/bddlt.hh>
 #include <spot/twa/twa.hh>
 #include <spot/twaalgos/powerset.hh>
 #include <spot/misc/bitvect.hh>
+#include <spot/twaalgos/hoa.hh>
+#include <spot/twa/bddprint.hh>
 
 
 
