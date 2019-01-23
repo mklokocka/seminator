@@ -273,7 +273,7 @@ int main(int argc, char* argv[])
 spot::twa_graph_ptr buchi_to_semi_deterministic_buchi(spot::twa_graph_ptr& aut, bool deterministic_first_component, bool optimization, unsigned output)
 {
     // Remove dead and unreachable states and prune accepting conditions in non-accepting SCCs.
-    aut = spot::scc_filter_states(aut, true);
+    aut = spot::scc_filter(aut, true);
 
     // Get the BDD dictionary with atomic propositions used in our automata.
     const spot::bdd_dict_ptr& dict = aut->get_dict();
