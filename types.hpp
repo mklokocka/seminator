@@ -38,10 +38,10 @@ typedef std::set<state_t> state_set;
 typedef std::vector<state_t> state_vect;
 
 typedef std::tuple<int, state_set, state_set> breakpoint_state;
-typedef std::map<breakpoint_state, state_t> state_dictionary;
+typedef std::map<breakpoint_state, state_t> breakpoint_map;
+typedef std::map<state_set, state_t> power_map;
 
 typedef spot::const_twa_graph_ptr const_aut_ptr;
 typedef spot::twa_graph_ptr aut_ptr;
-typedef typename spot::power_map::power_state power_state;
 typedef std::vector<std::string>* state_names;
 typedef spot::twa_graph::edge_storage_t spot_edge;

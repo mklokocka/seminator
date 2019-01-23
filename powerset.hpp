@@ -20,7 +20,7 @@
 /**
 * Returns a string in the form `{s1, s2, s3}` where si is a reference to the input_aut
 */
-std::string powerset_name(power_state);
+std::string powerset_name(state_set);
 
 // Class that computes successors for powerset construction.
 //

@@ -322,7 +322,7 @@ spot::twa_graph_ptr buchi_to_semi_deterministic_buchi(spot::twa_graph_ptr& aut, 
     else
     {
         // Keeps a dictionary giving us a relationship between pairs of sets of states and states in the result automata.
-        state_dictionary sdict;
+        breakpoint_map sdict;
         // List of states we still need to go through.
         todo_list todo;
 
@@ -548,7 +548,7 @@ spot::twa_graph_ptr buchi_to_semi_deterministic_buchi(spot::twa_graph_ptr& aut, 
     return result;
 }
 
-void copy_buchi(spot::twa_graph_ptr aut, spot::const_twa_graph_ptr to_copy, state_dictionary* sdict, todo_list* todo, std::vector<std::string>* names)
+void copy_buchi(spot::twa_graph_ptr aut, spot::const_twa_graph_ptr to_copy, breakpoint_map* sdict, todo_list* todo, std::vector<std::string>* names)
 {
     if (aut->get_dict() != to_copy->get_dict())
     {
@@ -613,7 +613,7 @@ std::vector<bdd> edge_condition_to_minterms(bdd allap, bdd cond, std::map<bdd, s
     }
 }
 
-unsigned sets_to_state(spot::twa_graph_ptr aut, state_dictionary* sdict, todo_list* todo, std::vector<std::string>* names, int k, state_set left, state_set right)
+unsigned sets_to_state(spot::twa_graph_ptr aut, breakpoint_map* sdict, todo_list* todo, std::vector<std::string>* names, int k, state_set left, state_set right)
 {
     std::tuple<int, state_set, state_set> set_pair (k, left, right);
 
@@ -981,12 +981,12 @@ bp_twa::add_cut_transition(unsigned from, unsigned to, bdd cond) {
 unsigned
 bp_twa::bp_state(breakpoint_state values) {
   unsigned result;
-  if (sdict_->count(values) == 0) {
+  if (bp2num_->count(values) == 0) {
     // create a new state
-    assert(bpdict_->size() == res_->num_states());
+    assert(num2bp_->size() == res_->num_states());
     result = res_->new_state();
-    bpdict_->emplace_back(values);
-    (*sdict_)[values] = result;
+    num2bp_->emplace_back(values);
+    (*bp2num_)[values] = result;
     //TODO add to bp2 states
 
     // Assign the proper name of the form P, Q, k
@@ -998,7 +998,7 @@ bp_twa::bp_state(breakpoint_state values) {
     names_->emplace_back(name.str());
   }  else {
     // return the existing one
-    result = sdict_->at(values);
+    result = bp2num_->at(values);
   }
   return result;
 }
@@ -1018,8 +1018,8 @@ bp_twa::create_all_cut_transitions() {
 
       if (cut_det_) {
         // in cDBA, add cut-edge from each state that contains edge.src
-        for (unsigned s = 0; s < pm_.map_.size(); ++s) {
-          const power_state* current_states = &pm_.states_of(s);
+        for (unsigned s = 0; s < ps2num_->size(); ++s) {
+          state_set * current_states = &(num2ps_->at(s));
           if (current_states->count(edge.src)) {
             add_cut_transition(s, target_state, edge.cond);
           }
@@ -1034,10 +1034,71 @@ bp_twa::create_all_cut_transitions() {
 void
 bp_twa::set_powerset_names()
 {
-  power_state state;
+  state_set state;
   for (state_t src_num = 0; src_num < res_->num_states(); ++src_num) {
     state = pm_.states_of(src_num);
     names_->emplace_back(powerset_name(state));
   }
   res_->set_named_prop("state-names", names_);
+}
+
+void
+bp_twa::create_first_component()
+{
+  res_ = spot::make_twa_graph(src_->get_dict());
+  res_->copy_ap_of(src_);
+  if (cut_det_) {
+    // Set the initial state
+    state_t num = res_->new_state();
+    res_->set_init_state(num);
+    state_t init_num = src_->get_init_state_number();
+    state_set ps{init_num};
+    (*ps2num_)[ps] = num;
+    num2ps_->emplace_back(ps);
+    names_->emplace_back(powerset_name(ps));
+
+    // Creates a new state if needed
+    auto get_state = [&](state_set ps) {
+      if (ps2num_->count(ps) == 0) {
+        // create a new state
+        assert(num2ps_->size() == res_->num_states());
+        num2ps_->emplace_back(ps);
+        auto state = res_->new_state();
+        (*ps2num_)[ps] = state;
+        //TODO add to bp1 states
+
+        names_->emplace_back(powerset_name(ps));
+        return state;
+      } else
+        return ps2num_->at(ps);
+    };
+
+    // Build the transitions
+    for (state_t src = 0; src < res_->num_states(); ++src)
+    {
+      auto ps = num2ps_->at(src);
+      auto succs = psb_->get_succs(ps);
+      for(size_t c = 0; c < psb_->nc_; ++c) {
+        auto cond = psb_->num2bdd_[c];
+        auto d_ps = succs->at(c);
+        // Skip transitions to ∅
+        if (d_ps == empty_set)
+          continue;
+        auto dst = get_state(d_ps);
+        res_->new_edge(src, dst, cond);
+      }
+    }
+    res_->merge_edges();
+
+    res_->set_named_prop("state-names", names_);
+
+    // TO REMOVE
+    std::cout << "After powerset:" << std::endl;
+    spot::print_hoa(std::cout, res_);
+    std::cout << std::endl;
+    std::cout << std::endl;
+  } else {
+    res_ = spot::make_twa_graph(src_->get_dict());
+    // TODO copy_buchi
+  }
 }

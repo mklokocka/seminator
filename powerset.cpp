@@ -10,7 +10,7 @@ static state_set bv_to_ps(const spot::bitvect* in)
   return ss;
 }
 
-std::string powerset_name(power_state state)
+std::string powerset_name(state_set state)
 {
   if (state.size() == 0)
     return "∅";

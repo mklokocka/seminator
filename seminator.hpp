@@ -67,7 +67,7 @@ spot::twa_graph_ptr buchi_to_semi_deterministic_buchi(spot::twa_graph_ptr& aut, 
  * @param[in, out] todo     Todo for generating the second component.
  * @param[out] names        Names of the states for printing purposes.
  */
-void copy_buchi(spot::twa_graph_ptr aut, spot::const_twa_graph_ptr to_copy, state_dictionary* sdict, todo_list* todo, std::vector<std::string>* names);
+void copy_buchi(spot::twa_graph_ptr aut, spot::const_twa_graph_ptr to_copy, breakpoint_map* sdict, todo_list* todo, std::vector<std::string>* names);
 
 /**
  * Helper function to convert an edge condition to a vector of all the different minterms.
@@ -90,7 +90,7 @@ std::vector<bdd> edge_condition_to_minterms(bdd allap, bdd cond, std::map<bdd, s
  * @param[in]     right Right set of states.
  * @return Returns a number of the state that either already existed or was created a new representing the pair of sets of states from the old automata.
  */
-unsigned sets_to_state(spot::twa_graph_ptr aut, state_dictionary* sdict, todo_list* todo, std::vector<std::string>* names, int k, state_set left, state_set right);
+unsigned sets_to_state(spot::twa_graph_ptr aut, breakpoint_map* sdict, todo_list* todo, std::vector<std::string>* names, int k, state_set left, state_set right);
 
 /**
  * Helper function that pairs a set of states an already existing (or new, in the case it does not exist) state in the powerset construction of an automata.
@@ -140,31 +140,32 @@ enum class State_type {SIMPLE1,PS1,BP2,PS2};
 class bp_twa {
   public:
     bp_twa(const_aut_ptr src_aut, bool cut_det) :
-    src_(src_aut),
-    sdict_(new state_dictionary()),
-    cut_det_(cut_det),
-    pm_(spot::power_map()),
-    h_(src_->num_sets() - 1),
+    src_(src_aut), cut_det_(cut_det),
     psb_(new powerset_builder(src_)) {
-      if (cut_det) {
-        res_ = spot::tgba_powerset(src_, pm_);
-        set_powerset_names();
+      create_first_component();
 
-        std::cout << "After powerset:" << std::endl;
-        spot::print_hoa(std::cout, res_);
-        std::cout << std::endl;
-        std::cout << std::endl;
-      } else {
-        res_ = spot::make_twa_graph(src_->get_dict());
-        // TODO copy_buchi
-      }
-
-      bpdict_ = new std::vector<breakpoint_state>;
-      bpdict_->resize(res_->num_states());
+      // Resize the num2bp_ for new states to be at appropriete indices.
+      num2bp_->resize(res_->num_states());
 
       create_all_cut_transitions();
+
+      // TO REMOVE
+      // breakpoint_state bs = num2bp_->at(4);
+      // auto succs = psb_->get_succs(std::get<1>(bs));
+      // // For each condition: print succ
+      // for(size_t c = 0; c < psb_->nc_; ++c) {
+      //   auto cond = psb_->num2bdd_[c];
+      //   std::cout << "\nFor ";
+      //   spot::bdd_print_formula(std::cout, res_->get_dict(), cond);
+      //   auto name = powerset_name(succs->at(c));
+      //   std::cout << " go to " << name;
+      // }
+      // std::cout.flush();
+      // psb_->get_succs(std::get<1>(bs), 0);
+
     }
 
+    // Getters
     const_aut_ptr src_aut();
     aut_ptr res_aut();
     state_names names();
@@ -201,22 +202,34 @@ class bp_twa {
     *
     * @return    (unsigned) the index of newly created edge in res_aut
     */
-    unsigned add_cut_transition(unsigned, unsigned, bdd);
+    unsigned add_cut_transition(state_t, state_t, bdd);
 
   private:
+    bool cut_det_; // true if cut-determinism is requested
+
+    // input and result automata
     const_aut_ptr src_;
     aut_ptr res_;
-    state_dictionary * sdict_;
-    std::vector<breakpoint_state> * bpdict_;
+
+    // mapping between states of 1st comp. of res_ and their content for cut-det
+    power_map * ps2num_ = new power_map;
+    std::vector<state_set> * num2ps_ = new std::vector<state_set>;
+
+    // mapping between states of 2nd comp. of res_ and their content
+    breakpoint_map * bp2num_ = new breakpoint_map;               // bp_state -> state_t
+    std::vector<breakpoint_state> * num2bp_ = new std::vector<breakpoint_state>;  // state_t  -> bp_state
+
+    // names of res automata states
     state_names names_ = new std::vector<std::string>;
-    bool cut_det_;
-    spot::power_map pm_;
+
+    // pointers to cut-edges (can be changed after merge_edges() is called)
     std::vector<unsigned> cut_trans_ = std::vector<unsigned>();
 
-    powerset_builder* psb_;
+    // needed for determinization in case of cut-det is requester
+    spot::power_map pm_ = spot::power_map();
 
-    // The highest mark
-    unsigned h_;
+    // Builder of powerset successors
+    powerset_builder* psb_;
 
     /**
     * Sets the names of the automaton `aut` build by the `tgba_powerset`
@@ -225,6 +238,9 @@ class bp_twa {
     * @param pm  Power_map filled by `spot::tgba_powerset`
     */
     void set_powerset_names();
+
+    // Creates res_ and its 1st component
+    void create_first_component();
 };
 
 
