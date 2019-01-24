@@ -133,6 +133,12 @@ bool is_cut_deterministic(const spot::twa_graph_ptr& aut, std::set<unsigned>* no
 */
 bool jump_condition(const_aut_ptr, spot_edge);
 
+/*
+* Gives the name for a breakpoint state of the form: level, P, Q
+* Example:  0, {p1, p2}, {q1, 12}
+*/
+std::string bp_name(breakpoint_state);
+
 // Simple and PowerSet in 1st component,
 // BreakPoint and PowerSet in 2nd component
 enum class State_type {SIMPLE1,PS1,BP2,PS2};

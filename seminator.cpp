@@ -955,6 +955,15 @@ bool jump_condition(spot::const_twa_graph_ptr aut, spot::twa_graph::edge_storage
   );
 }
 
+std::string bp_name(breakpoint_state bps) {
+  state_set p = std::get<Bp::P>(bps);
+  state_set q = std::get<Bp::Q>(bps);
+  int level   = std::get<Bp::LEVEL>(bps);
+  std::stringstream name;
+  name << powerset_name(p) << " , " << powerset_name(q) << " , " << level;
+  return name.str();
+}
+
 /// bp_twa
 const_aut_ptr
 bp_twa::src_aut() {
@@ -979,26 +988,21 @@ bp_twa::add_cut_transition(unsigned from, unsigned to, bdd cond) {
 }
 
 unsigned
-bp_twa::bp_state(breakpoint_state values) {
+bp_twa::bp_state(breakpoint_state bps) {
   unsigned result;
-  if (bp2num_->count(values) == 0) {
+  if (bp2num_->count(bps) == 0) {
     // create a new state
     assert(num2bp_->size() == res_->num_states());
     result = res_->new_state();
-    num2bp_->emplace_back(values);
-    (*bp2num_)[values] = result;
+    num2bp_->emplace_back(bps);
+    (*bp2num_)[bps] = result;
     //TODO add to bp2 states
 
-    // Assign the proper name of the form P, Q, k
-    state_set p = std::get<Bp::P>(values);
-    state_set q = std::get<Bp::Q>(values);
-    int level   = std::get<Bp::LEVEL>(values);
-    std::stringstream name;
-    name << powerset_name(p) << " , " << powerset_name(q) << " , " << level;
-    names_->emplace_back(name.str());
+    auto name = bp_name(bps);
+    names_->emplace_back(name);
   }  else {
     // return the existing one
-    result = bp2num_->at(values);
+    result = bp2num_->at(bps);
   }
   return result;
 }
