@@ -24,16 +24,20 @@ std::string powerset_name(state_set);
 
 // Class that computes successors for powerset construction.
 //
-// The main function is get_succs(state_set ss, mark) which returns a vector
-// `succ` of size `nc` of state_sets, where `nc` is the number of possible
-// combinations of atomic propositions. `succ[ci]` are successors of ss under
-// the `ci`-th combination of AP. The mapping to the condition can be done
+// The main function is get_succs(state_set ss, single_scc, mark) which returns
+// a vector `succ` of size `nc` of state_sets, where `nc` is the number of
+// possible combinations of atomic propositions. `succ[ci]` are successors of ss
+// under the `ci`-th combination of AP. The mapping to the condition can be done
 // using num2bdd_ vector. In powerset construction, there should be edge:
 // `ss --num2bdd_[ci]--> get_succs(ss)->at(ci)` for each `ci`.
 //
 // The mark, if supplied, limits the successors using only transitions marked by
 // mark. If mark is higher than the highest mark (or not supplied), no
 // restriction is applied.
+//
+// If single_scc is true, the function restrict the successors that they share
+// the same SCC with the input state_set. There is also a check that the input
+// state_set is a subset of a single SCC.
 //
 // Uses bitvector arrays to store already computed successors of the states
 // from the input automaton.
@@ -47,7 +51,8 @@ public:
   powerset_builder(const_aut_ptr src) :
   src_(src),
   ns_(src_->num_states()),
-  nap_(src_->ap().size())
+  nap_(src_->ap().size()),
+  si_(spot::scc_info(src))
   {
     if ((-1UL / ns_) >> nap_ == 0)
       throw std::runtime_error("too many atomic propositions (or states)");
@@ -81,23 +86,26 @@ public:
   std::map<bdd, unsigned, spot::bdd_less_than> bdd2num_;
 
   // Returns successors of the input state_set under given mark. If the mark
-  // is >= src_->num_sets(), no restriction happens.
+  // is >= src_->num_sets(), no restriction happens. Use successors from the
+  // same SCC if requested (expects state_set to be subset of one SCC).
   //
   // Returns:
   // 0: successors of state_set under num2bdd_[0]-transtions marked by mark
   // 1: successors of state_set under num2bdd_[1]-transtions marked by mark
   //   ...  ...  ... ... ... ... ... ... ... ...
   // nc_-1: successors of state_set under num2bdd_[nc-1]-transtions marked by mark
-  std::vector<state_set> * get_succs(state_set, unsigned mark);
+  //
+  std::vector<state_set> * get_succs(state_set ss, bool single_scc, unsigned mark);
   // By default do not restrict to marks == use h+1
-  std::vector<state_set> * get_succs(state_set ss) {
-    return get_succs(ss, src_->num_sets());
+  std::vector<state_set> * get_succs(state_set ss, bool single_scc) {
+    return get_succs(ss, single_scc, src_->num_sets());
   }
 
 private:
   const_aut_ptr src_; // input automaton
-  unsigned ns_; // number of states of input automaton
-  unsigned nap_; // number of atomic propositions
+  unsigned ns_;       // number of states of input automaton
+  unsigned nap_;      // number of atomic propositions
+  spot::scc_info si_; // information about SCCs
 
   // The storage for precomputed powerset successors of states of `src_`.
   // We have a vector of size src_->num_of_acc_sets()+1 = `h+2`.

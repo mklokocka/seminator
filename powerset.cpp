@@ -10,6 +10,19 @@ static state_set bv_to_ps(const spot::bitvect* in)
   return ss;
 }
 
+static state_set bv_to_ps(const spot::bitvect* in, spot::scc_info * si, unsigned scc)
+{
+  state_set ss;
+  unsigned ns = in->size();
+  for (unsigned pos = 0; pos < ns; ++pos)
+    if (in->get(pos)) {
+      if (si->scc_of(pos) != scc)
+        continue;
+      ss.insert(pos);
+    }
+  return ss;
+}
+
 std::string powerset_name(state_set state)
 {
   if (state.size() == 0)
@@ -27,7 +40,20 @@ std::string powerset_name(state_set state)
 }
 
 std::vector<state_set> *
-powerset_builder::get_succs(state_set ss, unsigned mark) {
+powerset_builder::get_succs(state_set ss, bool single_scc, unsigned mark) {
+  if (ss == empty_set)
+    return new std::vector<state_set>(nc_, empty_set);
+
+  unsigned scc;
+
+  if (single_scc)
+  {
+    scc = si_.scc_of(*ss.begin());
+    for (auto s : ss)
+      if (si_.scc_of(s) != scc)
+        throw std::runtime_error("States of input set are from different SCCs");
+  }
+
   auto sm = pw_storage->at(mark);
 
   // outgoing map
@@ -48,7 +74,11 @@ powerset_builder::get_succs(state_set ss, unsigned mark) {
   // Convert bitvector for each condition into a set
   for (unsigned c = 0; c < nc_; ++c)
   {
-    auto ps = bv_to_ps(&om->at(c));
+    state_set ps;
+    if (single_scc) {
+      ps = bv_to_ps(&om->at(c), &si_, scc);
+    } else
+      ps = bv_to_ps(&om->at(c));
     result->emplace_back(std::move(ps));
   }
   return result;

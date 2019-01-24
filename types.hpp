@@ -30,6 +30,7 @@
 #include <spot/misc/bitvect.hh>
 #include <spot/twaalgos/hoa.hh>
 #include <spot/twa/bddprint.hh>
+#include <spot/twaalgos/sccinfo.hh>
 
 
 
@@ -49,3 +50,6 @@ typedef spot::const_twa_graph_ptr const_aut_ptr;
 typedef spot::twa_graph_ptr aut_ptr;
 typedef std::vector<std::string>* state_names;
 typedef spot::twa_graph::edge_storage_t spot_edge;
+
+
+static const state_set empty_set;

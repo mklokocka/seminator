@@ -1081,7 +1081,7 @@ bp_twa::create_first_component()
     for (state_t src = 0; src < res_->num_states(); ++src)
     {
       auto ps = num2ps_->at(src);
-      auto succs = psb_->get_succs(ps);
+      auto succs = psb_->get_succs(ps, false);
       for(size_t c = 0; c < psb_->nc_; ++c) {
         auto cond = psb_->num2bdd_[c];
         auto d_ps = succs->at(c);

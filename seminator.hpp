@@ -24,15 +24,13 @@
 #include <types.hpp>
 
 #include <spot/misc/bddlt.hh>
-#include <spot/twaalgos/sccinfo.hh>
+
 
 static const std::string VERSION_TAG = "v1.2.0dev";
 
 static const unsigned TGBA = 0;
 static const unsigned TBA = 1;
 static const unsigned BA = 2;
-
-static const state_set empty_set;
 
 bool jump_enter = false;
 bool jump_always = false;
