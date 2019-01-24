@@ -77,8 +77,9 @@ powerset_builder::get_succs(state_set ss, bool single_scc, unsigned mark) {
     state_set ps;
     if (single_scc) {
       ps = bv_to_ps(&om->at(c), &si_, scc);
-    } else
+    } else {
       ps = bv_to_ps(&om->at(c));
+    }
     result->emplace_back(std::move(ps));
   }
   return result;

@@ -147,11 +147,31 @@ class bp_twa {
     src_(src_aut), cut_det_(cut_det),
     psb_(new powerset_builder(src_)) {
       create_first_component();
+      res_->set_buchi();
 
+      const auto first_comp_size = res_->num_states();
       // Resize the num2bp_ for new states to be at appropriete indices.
-      num2bp_->resize(res_->num_states());
+      num2bp_->resize(first_comp_size);
+      assert(names_->size() == first_comp_size);
+
+      // TO REMOVE
+      std::cout << "After powerset:" << std::endl;
+      spot::print_hoa(std::cout, res_);
+      std::cout << std::endl;
+      std::cout << std::endl;
 
       create_all_cut_transitions();
+
+      // TO REMOVE
+      std::cout << "After cut:" << std::endl;
+      spot::print_hoa(std::cout, res_);
+      std::cout << std::endl;
+      std::cout << std::endl;
+
+
+      finish_second_component(first_comp_size);
+
+      res_->merge_edges();
 
       // TO REMOVE
       // breakpoint_state bs = num2bp_->at(4);
@@ -245,6 +265,8 @@ class bp_twa {
 
     // Creates res_ and its 1st component
     void create_first_component();
+
+    void finish_second_component(state_t);
 };
 
 

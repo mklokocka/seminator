@@ -1095,14 +1095,55 @@ bp_twa::create_first_component()
     res_->merge_edges();
 
     res_->set_named_prop("state-names", names_);
-
-    // TO REMOVE
-    std::cout << "After powerset:" << std::endl;
-    spot::print_hoa(std::cout, res_);
-    std::cout << std::endl;
-    std::cout << std::endl;
   } else {
     res_ = spot::make_twa_graph(src_->get_dict());
     // TODO copy_buchi
+  }
+}
+
+void
+bp_twa::finish_second_component(state_t start) {
+  for (state_t src = start; src < res_->num_states(); ++src)
+  {
+    auto bps = num2bp_->at(src);
+    state_set p = std::get<Bp::P>(bps);
+    state_set q = std::get<Bp::Q>(bps);
+    int k       = std::get<Bp::LEVEL>(bps);
+
+    //TODO true -> scc_optim
+    auto p_succs   = psb_->get_succs(p, true);
+    auto q_succs   = psb_->get_succs(q, true);
+    auto p_k_succs = psb_->get_succs(p, true, k); // go to Q
+
+    for(size_t c = 0; c < psb_->nc_; ++c) {
+      auto p2   = p_succs->at(c);
+      auto q2   = q_succs->at(c);
+      auto p2_k = p_k_succs->at(c); // go to Q
+      q2.insert(p2_k.begin(),p2_k.end());
+      // Skip transitions to ∅
+      if (p2 == empty_set)
+        continue;
+
+      auto k2 = k;
+      // Check p == q
+      auto acc = spot::acc_cond::mark_t();
+      if (p2 == q2) {
+        k2 = (k + 1) % src_->num_sets();
+        acc = {0};
+        // Take the k2-succs of p
+        q2 = psb_->get_succs(p, true, k2)->at(c);
+        if (p2 == q2)
+          q2 = empty_set;
+      }
+      // Construct the breakpoint_state. We use get just to be error-prone
+      breakpoint_state bpd;
+      std::get<Bp::LEVEL>(bpd) = k2;
+      std::get<Bp::P>    (bpd) = p2;
+      std::get<Bp::Q>    (bpd) = q2;
+
+      auto dst = bp_state(bpd);
+      auto cond = psb_->num2bdd_[c];
+      res_->new_edge(src, dst, cond, acc);
+    }
   }
 }
