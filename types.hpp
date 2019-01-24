@@ -35,9 +35,13 @@
 
 typedef unsigned state_t;
 typedef std::set<state_t> state_set;
-typedef std::vector<state_t> state_vect;
-
+// TODO: change to class/struct
 typedef std::tuple<int, state_set, state_set> breakpoint_state;
+struct Bp{enum size_t {LEVEL = 0, P = 1, Q = 2};};
+
+
+
+typedef std::vector<state_t> state_vect;
 typedef std::map<breakpoint_state, state_t> breakpoint_map;
 typedef std::map<state_set, state_t> power_map;
 

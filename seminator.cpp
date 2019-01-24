@@ -990,9 +990,9 @@ bp_twa::bp_state(breakpoint_state values) {
     //TODO add to bp2 states
 
     // Assign the proper name of the form P, Q, k
-    state_set p = std::get<1>(values);
-    state_set q = std::get<2>(values);
-    int level   = std::get<0>(values);
+    state_set p = std::get<Bp::P>(values);
+    state_set q = std::get<Bp::Q>(values);
+    int level   = std::get<Bp::LEVEL>(values);
     std::stringstream name;
     name << powerset_name(p) << " , " << powerset_name(q) << " , " << level;
     names_->emplace_back(name.str());
