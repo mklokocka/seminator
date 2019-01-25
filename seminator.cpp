@@ -295,19 +295,19 @@ spot::twa_graph_ptr buchi_to_semi_deterministic_buchi(spot::twa_graph_ptr& aut, 
     {
       if (deterministic_first_component)
       {
-        std::set<unsigned> non_det_states;
-        if (is_cut_deterministic(aut, &non_det_states))
+        auto non_det_states = new state_set;
+        if (is_cut_deterministic(aut, non_det_states))
           result = aut;
         else
-          determinize_first_component(result, aut, non_det_states);
+          result = determinize_first_component(aut, non_det_states);
       }
       else
         result = aut;
     }
     else
     {   // Use the breakpoint construction
-        bp_twa res_bp(aut, deterministic_first_component, jump_condition);
-        result = res_bp.res_aut();
+        bp_twa resbp(aut, deterministic_first_component, jump_condition);
+        result = resbp.res_aut();
     }
 
     // Optimization
@@ -318,7 +318,8 @@ spot::twa_graph_ptr buchi_to_semi_deterministic_buchi(spot::twa_graph_ptr& aut, 
     {
 
         spot::postprocessor postprocessor;
-        if (deterministic_first_component) {
+        if (deterministic_first_component)
+        {
           static spot::option_map extra_options;
           extra_options.set("ba_simul",1);
           extra_options.set("simul",1);
@@ -328,65 +329,16 @@ spot::twa_graph_ptr buchi_to_semi_deterministic_buchi(spot::twa_graph_ptr& aut, 
     }
 
     if (output == TBA && result->acc().is_generalized_buchi())
-    {
         result = spot::degeneralize_tba(result);
-    }
     else if (output == BA)
-    {
         result = spot::degeneralize(result);
-    }
 
     if (!spot::is_semi_deterministic(result))
-    {
         throw not_semi_deterministic_exception();
-    }
     else if (deterministic_first_component && !is_cut_deterministic(result))
-    {
         throw not_cut_deterministic_exception();
-    }
 
     return result;
-}
-
-std::vector<bdd> edge_condition_to_minterms(bdd allap, bdd cond, std::map<bdd, std::vector<bdd>, spot::bdd_less_than>* minterms)
-{
-    if (!(*minterms)[cond].empty())
-    {
-        return (*minterms)[cond];
-    }
-    else
-    {
-        bdd all = cond;
-        while (all != bddfalse)
-        {
-            bdd one = bdd_satoneset(all, allap, bddfalse);
-            all -= one;
-            (*minterms)[cond].emplace_back(one);
-        }
-        return (*minterms)[cond];
-    }
-}
-
-unsigned powerset_set_to_state(spot::twa_graph_ptr aut, powerset_state_dictionary* sdict, powerset_todo_list* todo, std::vector<std::string>* names, state_set states)
-{
-    try {
-        return sdict->at(states);
-    } catch (std::out_of_range exc) {
-        unsigned new_state_number = aut->new_state();
-        (*sdict)[states] = new_state_number;
-        powerset_todo_state new_todo_state (states, new_state_number);
-        todo->push_back(new_todo_state);
-
-        // Create the name
-        std::string name;
-        for (const unsigned state : states)
-        {
-            name.append(std::to_string(state));
-        }
-
-        names->push_back("{" + name + "}");
-        return new_state_number;
-    }
 }
 
 bool is_cut_deterministic(const spot::twa_graph_ptr& aut, std::set<unsigned>* non_det_states)
@@ -420,17 +372,10 @@ bool is_cut_deterministic(const spot::twa_graph_ptr& aut, std::set<unsigned>* no
             {
                 bdd available = bddtrue;
                 for (auto& t: aut->out(src))
-                {
-                    if (!bdd_implies(t.cond, available))
-                    {
-                        // Not even semi-deterministic.
-                        cut_det = false;
-                    }
+                    if (!bdd_implies(t.cond, available)) // Not even semi-deterministic.
+                      cut_det = false;
                     else
-                    {
-                        available -= t.cond;
-                    }
-                }
+                      available -= t.cond;
             }
         }
     }
@@ -441,12 +386,8 @@ bool is_cut_deterministic(const spot::twa_graph_ptr& aut, std::set<unsigned>* no
         if (!si.is_accepting_scc(i) && !reachable_from_acc[i])
         {
             for (unsigned succ: si.succ(i))
-            {
-                if (cut[succ] == NOT_IN_CUT)
-                {
-                    cut[i] = NOT_IN_CUT;
-                }
-            }
+              if (cut[succ] == NOT_IN_CUT)
+                  cut[i] = NOT_IN_CUT;
 
             std::set<unsigned> edge_states;
 
@@ -458,202 +399,172 @@ bool is_cut_deterministic(const spot::twa_graph_ptr& aut, std::set<unsigned>* no
                 {
                     // We check whether the state is at the edge of the SCC.
                     if (si.scc_of(t.dst) != i)
-                    {
-                        edge_states.insert(src);
-                    }
+                      edge_states.insert(src);
                     else if (!bdd_implies(t.cond, available))
-                    {
-                        // Component is not deterministic, thus the automaton is not cut deterministic.
-                        cut_det = false;
-                    }
+                      cut_det = false;// SCC not det. => automaton not cut-det.
                     else
-                    {
-                        available -= t.cond;
-                    }
+                      available -= t.cond;
                 }
             }
 
             if (cut[i] == UNKNOWN)
             {
                 bool is_in_cut = true;
-                // The inner part of the component is deterministic, now we are interested in the outgoing edges.
+                // Inner part of SCC deterministic, what about the outgoing edges?
                 for (unsigned edge_state : edge_states)
                 {
                     bdd available = bddtrue;
                     for (auto& t: aut->out(edge_state))
-                    {
-                        if (!bdd_implies(t.cond, available))
-                        {
-                            is_in_cut = false;
-                        }
-                        else
-                        {
-                            available -= t.cond;
-                        }
-                    }
+                      if (!bdd_implies(t.cond, available))
+                        is_in_cut = false;
+                      else
+                        available -= t.cond;
                 }
 
                 cut[i] = is_in_cut ? IN_CUT : NOT_IN_CUT;
             }
             else if (cut_det)
             {
-                // We know that the component cannot be in the cut, so we check if the transitions outside the cut
+                // SCC cannot be in the cut, check if transitions outside cut
                 // are deterministic.
                 for (unsigned edge_state : edge_states)
                 {
                     bdd available = bddtrue;
                     for (auto& t: aut->out(edge_state))
-                    {
                         if (cut[si.scc_of(t.dst)] != IN_CUT)
-                        {
                             if (!bdd_implies(t.cond, available))
-                            {
                                 cut_det = false;
-                            }
                             else
-                            {
                                 available -= t.cond;
-                            }
-                        }
-                    }
                 }
             }
         }
         else
-        {
             cut[i] = IN_CUT;
-        }
     }
 
     if (non_det_states != nullptr)
-    {
         for (unsigned scc = 0; scc < cut.size(); scc++)
-        {
             if (cut[scc] != IN_CUT)
-            {
                 for (unsigned state: si.states_of(scc))
-                {
                     non_det_states->insert(state);
-                }
-            }
-        }
-    }
 
     return cut_det;
 }
 
-void determinize_first_component(spot::twa_graph_ptr result, spot::twa_graph_ptr aut, std::set<unsigned> to_determinize)
+aut_ptr determinize_first_component(const_aut_ptr src, state_set * to_determinize)
 {
-    // We will also need to get all the atomic propositions of the automata.
-    bdd allap = bddtrue;
+  auto res = spot::make_twa_graph(src->get_dict());
+  res->copy_ap_of(src);
+  res->set_acceptance(src->get_acceptance());
+  auto names = new std::vector<std::string>;
 
-    // Creating a dictionary of minterms
-    std::map<bdd, std::vector<bdd>, spot::bdd_less_than> minterms;
+  // Setup the powerset construction
+  auto ps2num = new power_map;
+  auto num2ps = new std::vector<state_set>;
+  auto psb = new powerset_builder(src);
 
-    // Names of the new states for printing purposes.
-    std::vector<std::string>* names = new std::vector<std::string>();
-
-    // We need to create the powerset construction for the first part of the automaton.
-
-    // Keeps a dictionary giving us a relationship between pairs of sets of states and states in the result automata.
-    powerset_state_dictionary powerset_sdict;
-    // List of states we still need to go through.
-    powerset_todo_list powerset_todo;
-
-    state_set initial_state_set{aut->get_init_state_number()};
-
-    int initial_state = powerset_set_to_state(result, &powerset_sdict, &powerset_todo, names, initial_state_set);
-
-    result->set_init_state(initial_state);
-
-    while (!powerset_todo.empty())
+  // returns the state`s index, creates a new state if needed
+  auto get_state = [&](state_set ps) {
+    if (ps2num->count(ps) == 0)
     {
-        powerset_todo_state todo_now = powerset_todo.back();
-        powerset_todo.pop_back();
-        state_set states = std::get<0>(todo_now);
-        int state_now = std::get<1>(todo_now);
+      // create a new state
+      assert(num2ps->size() == res->num_states());
+      num2ps->emplace_back(ps);
+      auto state = res->new_state();
+      (*ps2num)[ps] = state;
+      //TODO add to bp1 states
 
-        // First, we will use the state set to generate a map from formulae to state_sets to create new states.
-        std::map<bdd, state_set, spot::bdd_less_than> states_cond_map;
-        for (auto& state : states)
-        {
-            for (auto& edge : aut->out(state))
-            {
-                //std::cout << edge.dst << std::endl;
-                if (to_determinize.find(edge.dst) == to_determinize.end()) {
-                    continue;
-                }
-                std::vector<bdd> minterm_conds = edge_condition_to_minterms(allap, edge.cond, &minterms);
+      names->emplace_back(powerset_name(ps));
+      return state;
+    } else
+      return ps2num->at(ps);
 
-                for(auto& minterm_cond : minterm_conds)
-                {
-                    states_cond_map[minterm_cond].insert(edge.dst);
-                }
-            }
-        }
+  };
 
-        for (auto& cond : states_cond_map)
-        {
-            state_set new_set = states_cond_map[cond.first];
-            int new_state = powerset_set_to_state(result, &powerset_sdict, &powerset_todo, names, new_set);
-            result->new_edge(state_now, new_state, cond.first);
-        }
-    }
+  // Set the initial state
+  state_t init_num = src->get_init_state_number();
+  state_set ps{init_num};
+  res->set_init_state(get_state(ps));
 
-    // Now we need to connect the first with the second component
-    auto names_2 = aut->get_named_prop<std::vector<std::string>>("state-names");
-    // Copy the second component into result
-    state_map old_new_map;
-    result->copy_acceptance_of(aut);
-    for (unsigned i = 0; i < aut->num_states(); i++)
+  // Compute powerset with respect to to_determinize
+  for (state_t s = 0; s < res->num_states(); ++s)
+  {
+    auto ps = num2ps->at(s);
+    auto succs = psb->get_succs(ps, false);
+    for(size_t c = 0; c < psb->nc_; ++c)
     {
-        if (to_determinize.find(i) != to_determinize.end()) {
-            continue;
-        }
-        auto new_index = result->new_state();
-        old_new_map.insert(std::pair<unsigned,unsigned>(i,new_index));
-        std::string name;
-        if (names_2 == nullptr)
-        {
-            name = std::to_string(i);
-        }
-        else
-        {
-            name=names_2->at(i);
-        }
-        names->push_back(name);
+      auto cond = psb->num2bdd_[c];
+      auto d_ps = succs->at(c);
+      state_set the_intersection;
+      // intersect with to_derminize
+      std::set_intersection(
+         d_ps.begin(), d_ps.end(),
+         to_determinize->begin(), to_determinize->end(),
+         std::inserter(the_intersection, the_intersection.end())
+      );
+      d_ps = the_intersection;
+      // Skip transitions to ∅
+      if (d_ps == empty_set)
+        continue;
+      auto dst = get_state(d_ps);
+      res->new_edge(s, dst, cond);
     }
+  }
 
-    for (unsigned i = 0; i < aut->num_states(); i++)
-        {
-            if (to_determinize.find(i) != to_determinize.end()) {
-                continue;
-            }
-        for (auto& edge : aut->out(i))
-        {
-            result->new_edge(old_new_map[i],old_new_map[edge.dst],edge.cond, edge.acc);
-        }
+  // remeber for later stop iteration when adding cut transitions
+  auto lsize = res->num_states();
+
+  // Copy the second part
+  typedef std::map<state_t, state_t> state_map;
+  state_map old2new;
+  state_map new2old;
+  for (auto s = 0; s < src->num_states(); s++)
+  {
+    if (to_determinize->count(s) > 0) // skip states from the 1st component
+      continue;
+    auto ns = res->new_state();
+    old2new[s] = ns;
+    new2old[ns] = s;
+    names->emplace_back(std::to_string(s));
+  }
+  // Now copy the transitions
+  for (auto s = 0; s < src->num_states(); s++)
+  {
+    if (to_determinize->count(s) > 0) // skip states from the 1st component
+      continue;
+    for (auto e : src->out(s))
+      res->new_edge(old2new[e.src],old2new[e.dst],e.cond,e.acc);
+  }
+
+  // Add cut-transitions
+  for (state_t ns = 0; ns < lsize; ns++)
+  {
+    auto ps = num2ps->at(ns);
+    auto succs = psb->get_succs(ps, false);
+    for(size_t c = 0; c < psb->nc_; ++c)
+    {
+      auto cond = psb->num2bdd_[c];
+      auto d_ps = succs->at(c);
+      state_set the_intersection;
+      // intersect with to_derminize
+      std::set_difference(
+         d_ps.begin(), d_ps.end(),
+         to_determinize->begin(), to_determinize->end(),
+         std::inserter(the_intersection, the_intersection.end())
+      );
+      d_ps = the_intersection;
+      // Skip transitions to ∅
+      if (d_ps == empty_set)
+        continue;
+      for (auto s : d_ps)
+        res->new_edge(ns, old2new[s], cond);
     }
+  }
 
-    //Iterate over the states in the first component and find their edges to the second component
-    for (auto& res_state : powerset_sdict) {
-        state_set states = std::get<0>(res_state);
-        int state_now = std::get<1>(res_state);
-
-        for (auto& state : states)
-        {
-            for (auto& edge : aut->out(state))
-            {
-                if (to_determinize.find(edge.dst) != to_determinize.end()) {
-                    continue;
-                }
-                result->new_edge(state_now,old_new_map[edge.dst],edge.cond, edge.acc);
-            }
-        }
-    }
-
-    result->set_named_prop("state-names", names);
-    result->merge_edges();
+  res->merge_edges();
+  res->set_named_prop("state-names", names);
+  return res;
 }
 
 bool jump_condition(spot::const_twa_graph_ptr aut, spot::twa_graph::edge_storage_t e) {

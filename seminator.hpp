@@ -56,29 +56,10 @@ typedef std::map<unsigned,unsigned> state_map;
 spot::twa_graph_ptr buchi_to_semi_deterministic_buchi(spot::twa_graph_ptr& aut, bool deterministic_first_component, bool optimization, unsigned output);
 
 /**
- * Helper function to convert an edge condition to a vector of all the different minterms.
- *
- * @param[in] allap         All atomic propositions used through out the automata.
- * @param[in] cond          Edge condition.
- * @param[in, out] minterms A map of edge conditions to minterms that we have already found.
- * @return Vector of minterms.
+ * Determinizes the first part of input. The first part is given by to_determinize
+ * that can be obtained by `is_cut_deterministic`. Returns a new automaton.
  */
-std::vector<bdd> edge_condition_to_minterms(bdd allap, bdd cond, std::map<bdd, std::vector<bdd>, spot::bdd_less_than>* minterms);
-
-/**
- * Helper function that pairs a set of states an already existing (or new, in the case it does not exist) state in the powerset construction of an automata.
- *
- * @param[in,out] aut The powerset automata.
- * @param[in,out] sdict Dictionary keeping track of the relationship between pair of sets of states and new states in the new automata.
- * @param[out]    todo Vector of states we have to go through next.
- * @param[out]    names Vector of names that we keep to name the states of the new automata.
- * @param[in]     states Left set of states.
- * @return Returns a number of the state that either already existed or was created a new representing the pair of sets of states from the old automata.
- */
-unsigned powerset_set_to_state(spot::twa_graph_ptr aut, powerset_state_dictionary* sdict, powerset_todo_list* todo, std::vector<std::string>* names, state_set states);
-
-
-void determinize_first_component(spot::twa_graph_ptr result, spot::twa_graph_ptr aut, std::set<unsigned> to_determinize);
+aut_ptr determinize_first_component(const_aut_ptr, state_set * to_determinize);
 
 
 /**
