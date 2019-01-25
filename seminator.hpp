@@ -56,18 +56,6 @@ typedef std::map<unsigned,unsigned> state_map;
 spot::twa_graph_ptr buchi_to_semi_deterministic_buchi(spot::twa_graph_ptr& aut, bool deterministic_first_component, bool optimization, unsigned output);
 
 /**
- * Helper function to copy all the states and transitions of an automaton to another one.
- * Doesn't keep any flags besides state Buchi acceptance. Both automata need to have the same dictionary.
- *
- * @param[out] aut          Automata to copy to.
- * @param[in]  to_copy      Automata to copy from.
- * @param[in, out] sdict    Dictionary of states in second component to their number.
- * @param[in, out] todo     Todo for generating the second component.
- * @param[out] names        Names of the states for printing purposes.
- */
-void copy_buchi(spot::twa_graph_ptr aut, spot::const_twa_graph_ptr to_copy, breakpoint_map* sdict, todo_list* todo, std::vector<std::string>* names);
-
-/**
  * Helper function to convert an edge condition to a vector of all the different minterms.
  *
  * @param[in] allap         All atomic propositions used through out the automata.
@@ -76,19 +64,6 @@ void copy_buchi(spot::twa_graph_ptr aut, spot::const_twa_graph_ptr to_copy, brea
  * @return Vector of minterms.
  */
 std::vector<bdd> edge_condition_to_minterms(bdd allap, bdd cond, std::map<bdd, std::vector<bdd>, spot::bdd_less_than>* minterms);
-
-/**
- * Helper function that pairs two sets of states an already existing (or new, in the case it does not exist) state in the new automata.
- *
- * @param[in,out] aut The new automata.
- * @param[in,out] sdict Dictionary keeping track of the relationship between pair of sets of states and new states in the new automata.
- * @param[out]    todo Vector of states we have to go through next.
- * @param[out]    names Vector of names that we keep to name the states of the new automata.
- * @param[in]     left Left set of states.
- * @param[in]     right Right set of states.
- * @return Returns a number of the state that either already existed or was created a new representing the pair of sets of states from the old automata.
- */
-unsigned sets_to_state(spot::twa_graph_ptr aut, breakpoint_map* sdict, todo_list* todo, std::vector<std::string>* names, int k, state_set left, state_set right);
 
 /**
  * Helper function that pairs a set of states an already existing (or new, in the case it does not exist) state in the powerset construction of an automata.

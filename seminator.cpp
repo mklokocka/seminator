@@ -245,7 +245,6 @@ int main(int argc, char* argv[])
             {
                 result = res3;
             }
-
         }
         spot::print_hoa(std::cout, result) << '\n';
         return 0;
@@ -275,231 +274,40 @@ spot::twa_graph_ptr buchi_to_semi_deterministic_buchi(spot::twa_graph_ptr& aut, 
     // Remove dead and unreachable states and prune accepting conditions in non-accepting SCCs.
     aut = spot::scc_filter(aut, true);
 
-    // Get the BDD dictionary with atomic propositions used in our automata.
-    const spot::bdd_dict_ptr& dict = aut->get_dict();
+    spot::twa_graph_ptr result;
 
-    // We make a copy of the original automata, keeping the acceptance condition the same, for now.
-    spot::twa_graph_ptr result = spot::make_twa_graph(dict);
-
-    // Names of the new states for printing purposes.
-    std::vector<std::string>* names = new std::vector<std::string>();
-
-    // Make sure we copy all the atomic propositions, so that when aut seize to exists, the resulting
-    // automata will still be okay.
-    result->copy_ap_of(aut);
-
-    // Check if the given automata is state-based Buchi automata.
+    // Check if input is TGBA
     if (!aut->acc().is_generalized_buchi())
-    {
-        throw not_tgba_exception();
-    }
+      throw not_tgba_exception();
+
     // Check if automaton is deterministic already.
     else if (spot::is_deterministic(aut))
-    {
-        result = aut;
+      result = aut;
+
+    // Safety automata can be determinized using powerset construction
+    else if (aut->acc().is_all()) {
+      result = spot::tba_determinize(aut);
+      result->set_acceptance(0, spot::acc_cond::acc_code::t());
     }
+
     // Check if semi-deterministic already.
     else if (spot::is_semi_deterministic(aut))
     {
-        if (deterministic_first_component)
-        {
-            std::set<unsigned> non_det_states;
-            if (is_cut_deterministic(aut, &non_det_states))
-            {
-                result = aut;
-            }
-            else
-            {
-                // Determinize first component.
-                determinize_first_component(result, aut, non_det_states);
-            }
-        }
+      if (deterministic_first_component)
+      {
+        std::set<unsigned> non_det_states;
+        if (is_cut_deterministic(aut, &non_det_states))
+          result = aut;
         else
-        {
-            result = aut;
-        }
+          determinize_first_component(result, aut, non_det_states);
+      }
+      else
+        result = aut;
     }
     else
-    {
+    {   // Use the breakpoint construction
         bp_twa res_bp(aut, deterministic_first_component, jump_condition);
-
-        // Keeps a dictionary giving us a relationship between pairs of sets of states and states in the result automata.
-        breakpoint_map sdict;
-        // List of states we still need to go through.
-        todo_list todo;
-
-        int num_of_acc_sets = aut->acc().num_sets();
-        bool all = aut->acc().is_all();
-
-        // We will also need to get all the atomic propositions of the automata.
-        bdd allap = bddtrue;
-        {
-            typedef std::set<bdd, spot::bdd_less_than> sup_map;
-            sup_map sup;
-            // Record occurrences of all guards
-            for (auto& t: aut->edges())
-            sup.emplace(t.cond);
-            for (auto& i: sup)
-            allap &= bdd_support(i);
-        }
-
-        // Creating a dictionary of minterms
-        std::map<bdd, std::vector<bdd>, spot::bdd_less_than> minterms;
-
-        // Now, we create the first component of the new automata.
-        if (!deterministic_first_component)
-        {
-            // Make a copy of the given automata to the result.
-            copy_buchi(result, aut, &sdict, &todo, names);
-        }
-        else
-        {
-            // Keeps a dictionary giving us a relationship between pairs of sets of states and states in the result automata.
-            powerset_state_dictionary powerset_sdict;
-            // List of states we still need to go through.
-            powerset_todo_list powerset_todo;
-
-            state_set initial_state_set{aut->get_init_state_number()};
-
-            int initial_state = powerset_set_to_state(result, &powerset_sdict, &powerset_todo, names, initial_state_set);
-
-            result->set_init_state(initial_state);
-
-            while (!powerset_todo.empty())
-            {
-                powerset_todo_state todo_now = powerset_todo.back();
-                powerset_todo.pop_back();
-                state_set states = std::get<0>(todo_now);
-                int state_now = std::get<1>(todo_now);
-
-                // First, we will use the state set to generate a map from formulae to state_sets to create new states.
-                std::map<bdd, state_set, spot::bdd_less_than> states_cond_map;
-                for (auto& state : states)
-                {
-                    for (auto& edge : aut->out(state))
-                    {
-                        std::vector<bdd> minterm_conds = edge_condition_to_minterms(allap, edge.cond, &minterms);
-
-                        for(auto& minterm_cond : minterm_conds)
-                        {
-                            states_cond_map[minterm_cond].insert(edge.dst);
-                        }
-
-                        if (jump_condition(aut, edge))
-                        {
-                            state_set new_set{edge.dst};
-                            state_set empty_set;
-                            int new_state = sets_to_state(result, &sdict, &todo, names, 0, empty_set, new_set);
-                            result->new_edge(state_now, new_state, edge.cond);
-                        }
-                    }
-                }
-
-                for (auto& cond : states_cond_map)
-                {
-                    state_set new_set = states_cond_map[cond.first];
-                    int new_state = powerset_set_to_state(result, &powerset_sdict, &powerset_todo, names, new_set);
-                    result->new_edge(state_now, new_state, cond.first);
-                }
-            }
-        }
-
-        spot::scc_info si(aut);
-        spot::acc_cond::mark_t accepting_set = result->set_buchi();
-        result->prop_state_acc(false);
-
-        // Now we have to go through the newly created states in todo to finish generating the deterministic part of the new automata.
-        while (!todo.empty())
-        {
-            todo_state todo_now = todo.back();
-            todo.pop_back();
-            int k = std::get<0>(todo_now);
-            state_set p = std::get<1>(todo_now);
-            state_set q = std::get<2>(todo_now);
-            int state_now = std::get<3>(todo_now);
-
-            // First, we will use the q set to generate a map from formulae to state_sets to create new q's.
-            std::map<bdd, state_set, spot::bdd_less_than> q_map;
-            // Now, we do a similar thing for p, but we have to take care to differentiate an accepting state (p, p) and non-accepting states.
-            std::map<bdd, state_set, spot::bdd_less_than> p_map;
-
-            for (auto& state : q)
-            {
-                for (auto& edge : aut->out(state))
-                {
-                    if (si.scc_of(edge.dst) == si.scc_of(state))
-                    {
-                    std::vector<bdd> minterm_conds = edge_condition_to_minterms(allap, edge.cond, &minterms);
-
-                    for(auto& minterm_cond : minterm_conds)
-                    {
-                        q_map[minterm_cond].insert(edge.dst);
-                        // Check if q is in the intersection of Q and F
-                        if (all || edge.acc.has(k))
-                        {
-                            p_map[minterm_cond].insert(edge.dst);
-                        }
-                    }
-                }
-            }
-            }
-            if (p != q)
-            {
-                for (auto& state : p)
-                {
-                    for (auto& edge : aut->out(state))
-                    {
-                        if (si.scc_of(edge.dst) == si.scc_of(state))
-                        {
-                        std::vector<bdd> minterm_conds = edge_condition_to_minterms(allap, edge.cond, &minterms);
-
-                        for(auto& minterm_cond : minterm_conds)
-                        {
-                            p_map[minterm_cond].insert(edge.dst);
-                            }
-                        }
-                    }
-                }
-            }
-
-            std::set<bdd, spot::bdd_less_than> conditions;
-
-            for (auto& cond : p_map)
-            {
-                conditions.insert(cond.first);
-            }
-            for (auto& cond : q_map)
-            {
-                conditions.insert(cond.first);
-            }
-
-            // Now we will iterate over all conds relevant to our state
-            for (auto& cond : conditions)
-            {
-                state_set p_set = p_map[cond];
-                state_set q_set = q_map[cond];
-
-                // Now we have to generate the successor state. Here we have to be careful, if
-                // p_set != q_set, we can generate as normal, if p_set == q_set, and the result
-                // should be a transition based automata, we need to generate an accepting edge
-                int new_state;
-                if (p_set != q_set)
-                {
-                    new_state = sets_to_state(result, &sdict, &todo, names, k, p_set, q_set);
-                    result->new_edge(state_now, new_state, cond);
-                }
-                else
-                {
-                    state_set empty_set;
-                    new_state = sets_to_state(result, &sdict, &todo, names, !all ? (k + 1) % num_of_acc_sets : 0, empty_set, q_set);
-                    result->new_edge(state_now, new_state, cond, accepting_set);
-                }
-            }
-        }
-
-        result->set_named_prop("state-names", names);
-
-        result->merge_edges();
+        result = res_bp.res_aut();
     }
 
     // Optimization
@@ -540,52 +348,6 @@ spot::twa_graph_ptr buchi_to_semi_deterministic_buchi(spot::twa_graph_ptr& aut, 
     return result;
 }
 
-void copy_buchi(spot::twa_graph_ptr aut, spot::const_twa_graph_ptr to_copy, breakpoint_map* sdict, todo_list* todo, std::vector<std::string>* names)
-{
-    if (aut->get_dict() != to_copy->get_dict())
-    {
-        throw mismatched_bdd_dict_exception();
-    }
-
-    aut->new_states(to_copy->num_states());
-
-    // We remember the old names.
-    for (unsigned i = 0; i < aut->num_states(); i++)
-    {
-        names->push_back(std::to_string(i));
-    }
-
-    std::vector<bool> seen(to_copy->num_states());
-    std::stack<unsigned> copy_todo;
-    auto push_state = [&](unsigned state)
-    {
-        copy_todo.push(state);
-        seen[state] = true;
-    };
-    push_state(to_copy->get_init_state_number());
-    while (!copy_todo.empty())
-    {
-        unsigned s = copy_todo.top();
-        copy_todo.pop();
-        for (auto& e: to_copy->out(s))
-        {
-            aut->new_edge(e.src, e.dst, e.cond);
-            if (!seen[e.dst])
-                push_state(e.dst);
-
-            if (jump_condition(to_copy, e))
-            {
-                state_set new_set{e.dst};
-                state_set empty_set;
-                int new_state = sets_to_state(aut, sdict, todo, names, 0, empty_set, new_set);
-                aut->new_edge(e.src, new_state, e.cond);
-            }
-        }
-    }
-
-    aut->set_init_state(to_copy->get_init_state_number());
-}
-
 std::vector<bdd> edge_condition_to_minterms(bdd allap, bdd cond, std::map<bdd, std::vector<bdd>, spot::bdd_less_than>* minterms)
 {
     if (!(*minterms)[cond].empty())
@@ -602,36 +364,6 @@ std::vector<bdd> edge_condition_to_minterms(bdd allap, bdd cond, std::map<bdd, s
             (*minterms)[cond].emplace_back(one);
         }
         return (*minterms)[cond];
-    }
-}
-
-unsigned sets_to_state(spot::twa_graph_ptr aut, breakpoint_map* sdict, todo_list* todo, std::vector<std::string>* names, int k, state_set left, state_set right)
-{
-    std::tuple<int, state_set, state_set> set_pair (k, left, right);
-
-    try {
-        return sdict->at(set_pair);
-    } catch (std::out_of_range exc) {
-        unsigned new_state_number = aut->new_state();
-        (*sdict)[set_pair] = new_state_number;
-        todo_state new_todo_state (k, left, right, new_state_number);
-        todo->push_back(new_todo_state);
-
-        // Create the name
-        std::string left_part;
-        for (const unsigned state : left)
-        {
-            left_part.append(std::to_string(state));
-        }
-
-        std::string right_part;
-        for (const unsigned state : right)
-        {
-            right_part.append(std::to_string(state));
-        }
-
-        names->push_back("(" + std::to_string(k) + ", {" + left_part + "}, {" + right_part + "})");
-        return new_state_number;
     }
 }
 
@@ -814,15 +546,6 @@ void determinize_first_component(spot::twa_graph_ptr result, spot::twa_graph_ptr
 {
     // We will also need to get all the atomic propositions of the automata.
     bdd allap = bddtrue;
-    {
-        typedef std::set<bdd, spot::bdd_less_than> sup_map;
-        sup_map sup;
-        // Record occurrences of all guards
-        for (auto& t: aut->edges())
-          sup.emplace(t.cond);
-        for (auto& i: sup)
-          allap &= bdd_support(i);
-    }
 
     // Creating a dictionary of minterms
     std::map<bdd, std::vector<bdd>, spot::bdd_less_than> minterms;
