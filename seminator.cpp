@@ -232,19 +232,17 @@ int main(int argc, char* argv[])
         else
         {
             auto res1 = buchi_to_semi_deterministic_buchi(aut, deterministic_first_component, optimize, preferred_output);
+
             auto tba_aut = spot::degeneralize_tba(aut);
-            auto res2 = buchi_to_semi_deterministic_buchi(tba_aut, deterministic_first_component, optimize, preferred_output);
-            result = res1;
-            if (res2->num_states() < res1->num_states())
-            {
-                result = res2;
-            }
+            auto res2 = buchi_to_semi_deterministic_buchi(tba_aut,
+            deterministic_first_component, optimize, preferred_output);
+
             auto nba_aut = spot::degeneralize(aut);
             auto res3 = buchi_to_semi_deterministic_buchi(nba_aut, deterministic_first_component, optimize, preferred_output);
+
+            result = (res2->num_states() < res1->num_states()) ? res2 : res1;
             if (res3->num_states() < result->num_states())
-            {
                 result = res3;
-            }
         }
         spot::print_hoa(std::cout, result) << '\n';
         return 0;
@@ -565,18 +563,4 @@ aut_ptr determinize_first_component(const_aut_ptr src, state_set * to_determiniz
   res->merge_edges();
   res->set_named_prop("state-names", names);
   return res;
-}
-
-bool jump_condition(spot::const_twa_graph_ptr aut, spot::twa_graph::edge_storage_t e) {
-  spot::scc_info si(aut);
-  unsigned u = si.scc_of(e.src);
-  unsigned v = si.scc_of(e.dst);
-  bool accept_all(aut->acc().is_all());
-  unsigned highest_mark(aut->acc().num_sets() - 1);
-
-  return (
-    e.acc.has(highest_mark) || accept_all || // 1 || 2
-    (jump_enter && u != v && si.is_accepting_scc(v)) || // 3
-    (jump_always && si.is_accepting_scc(v)) // 4
-  );
 }

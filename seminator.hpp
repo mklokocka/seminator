@@ -16,7 +16,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
-#include <utility>
+//#include <utility>
 #include <stdexcept>
 #include <unistd.h>
 
@@ -34,19 +34,6 @@ static const unsigned BA = 2;
 
 bool jump_enter = false;
 bool jump_always = false;
-
-// TO REMOVE!!!
-typedef std::tuple<int, state_set, state_set, unsigned> todo_state;
-typedef std::vector<todo_state> todo_list;
-typedef std::map<state_set, unsigned> powerset_state_dictionary;
-typedef std::tuple<state_set, unsigned> powerset_todo_state;
-typedef std::vector<powerset_todo_state> powerset_todo_list;
-typedef std::map<unsigned,unsigned> state_map;
-// TO REMOVE
-#include <stack>
-
-
-
 
 /**
  * The semi-determinization algorithm as thought of by F. Blahoudek, J. Strejcek and M. Kretinsky.
@@ -80,12 +67,22 @@ bool is_cut_deterministic(const spot::twa_graph_ptr& aut, std::set<unsigned>* no
 * @return True if some jump condition is satisfied
 *
 * Currently, 4 conditions trigger the jump:
-*  1. If the input automaton is safety (accepts all)
-*  2. If the edge has the highest mark
-*  3. If we freshly enter accepting scc (--jump-enter only)
-*  4. If e leads to accepting SCC (--jump-always only)
+*  1. If the edge has the highest mark
+*  2. If we freshly enter accepting scc (--jump-enter only)
+*  3. If e leads to accepting SCC (--jump-always only)
 */
-bool jump_condition(const_aut_ptr, spot_edge);
+bool jump_condition(spot::const_twa_graph_ptr aut, spot::twa_graph::edge_storage_t e) {
+  spot::scc_info si(aut);
+  unsigned u = si.scc_of(e.src);
+  unsigned v = si.scc_of(e.dst);
+  unsigned highest_mark(aut->acc().num_sets() - 1);
+
+  return (
+    e.acc.has(highest_mark) || //1
+    (jump_enter && u != v && si.is_accepting_scc(v)) || // 2
+    (jump_always && si.is_accepting_scc(v)) // 3
+  );
+}
 
 /**
  * Class representing an exception thrown when the algorithm is not run on a proper SBwA automata.
