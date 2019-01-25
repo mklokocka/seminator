@@ -17,13 +17,11 @@
 #pragma once
 
 #include <utility>
-
 #include <stdexcept>
 #include <unistd.h>
 
 #include <types.hpp>
-#include <powerset.hpp>
-#include <breakpoint.hpp>
+#include <breakpoint_twa.hpp>
 
 #include <spot/misc/bddlt.hh>
 

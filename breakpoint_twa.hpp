@@ -145,22 +145,12 @@ class bp_twa {
     // pointers to cut-edges (can be changed after merge_edges() is called)
     std::vector<unsigned> cut_trans_ = std::vector<unsigned>();
 
-    // needed for determinization in case of cut-det is requester
-    spot::power_map pm_ = spot::power_map();
-
     // Builder of powerset successors
     powerset_builder* psb_;
-
-    /**
-    * Sets the names of the automaton `aut` build by the `tgba_powerset`
-    *
-    * @param aut The result of `spot::tgba_powerset`
-    * @param pm  Power_map filled by `spot::tgba_powerset`
-    */
-    void set_powerset_names();
 
     // Creates res_ and its 1st component
     void create_first_component();
 
+    // Performs the main part of the construction (breakpoint with levels)
     void finish_second_component(state_t);
 };

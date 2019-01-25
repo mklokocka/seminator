@@ -16,7 +16,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <types.hpp>
-#include <breakpoint.hpp>
+#include <breakpoint_twa.hpp>
 
 std::string bp_name(breakpoint_state bps) {
   state_set p = std::get<Bp::P>(bps);
@@ -95,17 +95,6 @@ bp_twa::create_all_cut_transitions() {
       }
     }
   }
-}
-
-void
-bp_twa::set_powerset_names()
-{
-  state_set state;
-  for (state_t src_num = 0; src_num < res_->num_states(); ++src_num) {
-    state = pm_.states_of(src_num);
-    names_->emplace_back(powerset_name(state));
-  }
-  res_->set_named_prop("state-names", names_);
 }
 
 void
