@@ -22,7 +22,7 @@ CPPFLAGS=-std=c++14 -g -I/usr/local/include -I.
 LDFLAGS=-std=c++14 -g -lstdc++
 LDLIBS=-L/usr/local/lib -lspot -lbddx
 
-SRCS=seminator.cpp powerset.cpp
+SRCS=seminator.cpp powerset.cpp breakpoint.cpp
 HEADERS=$(SRCS:.cpp=.hpp) types.hpp
 OBJS=$(SRCS:.cpp=.o)
 

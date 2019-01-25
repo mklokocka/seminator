@@ -32,6 +32,9 @@
 #include <spot/twa/bddprint.hh>
 #include <spot/twaalgos/sccinfo.hh>
 
+// Simple and PowerSet in 1st component,
+// BreakPoint and PowerSet in 2nd component
+enum class State_type {SIMPLE1,PS1,BP2,PS2};
 
 
 typedef unsigned state_t;
@@ -51,5 +54,6 @@ typedef spot::twa_graph_ptr aut_ptr;
 typedef std::vector<std::string>* state_names;
 typedef spot::twa_graph::edge_storage_t spot_edge;
 
+typedef bool (*jump_condition_t)(const_aut_ptr, spot_edge);
 
 static const state_set empty_set;
