@@ -352,15 +352,7 @@ spot::twa_graph_ptr buchi_to_semi_deterministic_buchi(spot::twa_graph_ptr& aut, 
         }
         else
         {
-            std::cout << "\nOriginal automaton:\n";
-            spot::print_hoa(std::cout, aut);
-            std::cout << "\n\n" << std::endl;
-
             bp_twa res_bp(aut, true);
-            std::cout << std::endl;
-            std::cout << "Result automaton produced by class bp_twa:" << std::endl;
-            spot::print_hoa(std::cout, res_bp.res_aut());
-            std::cout << "\n\n" << std::endl;
 
             // Keeps a dictionary giving us a relationship between pairs of sets of states and states in the result automata.
             powerset_state_dictionary powerset_sdict;

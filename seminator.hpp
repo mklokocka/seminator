@@ -154,24 +154,31 @@ class bp_twa {
       num2bp_->resize(first_comp_size);
       assert(names_->size() == first_comp_size);
 
+      spot::print_hoa(std::cout, src_);
+      std::cout << "\n\n" << std::endl;
+
       // TO REMOVE
-      std::cout << "After powerset:" << std::endl;
-      spot::print_hoa(std::cout, res_);
-      std::cout << std::endl;
-      std::cout << std::endl;
+      // res_->set_named_prop<std::string>("automaton-name", new std::string("After powerset"));
+      // spot::print_hoa(std::cout, res_);
+      // std::cout << std::endl;
+      // std::cout << std::endl;
 
       create_all_cut_transitions();
 
       // TO REMOVE
-      std::cout << "After cut:" << std::endl;
-      spot::print_hoa(std::cout, res_);
-      std::cout << std::endl;
-      std::cout << std::endl;
+      // res_->set_named_prop<std::string>("automaton-name", new std::string("After cut"));
+      // spot::print_hoa(std::cout, res_);
+      // std::cout << std::endl;
+      // std::cout << std::endl;
 
 
       finish_second_component(first_comp_size);
 
       res_->merge_edges();
+      res_->set_named_prop<std::string>("automaton-name", new std::string("My result"));
+      spot::print_hoa(std::cout, res_);
+      std::cout << "\n\n" << std::endl;
+
 
       // TO REMOVE
       // breakpoint_state bs = num2bp_->at(4);
