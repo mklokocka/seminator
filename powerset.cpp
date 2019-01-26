@@ -61,11 +61,9 @@ powerset_builder::get_succs(state_set ss, unsigned mark, state_set * intersect) 
     }
     // Add the successors into outgoing bitvector
     for (unsigned c = 0; c < nc_; ++c)
-      om->at(c) |= sm->at(s)->at(c) &= *i_bv;
+      (om->at(c) |= sm->at(s)->at(c)) &= *i_bv;
   }
   // Convert bitvector for each condition into a set
-  // auto res_bv = spot::make_bitvect(ns_);
-  // res_bv->operator&=(i_bv);
   for (unsigned c = 0; c < nc_; ++c)
   {
     auto ps = bv_to_ps(&om->at(c));

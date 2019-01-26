@@ -489,19 +489,11 @@ aut_ptr determinize_first_component(const_aut_ptr src, state_set * to_determiniz
   for (state_t s = 0; s < res->num_states(); ++s)
   {
     auto ps = num2ps->at(s);
-    auto succs = psb->get_succs(ps);
+    auto succs = psb->get_succs(ps, to_determinize);
     for(size_t c = 0; c < psb->nc_; ++c)
     {
       auto cond = psb->num2bdd_[c];
       auto d_ps = succs->at(c);
-      state_set the_intersection;
-      // intersect with to_derminize
-      std::set_intersection(
-         d_ps.begin(), d_ps.end(),
-         to_determinize->begin(), to_determinize->end(),
-         std::inserter(the_intersection, the_intersection.end())
-      );
-      d_ps = the_intersection;
       // Skip transitions to ∅
       if (d_ps == empty_set)
         continue;
@@ -536,22 +528,20 @@ aut_ptr determinize_first_component(const_aut_ptr src, state_set * to_determiniz
   }
 
   // Add cut-transitions
+  // We need complement of to_determinize for cut-transitions
+  state_set second;
+  for (state_t ns = 0; ns < src->num_states(); ns++)
+    if (to_determinize->count(ns) == 0)
+      second.insert(ns);
+
   for (state_t ns = 0; ns < lsize; ns++)
   {
     auto ps = num2ps->at(ns);
-    auto succs = psb->get_succs(ps);
+    auto succs = psb->get_succs(ps, &second);
     for(size_t c = 0; c < psb->nc_; ++c)
     {
       auto cond = psb->num2bdd_[c];
       auto d_ps = succs->at(c);
-      state_set the_intersection;
-      // intersect with to_derminize
-      std::set_difference(
-         d_ps.begin(), d_ps.end(),
-         to_determinize->begin(), to_determinize->end(),
-         std::inserter(the_intersection, the_intersection.end())
-      );
-      d_ps = the_intersection;
       // Skip transitions to ∅
       if (d_ps == empty_set)
         continue;
