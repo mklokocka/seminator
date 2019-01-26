@@ -131,7 +131,7 @@ bp_twa::create_first_component()
     for (state_t src = 0; src < res_->num_states(); ++src)
     {
       auto ps = num2ps_->at(src);
-      auto succs = psb_->get_succs(ps, false);
+      auto succs = psb_->get_succs(ps);
       for(size_t c = 0; c < psb_->nc_; ++c) {
         auto cond = psb_->num2bdd_[c];
         auto d_ps = succs->at(c);
@@ -168,10 +168,25 @@ bp_twa::finish_second_component(state_t start) {
     state_set q = std::get<Bp::Q>(bps);
     int k       = std::get<Bp::LEVEL>(bps);
 
+    assert(p != empty_set);
+
+    state_set * intersect = nullptr;
+    state_set scc_s;
     //TODO true -> scc_optim
-    auto p_succs   = psb_->get_succs(p, true);
-    auto q_succs   = psb_->get_succs(q, true);
-    auto p_k_succs = psb_->get_succs(p, true, k); // go to Q
+    if (true)
+    { // create set of states from current SCC
+    auto scc = src_si_.scc_of(*(p.begin()));
+    for (auto s : p)
+      assert(src_si_.scc_of(s) == scc);
+    auto scc_v = src_si_.states_of(scc);
+    scc_s = state_set(scc_v.begin(), scc_v.end());
+    intersect = &scc_s;
+    }
+
+    auto p_succs   = psb_->get_succs(p, intersect);
+    auto q_succs   = psb_->get_succs(q, intersect);
+    auto p_k_succs = psb_->get_succs(p, k, intersect); // go to Q
+
 
     for(size_t c = 0; c < psb_->nc_; ++c) {
       auto p2   = p_succs->at(c);
@@ -189,7 +204,7 @@ bp_twa::finish_second_component(state_t start) {
         k2 = (k + 1) % src_->num_sets();
         acc = {0};
         // Take the k2-succs of p
-        q2 = psb_->get_succs(p, true, k2)->at(c);
+        q2 = psb_->get_succs(p, k2, intersect)->at(c);
         if (p2 == q2)
           q2 = empty_set;
       }

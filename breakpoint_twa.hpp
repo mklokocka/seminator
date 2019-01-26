@@ -28,7 +28,8 @@ std::string bp_name(breakpoint_state);
 class bp_twa {
   public:
     bp_twa(const_aut_ptr src_aut, bool cut_det, jump_condition_t jump_condition) :
-    src_(src_aut), cut_det_(cut_det), jump_condition_(jump_condition),
+    src_(src_aut), src_si_(spot::scc_info(src_aut)),
+    cut_det_(cut_det), jump_condition_(jump_condition),
     psb_(new powerset_builder(src_)) {
       res_ = spot::make_twa_graph(src_->get_dict());
       res_->copy_ap_of(src_);
@@ -127,6 +128,9 @@ class bp_twa {
     // input and result automata
     const_aut_ptr src_;
     aut_ptr res_;
+
+    // scc info of src (needed for scc-aware optimization)
+    spot::scc_info src_si_;
 
     // fcnPointer to condition where to jump from 1st to 2nd component (cut-transition)
     // edge should be edge from src_

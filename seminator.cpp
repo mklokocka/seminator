@@ -489,7 +489,7 @@ aut_ptr determinize_first_component(const_aut_ptr src, state_set * to_determiniz
   for (state_t s = 0; s < res->num_states(); ++s)
   {
     auto ps = num2ps->at(s);
-    auto succs = psb->get_succs(ps, false);
+    auto succs = psb->get_succs(ps);
     for(size_t c = 0; c < psb->nc_; ++c)
     {
       auto cond = psb->num2bdd_[c];
@@ -539,7 +539,7 @@ aut_ptr determinize_first_component(const_aut_ptr src, state_set * to_determiniz
   for (state_t ns = 0; ns < lsize; ns++)
   {
     auto ps = num2ps->at(ns);
-    auto succs = psb->get_succs(ps, false);
+    auto succs = psb->get_succs(ps);
     for(size_t c = 0; c < psb->nc_; ++c)
     {
       auto cond = psb->num2bdd_[c];
