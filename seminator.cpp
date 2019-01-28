@@ -183,7 +183,7 @@ int main(int argc, char* argv[])
         return 1;
     }
 
-    spot::bdd_dict_ptr dict = spot::make_bdd_dict();
+    auto dict = spot::make_bdd_dict();
 
     spot::parsed_aut_ptr parsed_aut;
 
@@ -298,6 +298,7 @@ spot::twa_graph_ptr buchi_to_semi_deterministic_buchi(spot::twa_graph_ptr& aut, 
           result = aut;
         else
           result = determinize_first_component(aut, non_det_states);
+        delete non_det_states;
       }
       else
         result = aut;
@@ -458,9 +459,9 @@ aut_ptr determinize_first_component(const_aut_ptr src, state_set * to_determiniz
   auto names = new std::vector<std::string>;
 
   // Setup the powerset construction
-  auto ps2num = new power_map;
-  auto num2ps = new std::vector<state_set>;
-  auto psb = new powerset_builder(src);
+  auto ps2num = std::unique_ptr<power_map>(new power_map);
+  auto num2ps = std::unique_ptr<succ_vect>(new succ_vect);
+  auto psb = std::unique_ptr<powerset_builder>(new powerset_builder(src));
 
   // returns the state`s index, creates a new state if needed
   auto get_state = [&](state_set ps) {
@@ -489,7 +490,7 @@ aut_ptr determinize_first_component(const_aut_ptr src, state_set * to_determiniz
   for (state_t s = 0; s < res->num_states(); ++s)
   {
     auto ps = num2ps->at(s);
-    auto succs = psb->get_succs(ps, to_determinize);
+    auto succs = std::unique_ptr<succ_vect>(psb->get_succs(ps, to_determinize));
     for(size_t c = 0; c < psb->nc_; ++c)
     {
       auto cond = psb->num2bdd_[c];
@@ -537,7 +538,7 @@ aut_ptr determinize_first_component(const_aut_ptr src, state_set * to_determiniz
   for (state_t ns = 0; ns < lsize; ns++)
   {
     auto ps = num2ps->at(ns);
-    auto succs = psb->get_succs(ps, &second);
+    auto succs = std::unique_ptr<succ_vect>(psb->get_succs(ps, &second));
     for(size_t c = 0; c < psb->nc_; ++c)
     {
       auto cond = psb->num2bdd_[c];
@@ -549,6 +550,7 @@ aut_ptr determinize_first_component(const_aut_ptr src, state_set * to_determiniz
         res->new_edge(ns, old2new[s], cond);
     }
   }
+
 
   res->merge_edges();
   res->set_named_prop("state-names", names);

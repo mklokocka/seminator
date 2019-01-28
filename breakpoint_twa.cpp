@@ -53,19 +53,19 @@ bp_twa::add_cut_transition(unsigned from, unsigned to, bdd cond) {
 unsigned
 bp_twa::bp_state(breakpoint_state bps) {
   unsigned result;
-  if (bp2num_->count(bps) == 0) {
+  if (bp2num_.count(bps) == 0) {
     // create a new state
-    assert(num2bp_->size() == res_->num_states());
+    assert(num2bp_.size() == res_->num_states());
     result = res_->new_state();
-    num2bp_->emplace_back(bps);
-    (*bp2num_)[bps] = result;
+    num2bp_.emplace_back(bps);
+    bp2num_[bps] = result;
     //TODO add to bp2 states
 
     auto name = bp_name(bps);
     names_->emplace_back(name);
   }  else {
     // return the existing one
-    result = bp2num_->at(bps);
+    result = bp2num_.at(bps);
   }
   return result;
 }
@@ -84,8 +84,8 @@ bp_twa::create_all_cut_transitions() {
 
       if (cut_det_) {
         // in cDBA, add cut-edge from each state that contains edge.src
-        for (unsigned s = 0; s < ps2num_->size(); ++s) {
-          state_set * current_states = &(num2ps_->at(s));
+        for (unsigned s = 0; s < ps2num_.size(); ++s) {
+          state_set * current_states = &(num2ps_.at(s));
           if (current_states->count(edge.src)) {
             add_cut_transition(s, target_state, edge.cond);
           }
@@ -107,30 +107,30 @@ bp_twa::create_first_component()
     res_->set_init_state(num);
     state_t init_num = src_->get_init_state_number();
     state_set ps{init_num};
-    (*ps2num_)[ps] = num;
-    num2ps_->emplace_back(ps);
+    ps2num_[ps] = num;
+    num2ps_.emplace_back(ps);
     names_->emplace_back(powerset_name(ps));
 
     // Creates a new state if needed
     auto get_state = [&](state_set ps) {
-      if (ps2num_->count(ps) == 0) {
+      if (ps2num_.count(ps) == 0) {
         // create a new state
-        assert(num2ps_->size() == res_->num_states());
-        num2ps_->emplace_back(ps);
+        assert(num2ps_.size() == res_->num_states());
+        num2ps_.emplace_back(ps);
         auto state = res_->new_state();
-        (*ps2num_)[ps] = state;
+        ps2num_[ps] = state;
         //TODO add to bp1 states
 
         names_->emplace_back(powerset_name(ps));
         return state;
       } else
-        return ps2num_->at(ps);
+        return ps2num_.at(ps);
     };
 
     // Build the transitions
     for (state_t src = 0; src < res_->num_states(); ++src)
     {
-      auto ps = num2ps_->at(src);
+      auto ps = num2ps_.at(src);
       auto succs = psb_->get_succs(ps);
       for(size_t c = 0; c < psb_->nc_; ++c) {
         auto cond = psb_->num2bdd_[c];
@@ -163,7 +163,7 @@ void
 bp_twa::finish_second_component(state_t start) {
   for (state_t src = start; src < res_->num_states(); ++src)
   {
-    auto bps = num2bp_->at(src);
+    auto bps = num2bp_.at(src);
     state_set p = std::get<Bp::P>(bps);
     state_set q = std::get<Bp::Q>(bps);
     int k       = std::get<Bp::LEVEL>(bps);
@@ -183,9 +183,9 @@ bp_twa::finish_second_component(state_t start) {
     intersect = &scc_s;
     }
 
-    auto p_succs   = psb_->get_succs(p, intersect);
-    auto q_succs   = psb_->get_succs(q, intersect);
-    auto p_k_succs = psb_->get_succs(p, k, intersect); // go to Q
+    succ_vect_ptr p_succs   (psb_->get_succs(p, intersect));
+    succ_vect_ptr q_succs   (psb_->get_succs(q, intersect));
+    succ_vect_ptr p_k_succs (psb_->get_succs(p, k, intersect)); // go to Q
 
 
     for(size_t c = 0; c < psb_->nc_; ++c) {
@@ -204,7 +204,8 @@ bp_twa::finish_second_component(state_t start) {
         k2 = (k + 1) % src_->num_sets();
         acc = {0};
         // Take the k2-succs of p
-        q2 = psb_->get_succs(p, k2, intersect)->at(c);
+        succ_vect_ptr tmp (psb_->get_succs(p, k2, intersect));
+        q2 = tmp->at(c);
         if (p2 == q2)
           q2 = empty_set;
       }

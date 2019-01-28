@@ -37,7 +37,7 @@ class bp_twa {
 
       const auto first_comp_size = res_->num_states();
       // Resize the num2bp_ for new states to be at appropriete indices.
-      num2bp_->resize(first_comp_size);
+      num2bp_.resize(first_comp_size);
       assert(names_->size() == first_comp_size);
 
       // spot::print_hoa(std::cout, src_);
@@ -68,7 +68,7 @@ class bp_twa {
 
 
       // TO REMOVE
-      // breakpoint_state bs = num2bp_->at(4);
+      // breakpoint_state bs = num2bp_.at(4);
       // auto succs = psb_->get_succs(std::get<1>(bs));
       // // For each condition: print succ
       // for(size_t c = 0; c < psb_->nc_; ++c) {
@@ -81,6 +81,11 @@ class bp_twa {
       // std::cout.flush();
       // psb_->get_succs(std::get<1>(bs), 0);
 
+    }
+
+    ~bp_twa()
+    {
+      delete psb_;
     }
 
     // Getters
@@ -137,12 +142,12 @@ class bp_twa {
     jump_condition_t jump_condition_;
 
     // mapping between states of 1st comp. of res_ and their content for cut-det
-    power_map * ps2num_ = new power_map;
-    std::vector<state_set> * num2ps_ = new std::vector<state_set>;
+    power_map ps2num_ = power_map();
+    succ_vect num2ps_ = succ_vect();
 
     // mapping between states of 2nd comp. of res_ and their content
-    breakpoint_map * bp2num_ = new breakpoint_map;               // bp_state -> state_t
-    std::vector<breakpoint_state> * num2bp_ = new std::vector<breakpoint_state>;  // state_t  -> bp_state
+    breakpoint_map bp2num_ = breakpoint_map();               // bp_state -> state_t
+    std::vector<breakpoint_state> num2bp_ = std::vector<breakpoint_state>();  // state_t  -> bp_state
 
     // names of res automata states
     state_names names_ = new std::vector<std::string>;
@@ -158,4 +163,6 @@ class bp_twa {
 
     // Performs the main part of the construction (breakpoint with levels)
     void finish_second_component(state_t);
+
+
 };

@@ -35,12 +35,12 @@ std::string powerset_name(state_set state)
   return ss.str();
 }
 
-std::vector<state_set> *
+succ_vect *
 powerset_builder::get_succs(state_set ss, unsigned mark, state_set * intersect) {
   if (ss == empty_set)
-    return new std::vector<state_set>(nc_, empty_set);
+    return new succ_vect(nc_, empty_set);
 
-  auto sm = pw_storage->at(mark);
+  auto sm = pw_storage.at(mark);
 
   auto i_bv = spot::make_bitvect(ns_);
   if (intersect)
@@ -50,7 +50,7 @@ powerset_builder::get_succs(state_set ss, unsigned mark, state_set * intersect) 
 
   // outgoing map
   auto om = std::unique_ptr<bitvect_array>(spot::make_bitvect_array(ns_, nc_));
-  auto result = new std::vector<state_set>;
+  auto result = new succ_vect;
 
   for (auto s : ss)
   {
@@ -69,6 +69,8 @@ powerset_builder::get_succs(state_set ss, unsigned mark, state_set * intersect) 
     auto ps = bv_to_ps(&om->at(c));
     result->emplace_back(std::move(ps));
   }
+  delete i_bv;
+
   return result;
 }
 

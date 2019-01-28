@@ -73,11 +73,19 @@ public:
 
     // Initialize the maps for each level
     for (unsigned l = 0; l <= src_->num_sets(); ++l)
-    {
-      pw_storage->emplace_back(new state_to_pwsucc_m());
-    }
+      pw_storage.emplace_back(new state_to_pwsucc_m());
+  }
 
-  };
+  ~powerset_builder()
+  {
+    for (auto map : pw_storage) {
+      for (auto s : (*map)) {
+        auto bva = s.second;
+        delete bva;
+      }
+      delete map;
+    }
+  }
 
   size_t nc_; // Number of conditions
   std::vector<bdd> num2bdd_;
@@ -93,9 +101,9 @@ public:
   //   ...  ...  ... ... ... ... ... ... ... ...
   // nc_-1: successors of state_set under num2bdd_[nc-1]-transtions marked by mark
   //
-  std::vector<state_set> * get_succs(state_set ss, unsigned mark, state_set * intersect = nullptr);
+  succ_vect * get_succs(state_set ss, unsigned mark, state_set * intersect = nullptr);
   // By default do not restrict to marks == use h+1
-  std::vector<state_set> * get_succs(state_set ss, state_set * intersect = nullptr) {
+  succ_vect * get_succs(state_set ss, state_set * intersect = nullptr) {
     return get_succs(ss, src_->num_sets(), intersect);
   }
 
@@ -119,7 +127,7 @@ private:
   //   1 (!a &  b) | <bitvector representing l-successors from `s` under !a &  b>
   //   2 ( a & !b) | <bitvector representing l-successors from `s` under  a & !b>
   //   3 (!a & !b) | <bitvector representing l-successors from `s` under !a & !b>
-  level2pwsucc_map* pw_storage = new level2pwsucc_map;
+  level2pwsucc_map pw_storage;
 
   /**
   * Compute bitvector_array for `s` and `mark`
