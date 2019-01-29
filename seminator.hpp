@@ -34,6 +34,7 @@ static const unsigned BA = 2;
 
 bool jump_enter = false;
 bool jump_always = false;
+bool weak_powerset = false;
 
 /**
  * The semi-determinization algorithm as thought of by F. Blahoudek, J. Strejcek and M. Kretinsky.
@@ -77,10 +78,11 @@ bool jump_condition(spot::const_twa_graph_ptr aut, spot::twa_graph::edge_storage
   unsigned v = si.scc_of(e.dst);
   unsigned highest_mark(aut->acc().num_sets() - 1);
 
-  return (
-    e.acc.has(highest_mark) || //1
-    (jump_enter && u != v && si.is_accepting_scc(v)) || // 2
-    (jump_always && si.is_accepting_scc(v)) // 3
+  return
+    si.is_accepting_scc(v) && (
+      e.acc.has(highest_mark) || //1
+      (jump_enter && u != v) || // 2
+      jump_always // 3
   );
 }
 

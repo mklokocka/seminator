@@ -50,7 +50,7 @@ bp_twa::add_cut_transition(unsigned from, unsigned to, bdd cond) {
   return edge;
 }
 
-unsigned
+state_t
 bp_twa::bp_state(breakpoint_state bps) {
   unsigned result;
   if (bp2num_.count(bps) == 0) {
@@ -58,6 +58,7 @@ bp_twa::bp_state(breakpoint_state bps) {
     assert(num2bp_.size() == res_->num_states());
     result = res_->new_state();
     num2bp_.emplace_back(bps);
+    num2ps2_.resize(num2bp_.size());
     bp2num_[bps] = result;
     //TODO add to bp2 states
 
@@ -70,6 +71,28 @@ bp_twa::bp_state(breakpoint_state bps) {
   return result;
 }
 
+// Creates a new state if needed
+state_t
+bp_twa::ps_state(state_set ps, bool fc) {
+  auto num2ps = fc ? &num2ps1_ : &num2ps2_;
+  auto ps2num = fc ? &ps2num1_ : &ps2num2_;
+
+  if (ps2num->count(ps) == 0) {
+    // create a new state
+    assert(num2ps->size() == res_->num_states());
+    num2ps->emplace_back(ps);
+    if (!fc)
+      num2bp_.resize(num2ps2_.size());
+    auto state = res_->new_state();
+    (*ps2num)[ps] = state;
+    //TODO add to bp1 states
+
+    names_->emplace_back(powerset_name(ps));
+    return state;
+  } else
+    return ps2num->at(ps);
+};
+
 void
 bp_twa::create_all_cut_transitions() {
   for (auto& edge : src_->edges())
@@ -78,14 +101,23 @@ bp_twa::create_all_cut_transitions() {
     {
       // create the target state
       state_set new_set{edge.dst};
-      // (level, P=new_set, Q=∅)
-      breakpoint_state dest(0, new_set, empty_set);
-      int target_state = bp_state(dest);
+      state_t target_state;
+
+      auto scc = src_si_.scc_of(edge.dst);
+      bool weak = src_si_.weak_sccs()[scc];
+      if (weak_powerset_ && weak)
+        target_state = ps_state(new_set, false);
+      else
+      {
+        // (level, P=new_set, Q=∅)
+        breakpoint_state dest(0, new_set, empty_set);
+        target_state = bp_state(dest);
+      }
 
       if (cut_det_) {
         // in cDBA, add cut-edge from each state that contains edge.src
-        for (unsigned s = 0; s < ps2num_.size(); ++s) {
-          state_set * current_states = &(num2ps_.at(s));
+        for (unsigned s = 0; s < ps2num1_.size(); ++s) {
+          state_set * current_states = &(num2ps1_.at(s));
           if (current_states->count(edge.src)) {
             add_cut_transition(s, target_state, edge.cond);
           }
@@ -97,6 +129,45 @@ bp_twa::create_all_cut_transitions() {
   }
 }
 
+
+// This is to be used for weak components or for 1st component of
+// cut-deterministic automata (the fc switch)
+// The edges in 2nd component are all is_accepting
+// No edges are accepting in the first component
+template <> void
+bp_twa::compute_successoors<state_set>(state_set ps, state_t src, bool fc)
+{
+  assert(ps != empty_set);
+  auto num2ps = fc ? &num2ps1_ : &num2ps2_;
+  auto ps2num = fc ? &ps2num1_ : &ps2num2_;
+
+  state_vect intersection;
+  //TODO true -> scc_optim
+  if (true && !fc)
+  { // create set of states from current SCC
+    auto scc = src_si_.scc_of(*(ps.begin()));
+    for (auto s : ps)
+      assert(src_si_.scc_of(s) == scc);
+    intersection = src_si_.states_of(scc);
+  }
+
+  typedef spot::acc_cond::mark_t acc_mark;
+
+  auto succs = psb_->get_succs<>(ps, intersection.begin(), intersection.end());
+  for(size_t c = 0; c < psb_->nc_; ++c) {
+    auto cond = psb_->num2bdd_[c];
+    auto d_ps = succs->at(c);
+    // Skip transitions to ∅
+    if (d_ps == empty_set)
+      continue;
+    auto dst = ps_state(d_ps, fc);
+    res_->new_edge(src, dst, cond, fc ?
+      acc_mark() :
+      acc_mark({0}));
+  }
+}
+
+
 void
 bp_twa::create_first_component()
 {
@@ -107,40 +178,15 @@ bp_twa::create_first_component()
     res_->set_init_state(num);
     state_t init_num = src_->get_init_state_number();
     state_set ps{init_num};
-    ps2num_[ps] = num;
-    num2ps_.emplace_back(ps);
+    ps2num1_[ps] = num;
+    num2ps1_.emplace_back(ps);
     names_->emplace_back(powerset_name(ps));
-
-    // Creates a new state if needed
-    auto get_state = [&](state_set ps) {
-      if (ps2num_.count(ps) == 0) {
-        // create a new state
-        assert(num2ps_.size() == res_->num_states());
-        num2ps_.emplace_back(ps);
-        auto state = res_->new_state();
-        ps2num_[ps] = state;
-        //TODO add to bp1 states
-
-        names_->emplace_back(powerset_name(ps));
-        return state;
-      } else
-        return ps2num_.at(ps);
-    };
 
     // Build the transitions
     for (state_t src = 0; src < res_->num_states(); ++src)
     {
-      auto ps = num2ps_.at(src);
-      auto succs = psb_->get_succs<>(ps);
-      for(size_t c = 0; c < psb_->nc_; ++c) {
-        auto cond = psb_->num2bdd_[c];
-        auto d_ps = succs->at(c);
-        // Skip transitions to ∅
-        if (d_ps == empty_set)
-          continue;
-        auto dst = get_state(d_ps);
-        res_->new_edge(src, dst, cond);
-      }
+      auto ps = num2ps1_.at(src);
+      compute_successoors(ps, src, true);
     }
     res_->merge_edges();
   } else { // Just copy the states and transitions
@@ -159,65 +205,75 @@ bp_twa::create_first_component()
   res_->set_named_prop("state-names", names_);
 }
 
+template <> void
+bp_twa::compute_successoors<breakpoint_state>(breakpoint_state bps, state_t src, bool fc)
+{
+  state_set p = std::get<Bp::P>(bps);
+  state_set q = std::get<Bp::Q>(bps);
+  int k       = std::get<Bp::LEVEL>(bps);
+
+  assert(p != empty_set);
+
+  state_vect intersection;
+  //TODO true -> scc_optim
+  if (true)
+  { // create set of states from current SCC
+    auto scc = src_si_.scc_of(*(p.begin()));
+    for (auto s : p)
+      assert(src_si_.scc_of(s) == scc);
+    intersection = src_si_.states_of(scc);
+  }
+
+  succ_vect_ptr p_succs   (psb_->get_succs(p,
+                          intersection.begin(), intersection.end()));
+  succ_vect_ptr q_succs   (psb_->get_succs(q,
+                          intersection.begin(), intersection.end()));
+  succ_vect_ptr p_k_succs (psb_->get_succs(p, k, // go to Q
+                          intersection.begin(), intersection.end()));
+
+  for(size_t c = 0; c < psb_->nc_; ++c) {
+    auto p2   = p_succs->at(c);
+    auto q2   = q_succs->at(c);
+    auto p2_k = p_k_succs->at(c); // go to Q
+    q2.insert(p2_k.begin(),p2_k.end());
+    // Skip transitions to ∅
+    if (p2 == empty_set)
+      continue;
+
+    auto k2 = k;
+    // Check p == q
+    auto acc = spot::acc_cond::mark_t();
+    if (p2 == q2) {
+      k2 = (k + 1) % src_->num_sets();
+      acc = {0};
+      // Take the k2-succs of p
+      succ_vect_ptr tmp (psb_->get_succs(p, k2,
+                        intersection.begin(), intersection.end()));
+      q2 = tmp->at(c);
+      if (p2 == q2)
+        q2 = empty_set;
+    }
+    // Construct the breakpoint_state. We use get just to be error-prone
+    breakpoint_state bpd;
+    std::get<Bp::LEVEL>(bpd) = k2;
+    std::get<Bp::P>    (bpd) = p2;
+    std::get<Bp::Q>    (bpd) = q2;
+
+    auto dst = bp_state(bpd);
+    auto cond = psb_->num2bdd_[c];
+    res_->new_edge(src, dst, cond, acc);
+  }
+}
+
 void
 bp_twa::finish_second_component(state_t start) {
   for (state_t src = start; src < res_->num_states(); ++src)
   {
-    auto bps = num2bp_.at(src);
-    state_set p = std::get<Bp::P>(bps);
-    state_set q = std::get<Bp::Q>(bps);
-    int k       = std::get<Bp::LEVEL>(bps);
-
-    assert(p != empty_set);
-
-    state_vect intersection;
-    //TODO true -> scc_optim
-    if (true)
-    { // create set of states from current SCC
-      auto scc = src_si_.scc_of(*(p.begin()));
-      for (auto s : p)
-        assert(src_si_.scc_of(s) == scc);
-      intersection = src_si_.states_of(scc);
-    }
-
-    succ_vect_ptr p_succs   (psb_->get_succs(p,
-                            intersection.begin(), intersection.end()));
-    succ_vect_ptr q_succs   (psb_->get_succs(q,
-                            intersection.begin(), intersection.end()));
-    succ_vect_ptr p_k_succs (psb_->get_succs(p, k, // go to Q
-                            intersection.begin(), intersection.end()));
-
-    for(size_t c = 0; c < psb_->nc_; ++c) {
-      auto p2   = p_succs->at(c);
-      auto q2   = q_succs->at(c);
-      auto p2_k = p_k_succs->at(c); // go to Q
-      q2.insert(p2_k.begin(),p2_k.end());
-      // Skip transitions to ∅
-      if (p2 == empty_set)
-        continue;
-
-      auto k2 = k;
-      // Check p == q
-      auto acc = spot::acc_cond::mark_t();
-      if (p2 == q2) {
-        k2 = (k + 1) % src_->num_sets();
-        acc = {0};
-        // Take the k2-succs of p
-        succ_vect_ptr tmp (psb_->get_succs(p, k2,
-                          intersection.begin(), intersection.end()));
-        q2 = tmp->at(c);
-        if (p2 == q2)
-          q2 = empty_set;
-      }
-      // Construct the breakpoint_state. We use get just to be error-prone
-      breakpoint_state bpd;
-      std::get<Bp::LEVEL>(bpd) = k2;
-      std::get<Bp::P>    (bpd) = p2;
-      std::get<Bp::Q>    (bpd) = q2;
-
-      auto dst = bp_state(bpd);
-      auto cond = psb_->num2bdd_[c];
-      res_->new_edge(src, dst, cond, acc);
-    }
+    // Resolve the type of state and run compute_successors
+    auto ps = num2ps2_.at(src);
+    if (ps == empty_set)
+      compute_successoors(num2bp_.at(src), src);
+    else
+      compute_successoors(ps, src);
   }
 }
