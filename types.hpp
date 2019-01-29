@@ -18,6 +18,7 @@
 #pragma once
 
 #include <string>
+#include <iterator>
 #include <vector>
 #include <tuple>
 #include <map>
@@ -39,13 +40,18 @@ enum class State_type {SIMPLE1,PS1,BP2,PS2};
 
 typedef unsigned state_t;
 typedef std::set<state_t> state_set;
+typedef std::vector<state_t> state_vect;
+
+typedef typename state_set::iterator ss_it;
+typedef typename state_vect::iterator sv_it;
+
 // TODO: change to class/struct
 typedef std::tuple<int, state_set, state_set> breakpoint_state;
 struct Bp{enum size_t {LEVEL = 0, P = 1, Q = 2};};
 
+
 typedef std::vector<state_set> succ_vect;
 
-typedef std::vector<state_t> state_vect;
 typedef std::map<breakpoint_state, state_t> breakpoint_map;
 typedef std::map<state_set, state_t> power_map;
 

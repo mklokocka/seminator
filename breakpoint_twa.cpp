@@ -131,7 +131,7 @@ bp_twa::create_first_component()
     for (state_t src = 0; src < res_->num_states(); ++src)
     {
       auto ps = num2ps_.at(src);
-      auto succs = psb_->get_succs(ps);
+      auto succs = psb_->get_succs<>(ps);
       for(size_t c = 0; c < psb_->nc_; ++c) {
         auto cond = psb_->num2bdd_[c];
         auto d_ps = succs->at(c);
@@ -170,23 +170,22 @@ bp_twa::finish_second_component(state_t start) {
 
     assert(p != empty_set);
 
-    state_set * intersect = nullptr;
-    state_set scc_s;
+    state_vect intersection;
     //TODO true -> scc_optim
     if (true)
     { // create set of states from current SCC
-    auto scc = src_si_.scc_of(*(p.begin()));
-    for (auto s : p)
-      assert(src_si_.scc_of(s) == scc);
-    auto scc_v = src_si_.states_of(scc);
-    scc_s = state_set(scc_v.begin(), scc_v.end());
-    intersect = &scc_s;
+      auto scc = src_si_.scc_of(*(p.begin()));
+      for (auto s : p)
+        assert(src_si_.scc_of(s) == scc);
+      intersection = src_si_.states_of(scc);
     }
 
-    succ_vect_ptr p_succs   (psb_->get_succs(p, intersect));
-    succ_vect_ptr q_succs   (psb_->get_succs(q, intersect));
-    succ_vect_ptr p_k_succs (psb_->get_succs(p, k, intersect)); // go to Q
-
+    succ_vect_ptr p_succs   (psb_->get_succs(p,
+                            intersection.begin(), intersection.end()));
+    succ_vect_ptr q_succs   (psb_->get_succs(q,
+                            intersection.begin(), intersection.end()));
+    succ_vect_ptr p_k_succs (psb_->get_succs(p, k, // go to Q
+                            intersection.begin(), intersection.end()));
 
     for(size_t c = 0; c < psb_->nc_; ++c) {
       auto p2   = p_succs->at(c);
@@ -204,7 +203,8 @@ bp_twa::finish_second_component(state_t start) {
         k2 = (k + 1) % src_->num_sets();
         acc = {0};
         // Take the k2-succs of p
-        succ_vect_ptr tmp (psb_->get_succs(p, k2, intersect));
+        succ_vect_ptr tmp (psb_->get_succs(p, k2,
+                          intersection.begin(), intersection.end()));
         q2 = tmp->at(c);
         if (p2 == q2)
           q2 = empty_set;

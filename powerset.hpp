@@ -19,17 +19,41 @@
 #include <types.hpp>
 
 /**
+* Converts a collection of states into bitvector
+*/
+template <typename Iterator>
+static void ps_to_bv(spot::bitvect * bv,
+                     Iterator begin = Iterator(),
+                     Iterator end = Iterator()
+                     )
+{
+  for (auto i = begin; i != end; i++)
+    bv->set(*i);
+}
+
+static state_set bv_to_ps(const spot::bitvect* in)
+{
+  state_set ss;
+  unsigned ns = in->size();
+  for (unsigned pos = 0; pos < ns; ++pos)
+    if (in->get(pos))
+      ss.insert(pos);
+  return ss;
+}
+
+
+/**
 * Returns a string in the form `{s1, s2, s3}` where si is a reference to the input_aut
 */
 std::string powerset_name(state_set);
 
 // Class that computes successors for powerset construction.
 //
-// The main function is get_succs(state_set ss, mark, intersect) which returns
-// a vector `succ` of size `nc` of state_sets, where `nc` is the number of
-// possible combinations of atomic propositions. `succ[ci]` are successors of ss
-// under the `ci`-th combination of AP. The mapping to the condition can be done
-// using num2bdd_ vector. In powerset construction, there should be edge:
+// The main function is get_succs(state_set ss, mark, intersect iterators) which
+// returns a vector `succ` of size `nc` of state_sets, where `nc` is the number
+// of possible combinations of atomic propositions. `succ[ci]` are successors of
+// ss under the `ci`-th combination of AP. The mapping to the condition can be
+// done using num2bdd_ vector. In powerset construction, there should be edge:
 // `ss --num2bdd_[ci]--> get_succs(ss)->at(ci)` for each `ci`.
 //
 // The mark, if supplied, limits the successors using only transitions marked by
@@ -101,10 +125,60 @@ public:
   //   ...  ...  ... ... ... ... ... ... ... ...
   // nc_-1: successors of state_set under num2bdd_[nc-1]-transtions marked by mark
   //
-  succ_vect * get_succs(state_set ss, unsigned mark, state_set * intersect = nullptr);
+  template <class Iterator = ss_it>
+  succ_vect * get_succs(state_set ss, unsigned mark,
+                        Iterator begin = empty_set.begin(),
+                        Iterator end = empty_set.end(),
+                        bool complement_iters = false)
+  {
+    if (ss == empty_set)
+      return new succ_vect(nc_, empty_set);
+
+    auto sm = pw_storage.at(mark);
+
+    auto i_bv = spot::make_bitvect(ns_);
+    if (begin != end)
+    {
+      ps_to_bv(i_bv, begin, end);
+      if (complement_iters)
+        i_bv->flip_all();
+    }
+    else
+      i_bv->set_all();
+
+    // outgoing map
+    auto om = std::unique_ptr<bitvect_array>(spot::make_bitvect_array(ns_, nc_));
+    auto result = new succ_vect;
+
+    for (auto s : ss)
+    {
+      if (sm->count(s) == 0)
+      { // Compute the bitvector_array with powerset transitions
+        auto bva = compute_bva(s, mark);
+        (*sm)[s] = bva;
+      }
+      // Add the successors into outgoing bitvector
+      for (unsigned c = 0; c < nc_; ++c)
+        (om->at(c) |= sm->at(s)->at(c)) &= *i_bv;
+    }
+    // Convert bitvector for each condition into a set
+    for (unsigned c = 0; c < nc_; ++c)
+    {
+      auto ps = bv_to_ps(&om->at(c));
+      result->emplace_back(std::move(ps));
+    }
+    delete i_bv;
+
+    return result;
+  }
+
   // By default do not restrict to marks == use h+1
-  succ_vect * get_succs(state_set ss, state_set * intersect = nullptr) {
-    return get_succs(ss, src_->num_sets(), intersect);
+  template <class Iterator = ss_it>
+  succ_vect * get_succs(state_set ss,
+                        Iterator begin = empty_set.begin(),
+                        Iterator end = empty_set.end(),
+                        bool complement_iters = false) {
+    return get_succs<Iterator>(ss, src_->num_sets(), begin, end, complement_iters);
   }
 
 private:

@@ -490,7 +490,9 @@ aut_ptr determinize_first_component(const_aut_ptr src, state_set * to_determiniz
   for (state_t s = 0; s < res->num_states(); ++s)
   {
     auto ps = num2ps->at(s);
-    auto succs = std::unique_ptr<succ_vect>(psb->get_succs(ps, to_determinize));
+    auto succs = std::unique_ptr<succ_vect>(psb->get_succs(ps,
+                                            to_determinize->begin(),
+                                            to_determinize->end()));
     for(size_t c = 0; c < psb->nc_; ++c)
     {
       auto cond = psb->num2bdd_[c];
@@ -528,17 +530,14 @@ aut_ptr determinize_first_component(const_aut_ptr src, state_set * to_determiniz
       res->new_edge(old2new[e.src],old2new[e.dst],e.cond,e.acc);
   }
 
-  // Add cut-transitions
-  // We need complement of to_determinize for cut-transitions
-  state_set second;
-  for (state_t ns = 0; ns < src->num_states(); ns++)
-    if (to_determinize->count(ns) == 0)
-      second.insert(ns);
-
   for (state_t ns = 0; ns < lsize; ns++)
   {
     auto ps = num2ps->at(ns);
-    auto succs = std::unique_ptr<succ_vect>(psb->get_succs(ps, &second));
+    auto succs = std::unique_ptr<succ_vect>(psb->get_succs(ps,
+                                            to_determinize->begin(),
+                                            to_determinize->end(),
+                                            true
+                                           ));
     for(size_t c = 0; c < psb->nc_; ++c)
     {
       auto cond = psb->num2bdd_[c];
