@@ -138,8 +138,6 @@ template <> void
 bp_twa::compute_successoors<state_set>(state_set ps, state_t src, bool fc)
 {
   assert(ps != empty_set);
-  auto num2ps = fc ? &num2ps1_ : &num2ps2_;
-  auto ps2num = fc ? &ps2num1_ : &ps2num2_;
 
   state_vect intersection;
   //TODO true -> scc_optim

@@ -18,7 +18,7 @@
 CC=gcc
 CXX=g++
 RM=rm -f
-CPPFLAGS=-std=c++14 -g -I/usr/local/include -I.
+CPPFLAGS=-std=c++14 -g -I/usr/local/include -I. -Wall
 LDFLAGS=-std=c++14 -g -lstdc++
 LDLIBS=-L/usr/local/lib -lspot -lbddx
 

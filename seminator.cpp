@@ -436,11 +436,12 @@ bool is_cut_deterministic(const spot::twa_graph_ptr& aut, std::set<unsigned>* no
                 {
                     bdd available = bddtrue;
                     for (auto& t: aut->out(edge_state))
-                        if (cut[si.scc_of(t.dst)] != IN_CUT)
+                        if (cut[si.scc_of(t.dst)] != IN_CUT) {
                             if (!bdd_implies(t.cond, available))
                                 cut_det = false;
                             else
                                 available -= t.cond;
+                        }
                 }
             }
         }
@@ -518,7 +519,7 @@ aut_ptr determinize_first_component(const_aut_ptr src, state_set * to_determiniz
   typedef std::map<state_t, state_t> state_map;
   state_map old2new;
   state_map new2old;
-  for (auto s = 0; s < src->num_states(); s++)
+  for (state_t s = 0; s < src->num_states(); s++)
   {
     if (to_determinize->count(s) > 0) // skip states from the 1st component
       continue;
@@ -528,7 +529,7 @@ aut_ptr determinize_first_component(const_aut_ptr src, state_set * to_determiniz
     names->emplace_back(std::to_string(s));
   }
   // Now copy the transitions
-  for (auto s = 0; s < src->num_states(); s++)
+  for (state_t s = 0; s < src->num_states(); s++)
   {
     if (to_determinize->count(s) > 0) // skip states from the 1st component
       continue;

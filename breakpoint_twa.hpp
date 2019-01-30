@@ -28,8 +28,8 @@ std::string bp_name(breakpoint_state);
 class bp_twa {
   public:
     bp_twa(const_aut_ptr src_aut, bool cut_det, bool weak_powerset, jump_condition_t jump_condition) :
-    src_(src_aut), src_si_(spot::scc_info(src_aut)),
     cut_det_(cut_det), weak_powerset_(weak_powerset),
+    src_(src_aut), src_si_(spot::scc_info(src_aut)),
     jump_condition_(jump_condition),
     psb_(new powerset_builder(src_)) {
       res_ = spot::make_twa_graph(src_->get_dict());
