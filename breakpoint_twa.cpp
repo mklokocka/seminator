@@ -215,9 +215,9 @@ bp_twa::compute_successoors<breakpoint_state>(breakpoint_state bps, state_t src,
   state_vect intersection;
   //TODO true -> scc_optim
   if (true)
-  { // create set of states from current SCC
+  { // get states of the current SCC
     auto scc = src_si_.scc_of(*(p.begin()));
-    for (auto s : p)
+    for (auto s : p) // check that all states belong to one SCC
       assert(src_si_.scc_of(s) == scc);
     intersection = src_si_.states_of(scc);
   }
