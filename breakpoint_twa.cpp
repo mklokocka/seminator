@@ -255,6 +255,18 @@ bp_twa::add_cut_transition(state_t from, edge_t edge) {
       target_state = bp_state(dest);
     }
     res_->new_edge(from, target_state, edge.cond);
+  } else {
+    state_set start({edge.src});
+    if (weak_powerset_ && weak)
+      compute_successoors(start, from, &scc_states, false, edge.cond);
+    else
+    {
+      breakpoint_state bps;
+      std::get<Bp::LEVEL>(bps) = 0;
+      std::get<Bp::P>    (bps) = start;
+      std::get<Bp::Q>    (bps) = empty_set;
+      compute_successoors(bps, from, &scc_states, false, edge.cond);
+    }
   }
 }
 
