@@ -35,6 +35,7 @@ static const unsigned BA = 2;
 bool jump_enter = false;
 bool jump_always = false;
 bool weak_powerset = false;
+bool breakpoint_jump = false;
 
 /**
  * The semi-determinization algorithm as thought of by F. Blahoudek, J. Strejcek and M. Kretinsky.
@@ -72,7 +73,7 @@ bool is_cut_deterministic(const spot::twa_graph_ptr& aut, std::set<unsigned>* no
 *  2. If we freshly enter accepting scc (--jump-enter only)
 *  3. If e leads to accepting SCC (--jump-always only)
 */
-bool jump_condition(spot::const_twa_graph_ptr aut, spot::twa_graph::edge_storage_t e) {
+bool jump_condition(const_aut_ptr aut, edge_t e) {
   spot::scc_info si(aut);
   unsigned u = si.scc_of(e.src);
   unsigned v = si.scc_of(e.dst);

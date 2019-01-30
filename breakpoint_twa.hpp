@@ -27,8 +27,11 @@ std::string bp_name(breakpoint_state);
 
 class bp_twa {
   public:
-    bp_twa(const_aut_ptr src_aut, bool cut_det, bool weak_powerset, jump_condition_t jump_condition) :
+    bp_twa(const_aut_ptr src_aut,
+      bool cut_det, bool weak_powerset, bool breakpoint_jump,
+      jump_condition_t jump_condition) :
     cut_det_(cut_det), weak_powerset_(weak_powerset),
+    breakpoint_jump_(breakpoint_jump),
     src_(src_aut), src_si_(spot::scc_info(src_aut)),
     jump_condition_(jump_condition),
     psb_(new powerset_builder(src_)) {
@@ -130,19 +133,17 @@ class bp_twa {
     void create_all_cut_transitions();
 
     /**
-    * \brief Create new cut transition and store it in `cut_trans`
+    * \brief Create cut transition from `from` build using `edge`
     *
-    * @param[in] from (unsigned[state]) State in 1st component
-    * @param[in] to (unsigned[state])   State in 2nd component
-    * @param[in] cond (bdd)             Label of the cut-transition
-    *
-    * @return    (unsigned) the index of newly created edge in res_aut
+    * @param[in] from (state_t) State in 1st component
+    * @param[in] edge (edge_t)  Edge of the input automaton
     */
-    unsigned add_cut_transition(state_t, state_t, bdd);
+    void add_cut_transition(state_t, edge_t);
 
   private:
     bool cut_det_; // true if cut-determinism is requested
     bool weak_powerset_;
+    bool breakpoint_jump_; //start bp already on cut
 
     // input and result automata
     const_aut_ptr src_;
@@ -169,9 +170,6 @@ class bp_twa {
     // names of res automata states
     state_names names_ = new std::vector<std::string>;
 
-    // pointers to cut-edges (can be changed after merge_edges() is called)
-    std::vector<unsigned> cut_trans_ = std::vector<unsigned>();
-
     // Builder of powerset successors
     powerset_builder* psb_;
 
@@ -181,6 +179,15 @@ class bp_twa {
     // Performs the main part of the construction (breakpoint with levels)
     void finish_second_component(state_t);
 
+    state_vect get_and_check_scc(state_set);
+
     template <class T>
-    void compute_successoors (T, state_t, bool first_comp = false);
+    void compute_successoors (T, state_t, state_vect * intersection,
+      bool first_comp = false, bdd cond_constrain = bddtrue);
+
+    template <class T>
+    void compute_successoors (T from, state_t src,
+      bool first_comp = false, bdd cond_constrain = bddtrue) {
+        compute_successoors<T>(from, src, new state_vect(), first_comp, cond_constrain);
+      }
 };

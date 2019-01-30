@@ -39,6 +39,7 @@ enum class State_type {SIMPLE1,PS1,BP2,PS2};
 
 
 typedef unsigned state_t;
+typedef spot::twa_graph::edge_storage_t edge_t;
 typedef std::set<state_t> state_set;
 typedef std::vector<state_t> state_vect;
 
