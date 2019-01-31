@@ -219,6 +219,7 @@ int main(int argc, char* argv[])
     spot::twa_graph_ptr result;
     try
     {
+        auto old_n = aut->get_named_prop<std::string>("automaton-name");
         if (cd_check) {
             std::cout << is_cut_deterministic(aut) << std::endl;
             return 0;
@@ -254,6 +255,15 @@ int main(int argc, char* argv[])
             if (res3->num_states() < result->num_states())
                 result = res3;
         }
+
+        if (old_n)
+        {
+          std::stringstream ss;
+          ss << (deterministic_first_component ? "cDBA for " : "sDBA for ") << *old_n;
+          std::string * name = new std::string(ss.str());
+          result->set_named_prop("automaton-name", name);
+        }
+
         spot::print_hoa(std::cout, result) << '\n';
         return 0;
     }

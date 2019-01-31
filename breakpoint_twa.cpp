@@ -303,3 +303,12 @@ bp_twa::finish_second_component(state_t start) {
     }
   }
 }
+
+void
+bp_twa::print_res(std::string * name)
+{
+  if (name)
+    res_->set_named_prop<std::string>("automaton-name", name);
+  spot::print_hoa(std::cout, res_);
+  std::cout << std::endl;
+}

@@ -47,29 +47,29 @@ class bp_twa {
 
       // spot::print_hoa(std::cout, src_);
       // std::cout << "\n\n" << std::endl;
-      //
-      // // TO REMOVE
-      // res_->set_named_prop<std::string>("automaton-name", new std::string("After powerset"));
-      // spot::print_hoa(std::cout, res_);
-      // std::cout << std::endl;
-      // std::cout << std::endl;
+
+      // print_res('After 1st component built');
 
       create_all_cut_transitions();
 
-      // TO REMOVE
-      // res_->set_named_prop<std::string>("automaton-name", new std::string("After cut"));
-      // spot::print_hoa(std::cout, res_);
-      // std::cout << std::endl;
-      // std::cout << std::endl;
+      // print_res('After cut');
 
       res_->set_buchi();
       finish_second_component(first_comp_size);
 
       res_->merge_edges();
 
-      // res_->set_named_prop<std::string>("automaton-name", new std::string("My result"));
-      // spot::print_hoa(std::cout, res_);
-      // std::cout << "\n\n" << std::endl;
+      // spot::print_hoa(std::cout, src_);
+
+      auto old_n = src_->get_named_prop<std::string>("automaton-name");
+      if (old_n)
+      {
+      std::stringstream ss;
+      ss << (cut_det_ ? "cDBA for " : "sDBA for ") << old_n;
+
+      std::string * name = new std::string(ss.str());
+      res_->set_named_prop("automaton-name", name);
+      }
     }
 
     ~bp_twa()
@@ -123,6 +123,9 @@ class bp_twa {
     * @param[in] edge (edge_t)  Edge of the input automaton
     */
     void add_cut_transition(state_t, edge_t);
+
+    // \brief print the res_ automaton on std::cout and set its name to `name`
+    void print_res(std::string * name = nullptr);
 
   private:
     bool cut_det_; // true if cut-determinism is requested
