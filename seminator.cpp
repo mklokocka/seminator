@@ -496,7 +496,7 @@ aut_ptr determinize_first_component(const_aut_ptr src, state_set * to_determiniz
       (*ps2num)[ps] = state;
       //TODO add to bp1 states
 
-      names->emplace_back(powerset_name(ps));
+      names->emplace_back(powerset_name(&ps));
       return state;
     } else
       return ps2num->at(ps);
@@ -512,7 +512,7 @@ aut_ptr determinize_first_component(const_aut_ptr src, state_set * to_determiniz
   for (state_t s = 0; s < res->num_states(); ++s)
   {
     auto ps = num2ps->at(s);
-    auto succs = std::unique_ptr<succ_vect>(psb->get_succs(ps,
+    auto succs = std::unique_ptr<succ_vect>(psb->get_succs(&ps,
                                             to_determinize->begin(),
                                             to_determinize->end()));
     for(size_t c = 0; c < psb->nc_; ++c)
@@ -555,7 +555,7 @@ aut_ptr determinize_first_component(const_aut_ptr src, state_set * to_determiniz
   for (state_t ns = 0; ns < lsize; ns++)
   {
     auto ps = num2ps->at(ns);
-    auto succs = std::unique_ptr<succ_vect>(psb->get_succs(ps,
+    auto succs = std::unique_ptr<succ_vect>(psb->get_succs(&ps,
                                             to_determinize->begin(),
                                             to_determinize->end(),
                                             true

@@ -23,7 +23,7 @@ std::string bp_name(breakpoint_state bps) {
   state_set q = std::get<Bp::Q>(bps);
   int level   = std::get<Bp::LEVEL>(bps);
   std::stringstream name;
-  name << powerset_name(p) << " , " << powerset_name(q) << " , " << level;
+  name << powerset_name(&p) << " , " << powerset_name(&q) << " , " << level;
   return name.str();
 }
 
@@ -80,7 +80,7 @@ bp_twa::ps_state(state_set ps, bool fc) {
     (*ps2num)[ps] = state;
     //TODO add to bp1 states
 
-    names_->emplace_back(powerset_name(ps));
+    names_->emplace_back(powerset_name(&ps));
     return state;
   } else
     return ps2num->at(ps);
@@ -120,7 +120,7 @@ bp_twa::compute_successors<state_set>(state_set ps, state_t src,
 
   typedef spot::acc_cond::mark_t acc_mark;
 
-  auto succs = psb_->get_succs<>(ps, intersection->begin(), intersection->end());
+  auto succs = psb_->get_succs<>(&ps, intersection->begin(), intersection->end());
   for(size_t c = 0; c < psb_->nc_; ++c) {
     auto cond = psb_->num2bdd_[c];
     if (!bdd_implies(cond, cond_constrain))
@@ -149,7 +149,7 @@ bp_twa::create_first_component()
     state_set ps{init_num};
     ps2num1_[ps] = num;
     num2ps1_.emplace_back(ps);
-    names_->emplace_back(powerset_name(ps));
+    names_->emplace_back(powerset_name(&ps));
 
     // Build the transitions
     for (state_t src = 0; src < res_->num_states(); ++src)
@@ -186,11 +186,11 @@ bp_twa::compute_successors<breakpoint_state>(breakpoint_state bps, state_t src,
   assert(p != empty_set);
   assert(!fc);
 
-  succ_vect_ptr p_succs   (psb_->get_succs(p,
+  succ_vect_ptr p_succs   (psb_->get_succs(&p,
                           intersection->begin(), intersection->end()));
-  succ_vect_ptr q_succs   (psb_->get_succs(q,
+  succ_vect_ptr q_succs   (psb_->get_succs(&q,
                           intersection->begin(), intersection->end()));
-  succ_vect_ptr p_k_succs (psb_->get_succs(p, k, // go to Q
+  succ_vect_ptr p_k_succs (psb_->get_succs(&p, k, // go to Q
                           intersection->begin(), intersection->end()));
 
   for(size_t c = 0; c < psb_->nc_; ++c) {
@@ -212,7 +212,7 @@ bp_twa::compute_successors<breakpoint_state>(breakpoint_state bps, state_t src,
       k2 = (k + 1) % src_->num_sets();
       acc = {0};
       // Take the k2-succs of p
-      succ_vect_ptr tmp (psb_->get_succs(p, k2,
+      succ_vect_ptr tmp (psb_->get_succs(&p, k2,
                         intersection->begin(), intersection->end()));
       q2 = tmp->at(c);
       if (p2 == q2)

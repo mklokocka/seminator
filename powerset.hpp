@@ -31,13 +31,13 @@ static void ps_to_bv(spot::bitvect * bv,
     bv->set(*i);
 }
 
-static state_set bv_to_ps(const spot::bitvect* in)
+static state_set * bv_to_ps(const spot::bitvect* in)
 {
-  state_set ss;
+  auto ss = new state_set;
   unsigned ns = in->size();
   for (unsigned pos = 0; pos < ns; ++pos)
     if (in->get(pos))
-      ss.insert(pos);
+      ss->insert(pos);
   return ss;
 }
 
@@ -45,7 +45,7 @@ static state_set bv_to_ps(const spot::bitvect* in)
 /**
 * Returns a string in the form `{s1, s2, s3}` where si is a reference to the input_aut
 */
-std::string powerset_name(state_set);
+std::string powerset_name(state_set *);
 
 // Class that computes successors for powerset construction.
 //
@@ -126,12 +126,12 @@ public:
   // nc_-1: successors of state_set under num2bdd_[nc-1]-transtions marked by mark
   //
   template <class Iterator = ss_it>
-  succ_vect * get_succs(state_set ss, unsigned mark,
+  succ_vect * get_succs(state_set * ss, unsigned mark,
                         Iterator begin = empty_set.begin(),
                         Iterator end = empty_set.end(),
                         bool complement_iters = false)
   {
-    if (ss == empty_set)
+    if (*ss == empty_set)
       return new succ_vect(nc_, empty_set);
 
     auto sm = pw_storage.at(mark);
@@ -150,7 +150,7 @@ public:
     auto om = std::unique_ptr<bitvect_array>(spot::make_bitvect_array(ns_, nc_));
     auto result = new succ_vect;
 
-    for (auto s : ss)
+    for (auto s : *ss)
     {
       if (sm->count(s) == 0)
       { // Compute the bitvector_array with powerset transitions
@@ -165,7 +165,8 @@ public:
     for (unsigned c = 0; c < nc_; ++c)
     {
       auto ps = bv_to_ps(&om->at(c));
-      result->emplace_back(std::move(ps));
+      result->emplace_back(std::move(*ps));
+      delete ps;
     }
     delete i_bv;
 
@@ -174,7 +175,7 @@ public:
 
   // By default do not restrict to marks == use h+1
   template <class Iterator = ss_it>
-  succ_vect * get_succs(state_set ss,
+  succ_vect * get_succs(state_set * ss,
                         Iterator begin = empty_set.begin(),
                         Iterator end = empty_set.end(),
                         bool complement_iters = false) {

@@ -1,13 +1,13 @@
 #include <powerset.hpp>
 
-std::string powerset_name(state_set state)
+std::string powerset_name(state_set * ps)
 {
-  if (state.size() == 0)
+  if (ps->size() == 0)
     return "∅";
 
   std::stringstream ss;
   ss << "{";
-  for (auto state: state)
+  for (auto state: *ps)
     ss << state << ',';
   //Remove the last comma
   ss.seekp(-1,ss.cur);
