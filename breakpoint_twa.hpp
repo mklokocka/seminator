@@ -70,22 +70,6 @@ class bp_twa {
       // res_->set_named_prop<std::string>("automaton-name", new std::string("My result"));
       // spot::print_hoa(std::cout, res_);
       // std::cout << "\n\n" << std::endl;
-
-
-      // TO REMOVE
-      // breakpoint_state bs = num2bp_.at(4);
-      // auto succs = psb_->get_succs(std::get<1>(bs));
-      // // For each condition: print succ
-      // for(size_t c = 0; c < psb_->nc_; ++c) {
-      //   auto cond = psb_->num2bdd_[c];
-      //   std::cout << "\nFor ";
-      //   spot::bdd_print_formula(std::cout, res_->get_dict(), cond);
-      //   auto name = powerset_name(succs->at(c));
-      //   std::cout << " go to " << name;
-      // }
-      // std::cout.flush();
-      // psb_->get_succs(std::get<1>(bs), 0);
-
     }
 
     ~bp_twa()
@@ -133,7 +117,7 @@ class bp_twa {
     void create_all_cut_transitions();
 
     /**
-    * \brief Create cut transition from `from` build using `edge`
+    * \brief Create cut transition from `from` built using `edge`
     *
     * @param[in] from (state_t) State in 1st component
     * @param[in] edge (edge_t)  Edge of the input automaton
@@ -152,8 +136,13 @@ class bp_twa {
     // scc info of src (needed for scc-aware optimization)
     spot::scc_info src_si_;
 
-    // fcnPointer to condition where to jump from 1st to 2nd component (cut-transition)
-    // edge should be edge from src_
+    // fcnPointer to decide when jump from 1st to 2nd component (cut-transition)
+    // The function should take 2 arguments:
+    //
+    //  1. const_aut_ptr src_
+    //  2. edge_t edge
+    //
+    // The edge is an edge from src_
     jump_condition_t jump_condition_;
 
     // mapping between power_states and their indices
@@ -164,8 +153,9 @@ class bp_twa {
     succ_vect num2ps2_ = succ_vect();
 
     // mapping between states of 2nd comp. of res_ and their content
-    breakpoint_map bp2num_ = breakpoint_map();               // bp_state -> state_t
-    std::vector<breakpoint_state> num2bp_ = std::vector<breakpoint_state>();  // state_t  -> bp_state
+    breakpoint_map bp2num_ = breakpoint_map();        // bp_state -> state_t
+    std::vector<breakpoint_state>
+          num2bp_ = std::vector<breakpoint_state>();  // state_t  -> bp_state
 
     // names of res automata states
     state_names names_ = new std::vector<std::string>;
@@ -174,13 +164,42 @@ class bp_twa {
     powerset_builder* psb_;
 
     // Creates res_ and its 1st component
+    //
+    // * for semi-deterministic automata only copy states and edges of src_ to
+    // 1st component of res_ and remove marks from all transitions.
+    //
+    // * for cut-deterministic automata apply powerset construction.
     void create_first_component();
 
     // Performs the main part of the construction (breakpoint with levels)
+    //
+    // @param[in] state_t s: the lowest index of 2nd component's state
+    //
+    // Cycles through all states, and computes successors for them. Suitable
+    // to use powerset construction for inherently_weak SCC.
+    //
     void finish_second_component(state_t);
 
+    // For a state_set S from src_ checks that all states in S are from the same
+    // SCC and returns the vector of all states of this SCC.
     state_vect get_and_check_scc(state_set);
 
+    // Create successors (and edges to them) for a given state
+    //
+    // The possible states right now are:
+    //  * breakpoint_state
+    //  * powerset (state_set)
+    //
+    // @param[in] T state     : the given state (may nat exist in any automaton)
+    // @param[in] state_t from: state-index (in res_) of state to which we add
+    //                          the computed edges (can be also used to add
+    //                          behaviour of the given state to state `from`)
+    // @param[in] state_vect intersection:
+    //                        : all successors will be interesected with the
+    //                          states given here (can be states of SCC)
+    // @param[in] bool fc     : indicates whether the constructed states should
+    //                          belong to the 1st component (for state_set only)
+    // @param[in] bdd cond    : build only edges with label described by `cond`
     template <class T>
     void compute_successors (T, state_t, state_vect * intersection,
       bool first_comp = false, bdd cond_constrain = bddtrue);
