@@ -112,7 +112,7 @@ bp_twa::create_all_cut_transitions() {
 // The edges in 2nd component are all is_accepting
 // No edges are accepting in the first component
 template <> void
-bp_twa::compute_successoors<state_set>(state_set ps, state_t src,
+bp_twa::compute_successors<state_set>(state_set ps, state_t src,
   state_vect * intersection,
   bool fc, bdd cond_constrain)
 {
@@ -155,7 +155,7 @@ bp_twa::create_first_component()
     for (state_t src = 0; src < res_->num_states(); ++src)
     {
       auto ps = num2ps1_.at(src);
-      compute_successoors(ps, src, true);
+      compute_successors(ps, src, true);
     }
     res_->merge_edges();
   } else { // Just copy the states and transitions
@@ -175,7 +175,7 @@ bp_twa::create_first_component()
 }
 
 template <> void
-bp_twa::compute_successoors<breakpoint_state>(breakpoint_state bps, state_t src,
+bp_twa::compute_successors<breakpoint_state>(breakpoint_state bps, state_t src,
   state_vect * intersection,
   bool fc, bdd cond_constrain)
 {
@@ -258,14 +258,14 @@ bp_twa::add_cut_transition(state_t from, edge_t edge) {
   } else {
     state_set start({edge.src});
     if (weak_powerset_ && weak)
-      compute_successoors(start, from, &scc_states, false, edge.cond);
+      compute_successors(start, from, &scc_states, false, edge.cond);
     else
     {
       breakpoint_state bps;
       std::get<Bp::LEVEL>(bps) = 0;
       std::get<Bp::P>    (bps) = start;
       std::get<Bp::Q>    (bps) = empty_set;
-      compute_successoors(bps, from, &scc_states, false, edge.cond);
+      compute_successors(bps, from, &scc_states, false, edge.cond);
     }
   }
 }
@@ -294,12 +294,12 @@ bp_twa::finish_second_component(state_t start) {
     {
       auto bps = num2bp_.at(src);
       auto intersection = get_and_check_scc(std::get<Bp::P>(bps));
-      compute_successoors(bps, src, &intersection);
+      compute_successors(bps, src, &intersection);
     }
     else
     {
       auto intersection = get_and_check_scc(ps);
-      compute_successoors(ps, src, &intersection);
+      compute_successors(ps, src, &intersection);
     }
   }
 }

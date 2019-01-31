@@ -182,12 +182,12 @@ class bp_twa {
     state_vect get_and_check_scc(state_set);
 
     template <class T>
-    void compute_successoors (T, state_t, state_vect * intersection,
+    void compute_successors (T, state_t, state_vect * intersection,
       bool first_comp = false, bdd cond_constrain = bddtrue);
 
     template <class T>
-    void compute_successoors (T from, state_t src,
+    void compute_successors (T from, state_t src,
       bool first_comp = false, bdd cond_constrain = bddtrue) {
-        compute_successoors<T>(from, src, new state_vect(), first_comp, cond_constrain);
+        compute_successors<T>(from, src, new state_vect(), first_comp, cond_constrain);
       }
 };
