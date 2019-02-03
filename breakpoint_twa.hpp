@@ -28,10 +28,11 @@ std::string bp_name(breakpoint_state);
 class bp_twa {
   public:
     bp_twa(const_aut_ptr src_aut,
-      bool cut_det, bool weak_powerset, bool breakpoint_jump,
+      bool cut_det, bool weak_powerset, bool breakpoint_jump, bool scc_aware,
       jump_condition_t jump_condition) :
     cut_det_(cut_det), weak_powerset_(weak_powerset),
     breakpoint_jump_(breakpoint_jump),
+    scc_aware_(scc_aware),
     src_(src_aut), src_si_(spot::scc_info(src_aut)),
     jump_condition_(jump_condition),
     psb_(new powerset_builder(src_)) {
@@ -131,6 +132,7 @@ class bp_twa {
     bool cut_det_; // true if cut-determinism is requested
     bool weak_powerset_;
     bool breakpoint_jump_; //start bp already on cut
+    bool scc_aware_;
 
     // input and result automata
     const_aut_ptr src_;

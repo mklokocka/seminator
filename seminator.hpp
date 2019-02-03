@@ -36,6 +36,7 @@ bool jump_enter = false;
 bool jump_always = false;
 bool weak_powerset = false;
 bool breakpoint_jump = false;
+bool scc_aware = true;
 
 /**
  * The semi-determinization algorithm as thought of by F. Blahoudek, J. Strejcek and M. Kretinsky.

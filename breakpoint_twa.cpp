@@ -236,7 +236,7 @@ bp_twa::add_cut_transition(state_t from, edge_t edge) {
   bool weak = src_si_.weak_sccs()[scc];
 
   state_vect scc_states;
-  if (true) // TODO true -> scc_optim
+  if (scc_aware_)
     scc_states = src_si_.states_of(scc);
 
 
@@ -273,8 +273,7 @@ bp_twa::add_cut_transition(state_t from, edge_t edge) {
 state_vect
 bp_twa::get_and_check_scc(state_set ps) {
   state_vect intersection;
-  //TODO true -> scc_optim
-  if (true)
+  if (scc_aware_)
   { // create set of states from current SCC
     auto scc = src_si_.scc_of(*(ps.begin()));
     for (auto s : ps)

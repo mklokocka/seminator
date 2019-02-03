@@ -93,6 +93,10 @@ int main(int argc, char* argv[])
         {
             breakpoint_jump = true;
         }
+        else if (arg.compare("--scc0") == 0)
+        {
+            scc_aware = false;
+        }
         else if (arg.compare("-s0") == 0)
         {
             optimize = false;
@@ -149,6 +153,7 @@ int main(int argc, char* argv[])
             std::cout << "  --jump-always\tjump to deterministic component on each transition to an accepting SCC" << std::endl;
             std::cout << "  --weak-powerset\tdo not use breakpoint construction for inherently weak accepting SCCs" << std::endl;
             std::cout << "  --breakpoint-jump\tuse breakpoint construction already on cut transitions" << std::endl;
+            std::cout << "  --scc0\tdisables scc-aware optimization (enabled by default)" << std::endl;
             std::cout << "   -s0\t\tdisables spot automata reductions algorithms" << std::endl;
 
             std::cout << " Output options: " << std::endl;
@@ -326,7 +331,7 @@ spot::twa_graph_ptr buchi_to_semi_deterministic_buchi(spot::twa_graph_ptr& aut, 
     else
     {   // Use the breakpoint construction
         bp_twa resbp(aut, deterministic_first_component,
-          weak_powerset, breakpoint_jump, jump_condition);
+          weak_powerset, breakpoint_jump, scc_aware, jump_condition);
         result = resbp.res_aut();
     }
 
