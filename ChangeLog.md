@@ -1,9 +1,16 @@
 ## [Unpublished]
+The code was almost completely rewritten.
 ### Added
-* Option `--jump-enter` to jump to deterministic component also when freshly entering an accepting SCC
-* Option `--jump-always` to jump to deterministic component always for transitions leading to some accepting SCC
+* New options that control when cut-transitions (jumps to determinisitc component) are created. By default a cut-transition is created when a highest mark occurs in the input automaton.
+  - `--jump-enter`: jump also when freshly entering an accepting SCC 
+  - `--jump-always`: jump also for all transitions leading to some accepting SCC
+* `--weak-powerset` for accepting SCC that is inherently weak in the input automaton, use only simple powerset construction in the deterministic part of the sDBA.
+* `--breakpoint-jump` starts the breakpoint construction already on cut-transitions. For a marked transition s -a-> p build s -a-> (δ(s),δ_0(s),0) instead of s -a-> ({p},∅,0).
+* `--scc0` disables the SCC-aware optimization (enabled by default)
 
 ### Changed
+* When a breakpoint is reached (R = B), track accepting transitions of the next level in B (it was set to ∅ before).
+
 #### Evaluation
 * Use the new version of owl for comparison (18.06)
 * Also compare Seminator with the `--jump-enter` option
