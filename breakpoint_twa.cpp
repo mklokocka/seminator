@@ -67,6 +67,7 @@ bp_twa::bp_state(breakpoint_state bps) {
 // _s a new state if needed
 state_t
 bp_twa::ps_state(state_set ps, bool fc) {
+  // fc = first component
   auto num2ps = fc ? &num2ps1_ : &num2ps2_;
   auto ps2num = fc ? &ps2num1_ : &ps2num2_;
 
