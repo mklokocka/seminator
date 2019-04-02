@@ -62,8 +62,8 @@ aut_ptr determinize_first_component(const_aut_ptr, state_set * to_determinize);
 bool is_cut_deterministic(const spot::twa_graph_ptr& aut, std::set<unsigned>* non_det_states = nullptr);
 
 /**
-* Returns whether a cut transition (jump to the deterministic component) for the
-* current edge should be created.
+* Returns whether a cut transition (jump to the deterministic component)
+* for the current edge should be created.
 *
 * @param[in] aut                The input automaton_stream_parser
 * @param[in] e                  The edge beeing processed
@@ -71,8 +71,8 @@ bool is_cut_deterministic(const spot::twa_graph_ptr& aut, std::set<unsigned>* no
 *
 * Currently, 4 conditions trigger the jump:
 *  1. If the edge has the highest mark
-*  2. If we freshly enter accepting scc (--cut-on-SCC-entry only)
-*  3. If e leads to accepting SCC (--cut-always only)
+*  2. If we freshly enter accepting scc (--cut-on-SCC-entry option)
+*  3. If e leads to accepting SCC (--cut-always option)
 */
 bool cut_condition(const_aut_ptr aut, edge_t e) {
   spot::scc_info si(aut);
@@ -86,6 +86,61 @@ bool cut_condition(const_aut_ptr aut, edge_t e) {
       (cut_on_SCC_entry && u != v) || // 2
       cut_always // 3
   );
+}
+
+void print_usage(std::ostream& os) {
+  os << "Usage: seminator [OPTION...] [FILENAME]" << std::endl;
+}
+
+void print_help() {
+  print_usage(std::cout);
+  std::cout <<
+"The tool transforms TGBA into equivalent semi- or cut-deterministic TBA.\n\n";
+
+  std::cout <<
+  "By default, it reads a generalized Büchi automaton (GBA) from standard input\n"
+  "and converts it into semi-deterministic Büchi automaton (sDBA), runs\n"
+  "Spot's simplifications on it and outputs the result in the HOA format.\n"
+  "The main algorithms are based on breakpoint construction. If the automaton\n"
+  "is already of the requested shape, only the simplifications are run.\n\n";
+
+  std::cout << " Input options:\n";
+  std::cout <<
+"   -f FILENAME\treads the input from FILENAME instead of stdin\n\n";
+
+  std::cout << " Output options: \n"
+  "  --cd \t\tcut-deterministic automaton\n"
+  "  --tgba \tTGBA output (default)\n"
+  "  --tba\t\tTBA output\n"
+  "  --ba \t\tSBA output\n"
+  "  --is-cd\tdo not run the translation, check whether the input is \n"
+  "         \tcut-deterministic. Outputs 1 if it is, 0 otherwise.\n"
+  "         \t(Spot's autfilt offers --is-semideterministic check)\n\n";
+
+  std::cout <<
+  " Transformation type (T=transition-based, S=state-based): \n"
+  "  --via-tgba\tone-step semi-determinization: TGBA -> sDBA\n"
+  "  --via-tba\ttwo-steps: TGBA -> TBA -> sDBA\n"
+  "  --via-sba\ttwo-steps: TGBA -> SBA -> sDBA\n\n";
+
+  std::cout << "Cut-edges construction:\n"
+  "  --cut-always      \tcut-edges for each edge to an accepting SCC\n"
+  "  --cut-on-SCC-entry\tcut-edges also for edges freshly entering an\n"
+  "                    \taccepting SCC\n"
+  "  --powerset-on-cut \tcreate s -a-> (δ(s),δ(s),0) instead of s -a-> ({p},∅,0)"
+  "\n\n"
+  "Cut-edges are edges between the 1st and 2nd component of the resulting\n"
+  "automaton, they are based on edges of the input automaton. By default,\n" "create cut-edges for edges with the highest mark, for edge s -a-> p build\n"
+  "cut-edge s -a-> ({p},∅,0).\n\n";
+
+  std::cout << "Optimizations:\n"
+  "  --powerset-for-weak\tavoid breakpoint construction for inherently weak\n" "                     \taccepting SCCs and use powerset construction instead\n"
+  "  -s0                \tdisables Spot's automata reductions algorithms\n"
+  "  --scc0             \tdisables scc-aware optimization\n\n";
+
+  std::cout << " Miscellaneous options: \n"
+  "  --help\tprint this help\n"
+  "  --version\tprint program version" << std::endl;
 }
 
 /**

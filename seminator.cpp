@@ -132,43 +132,7 @@ int main(int argc, char* argv[])
         }
         else if (arg.compare("--help") == 0)
         {
-            std::cout << "Usage: seminator [OPTION...] [FILENAME]" << std::endl;
-            std::cout << "The tool is used to transform a TGBA into an equivalent semi-(or cut-)deterministic TBA." << std::endl;
-
-            std::cout << std::endl;
-
-            std::cout << " Input:" << std::endl;
-            std::cout << "   -f FILENAME\ttransform the automaton in FILENAME" << std::endl;
-
-            std::cout << " Transformation options: " << std::endl;
-            std::cout << "  --cd\t\tmake sure the first component of the result is deterministic" << std::endl;
-            std::cout << "  --cy\t\tsimulate the CY[88] algorithm (preceeded by degeneralization to NBA)" << std::endl;
-            std::cout << "  --via-tgba\tthe standard algorithm which proceeds by transforming" <<
-                std::endl << "\t\tthe input automaton as is" << std::endl;
-            std::cout << "  --via-tba\tthe input automaton is first degeneralized into a TBA" <<
-                std::endl << "\t\tbefore being transformed" << std::endl;
-            std::cout << "  --via-sba\tthe input automaton is first degeneralized into a BA" <<
-                std::endl << "\t\tbefore being transformed" << std::endl;
-            std::cout << "  --cut-on-SCC-entry\tjump to deterministic component also when freshly entering an accepting SCC" << std::endl;
-            std::cout << "  --cut-always\tjump to deterministic component on each transition to an accepting SCC" << std::endl;
-            std::cout << "  --powerset-for-weak\tdo not use breakpoint construction for inherently weak accepting SCCs" << std::endl;
-            std::cout << "  --powerset-on-cut\tuse breakpoint construction already on cut transitions" << std::endl;
-            std::cout << "  --scc0\tdisables scc-aware optimization (enabled by default)" << std::endl;
-            std::cout << "   -s0\t\tdisables spot automata reductions algorithms" << std::endl;
-
-            std::cout << " Output options: " << std::endl;
-            std::cout << "  --tgba\tprefer TGBA output" << std::endl;
-            std::cout << "  --tba\t\tprefer TBA output" << std::endl;
-            std::cout << "  --ba\t\tprefer BA output" << std::endl;
-            std::cout << "  --is-cd\toutputs 1 if the input automaton is cut-deterministic," <<
-                std::endl << "\t\t0 otherwise; does not transform the input automaton" << std::endl;
-
-            std::cout << " Miscellaneous options: " << std::endl;
-            std::cout << "  --help\tprint this help" << std::endl;
-            std::cout << "  --version\tprint program version" << std::endl;
-
-            std::cout << std::endl;
-
+            print_help();
             return 1;
         }
         else if (arg.compare("--version") == 0)
@@ -195,6 +159,7 @@ int main(int argc, char* argv[])
     if (automata_from_cin.empty() && path_to_file.empty())
     {
         std::cerr << "Seminator: No automaton to process?  Run 'seminator --help' for help." << std::endl;
+        print_usage(std::cerr);
         return 1;
     }
 
