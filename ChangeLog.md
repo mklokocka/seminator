@@ -4,11 +4,13 @@ The code was almost completely rewritten.
 * New options that control when cut-transitions (jumps to deterministic component) are created. By default a cut-transition is created when a highest mark occurs in the input automaton.
   - `--cut-on-SCC-entry`: jump also when freshly entering an accepting SCC
   - `--cut-always`: jump also for all transitions leading to some accepting SCC
-* `--powerset-for-weak` for accepting SCC that is inherently weak in the input automaton, use only simple powerset construction in the deterministic part of the sDBA.
 * `--powerset-on-cut` starts the breakpoint/subset construction already on cut-transitions. For a marked transition s -a-> p build s -a-> (δ(s),δ_0(s),0) instead of s -a-> ({p},∅,0).
-* `--scc0` disables the SCC-aware optimization which is enabled by default
-* Multiple transformation types (``--via-sba`, ``--via-tba`, ``--via-tgba`) can be specified. The one will smallest result will be outputted.
+* `--powerset-for-weak` for accepting SCC that is inherently weak in the input automaton, use only simple powerset construction in the deterministic part of the sDBA.
+* Multiple transformation types (`--via-sba`, `--via-tba`, `--via-tgba`) can be specified. The one will smallest result will be outputted.
+* `--scc-aware` enables the scc-aware optimization (default on)
+* `--scc0` and `--no-scc-aware` disables the SCC-aware optimization
 * `--sd` option for semi-deterministic output (and not cut-deterministic)
+* `--no-reduction` is a synonym for `s0` (disables reductions by Spot)
 
 ### Changed
 * When a breakpoint is reached (R = B), track accepting transitions of the next level in B (it was set to ∅ before).

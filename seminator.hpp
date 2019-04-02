@@ -139,9 +139,12 @@ void print_help() {
   "  s -a-> p create cut-edge s -a-> ({p},∅,0).\n\n";
 
   std::cout << "Optimizations:\n"
-  "  --powerset-for-weak\tavoid breakpoint construction for inherently weak\n" "                     \taccepting SCCs and use powerset construction instead\n"
-  "  -s0                \tdisables Spot's automata reductions algorithms\n"
-  "  --scc0             \tdisables scc-aware optimization\n\n";
+  "    --powerset-for-weak    \tavoid breakpoint construction for\n"
+  "                           \tinherently weak accepting SCCs and use\n"
+  "                           \tpowerset construction instead\n"
+  "    -s0,    --no-reductions\tdisable Spot automata post-reductions\n"
+  "    --scc-aware            \tenable scc-aware optimization (default on)\n"
+  "    --scc0, --no-scc-aware \tdisable scc-aware optimization\n\n";
 
   std::cout << "Miscellaneous options: \n"
   "  --help\tprint this help\n"

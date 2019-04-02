@@ -45,6 +45,8 @@ int main(int argc, char* argv[])
         automata_from_cin.append(result);
     }
 
+    // Declaration for input options. The rest is in seminator.hpp
+    // as they need to be included in other files.
     bool deterministic_first_component = false;
     bool optimize = true;
     bool cd_check = false;
@@ -53,74 +55,67 @@ int main(int argc, char* argv[])
     bool via_sba = false;
     unsigned preferred_output = TGBA;
     std::string path_to_file;
+
     for (int i = 1; i < argc; i++)
     {
         std::string arg = argv[i];
-        if (arg.compare("--cd") == 0)
-        {
-            deterministic_first_component = true;
-        }
-        else if (arg.compare("--sd") == 0)
-        {
-            deterministic_first_component = false;
-        }
-        else if (arg.compare("--via-sba") == 0)
-        {
+
+        // Transformation types
+        if (arg.compare("--via-sba") == 0)
             via_sba = true;
-        }
+
         else if (arg.compare("--via-tba") == 0)
-        {
             via_tba = true;
-        }
+
         else if (arg.compare("--via-tgba") == 0)
-        {
             via_tgba = true;
-        }
+
         else if (arg.compare("--is-cd") == 0)
-        {
             cd_check = true;
-        }
-        else if (arg.compare("--cut-on-SCC-entry") == 0)
-        {
+
+        // Cut edges
+        else if (arg.compare("--cut-on-SCC-entry") == 0) {
             cut_on_SCC_entry = true;
-        }
-        else if (arg.compare("--cut-always") == 0)
-        {
+
+        } else if (arg.compare("--cut-always") == 0)
             cut_always = true;
-        }
-        else if (arg.compare("--powerset-for-weak") == 0)
-        {
-            powerset_for_weak = true;
-        }
+
         else if (arg.compare("--powerset-on-cut") == 0)
-        {
             powerset_on_cut = true;
-        }
+
+        // Optimizations
+        else if (arg.compare("--powerset-for-weak") == 0)
+            powerset_for_weak = true;
+
         else if (arg.compare("--scc0") == 0)
-        {
             scc_aware = false;
-        }
+        else if (arg.compare("--no-scc-aware") == 0)
+            scc_aware = false;
+        else if (arg.compare("--scc-aware") == 0)
+            scc_aware = true;
+
         else if (arg.compare("-s0") == 0)
-        {
             optimize = false;
-        }
-        else if (arg.compare("--cy") == 0)
-        {
-            std::cerr << "Invalid option --cy. Use --via-sba -s0 instead.";
-            return 2;
-        }
+
+        else if (arg.compare("--no-reductions") == 0)
+            optimize = false;
+
+        // Prefered output
+        else if (arg.compare("--cd") == 0)
+            deterministic_first_component = true;
+
+        else if (arg.compare("--sd") == 0)
+            deterministic_first_component = false;
+
         else if (arg.compare("--ba") == 0)
-        {
             preferred_output = BA;
-        }
+
         else if (arg.compare("--tba") == 0)
-        {
             preferred_output = TBA;
-        }
+
         else if (arg.compare("--tgba") == 0)
-        {
             preferred_output = TGBA;
-        }
+
         else if (arg.compare("-f") == 0)
         {
             if (argc < i + 1)
@@ -151,13 +146,14 @@ int main(int argc, char* argv[])
 
             return 0;
         }
-        else
+        // removed
+        else if (arg.compare("--cy") == 0)
         {
-            if (path_to_file.empty())
-            {
-                path_to_file = argv[i];
-            }
+            std::cerr << "Invalid option --cy. Use --via-sba -s0 instead.";
+            return 2;
         }
+        else if (path_to_file.empty())
+            path_to_file = argv[i];
     }
 
     if (!(via_sba || via_tba || via_tgba)) {
@@ -176,9 +172,7 @@ int main(int argc, char* argv[])
     spot::parsed_aut_ptr parsed_aut;
 
     if (!path_to_file.empty())
-    {
         parsed_aut = parse_aut(path_to_file, dict);
-    }
     else
     {
         const std::string filename = "Reading from std::cin pipe";
