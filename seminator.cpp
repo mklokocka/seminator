@@ -102,7 +102,7 @@ int main(int argc, char* argv[])
         }
         else if (arg.compare("--cy") == 0)
         {
-            std::cerr << "Invalid option --cy. Use --via-sba -s0 instead."
+            std::cerr << "Invalid option --cy. Use --via-sba -s0 instead.";
             return 2;
         }
         else if (arg.compare("--ba") == 0)
@@ -252,12 +252,12 @@ int main(int argc, char* argv[])
     }
 }
 
-spot::twa_graph_ptr buchi_to_semi_deterministic_buchi(spot::twa_graph_ptr& aut, bool deterministic_first_component, bool optimization, unsigned output)
+aut_ptr buchi_to_semi_deterministic_buchi(aut_ptr aut, bool deterministic_first_component, bool optimization, unsigned output)
 {
     // Remove dead and unreachable states and prune accepting conditions in non-accepting SCCs.
     aut = spot::scc_filter(aut, true);
 
-    spot::twa_graph_ptr result;
+    aut_ptr result;
 
     // Check if input is TGBA
     if (!aut->acc().is_generalized_buchi())
@@ -326,7 +326,7 @@ spot::twa_graph_ptr buchi_to_semi_deterministic_buchi(spot::twa_graph_ptr& aut, 
     return result;
 }
 
-bool is_cut_deterministic(const spot::twa_graph_ptr& aut, std::set<unsigned>* non_det_states)
+bool is_cut_deterministic(const_aut_ptr aut, std::set<unsigned>* non_det_states)
 {
     unsigned UNKNOWN = 0;
     unsigned IN_CUT = 1;

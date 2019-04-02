@@ -20,8 +20,8 @@
 #include <powerset.hpp>
 
 /*
-* Gives the name for a breakpoint state of the form: level, P, Q
-* Example:  0, {p1, p2}, {q1, 12}
+* Gives the name for a breakpoint state of the form: P, Q, level
+* Example:  {q1, q2, q3}, {q1, q3}, 0
 */
 std::string bp_name(breakpoint_state);
 

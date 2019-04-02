@@ -43,7 +43,7 @@ bool scc_aware = true;
  *
  * @param[in] aut TGBA to transform to a semi-deterministic TBA.
  */
-spot::twa_graph_ptr buchi_to_semi_deterministic_buchi(spot::twa_graph_ptr& aut, bool deterministic_first_component, bool optimization, unsigned output);
+aut_ptr buchi_to_semi_deterministic_buchi(aut_ptr aut, bool deterministic_first_component, bool optimization, unsigned output);
 
 /**
  * Determinizes the first part of input. The first part is given by to_determinize
@@ -59,7 +59,7 @@ aut_ptr determinize_first_component(const_aut_ptr, state_set * to_determinize);
  * @param[out] non_det_states   Vector of the states that block cut-determinism.
  * @return Whether the automaton is cut-deterministic or not.
  */
-bool is_cut_deterministic(const spot::twa_graph_ptr& aut, std::set<unsigned>* non_det_states = nullptr);
+bool is_cut_deterministic(const_aut_ptr aut, std::set<unsigned>* non_det_states = nullptr);
 
 /**
 * Returns whether a cut transition (jump to the deterministic component)
