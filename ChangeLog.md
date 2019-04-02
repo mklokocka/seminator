@@ -1,12 +1,13 @@
 ## [Unpublished]
 The code was almost completely rewritten.
 ### Added
-* New options that control when cut-transitions (jumps to determinisitc component) are created. By default a cut-transition is created when a highest mark occurs in the input automaton.
+* New options that control when cut-transitions (jumps to deterministic component) are created. By default a cut-transition is created when a highest mark occurs in the input automaton.
   - `--cut-on-SCC-entry`: jump also when freshly entering an accepting SCC
   - `--cut-always`: jump also for all transitions leading to some accepting SCC
 * `--powerset-for-weak` for accepting SCC that is inherently weak in the input automaton, use only simple powerset construction in the deterministic part of the sDBA.
 * `--powerset-on-cut` starts the breakpoint/subset construction already on cut-transitions. For a marked transition s -a-> p build s -a-> (δ(s),δ_0(s),0) instead of s -a-> ({p},∅,0).
 * `--scc0` disables the SCC-aware optimization which is enabled by default
+* More transformation types can be chosen. The one will smallest result will be outputted.
 
 ### Changed
 * When a breakpoint is reached (R = B), track accepting transitions of the next level in B (it was set to ∅ before).
@@ -17,7 +18,7 @@ The code was almost completely rewritten.
 * Also compare Seminator with the `--cut-always` option
 
 ### Removed
-* `--cy` option is now depracated
+* `--cy` option (use --via-tba -s0 instead)
 
 ### Fixed
 * jumps to the deterministic component after seeing highest mark (instead of 0) also for cut-deterministic automata

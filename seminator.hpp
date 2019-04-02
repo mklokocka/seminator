@@ -19,6 +19,7 @@
 //#include <utility>
 #include <stdexcept>
 #include <unistd.h>
+#include <limits>
 
 #include <types.hpp>
 #include <breakpoint_twa.hpp>
@@ -104,41 +105,43 @@ void print_help() {
   "The main algorithms are based on breakpoint construction. If the automaton\n"
   "is already of the requested shape, only the simplifications are run.\n\n";
 
-  std::cout << " Input options:\n";
+  std::cout << "Input options:\n";
   std::cout <<
-"   -f FILENAME\treads the input from FILENAME instead of stdin\n\n";
+  "    -f FILENAME\treads the input from FILENAME instead of stdin\n\n";
 
-  std::cout << " Output options: \n"
-  "  --cd \t\tcut-deterministic automaton\n"
-  "  --tgba \tTGBA output (default)\n"
-  "  --tba\t\tTBA output\n"
-  "  --ba \t\tSBA output\n"
-  "  --is-cd\tdo not run the translation, check whether the input is \n"
-  "         \tcut-deterministic. Outputs 1 if it is, 0 otherwise.\n"
-  "         \t(Spot's autfilt offers --is-semideterministic check)\n\n";
+  std::cout << "Output options: \n"
+  "    --cs   \tcut-deterministic automaton\n"
+  "    --tgba \tTGBA output (default)\n"
+  "    --tba\t\tTBA output\n"
+  "    --ba \t\tSBA output\n"
+  "    --is-cd\tdo not run the translation, check whether the input is \n"
+  "           \tcut-deterministic. Outputs 1 if it is, 0 otherwise.\n"
+  "           \t(Spot's autfilt offers --is-semideterministic check)\n\n";
 
   std::cout <<
-  " Transformation type (T=transition-based, S=state-based): \n"
-  "  --via-tgba\tone-step semi-determinization: TGBA -> sDBA\n"
-  "  --via-tba\ttwo-steps: TGBA -> TBA -> sDBA\n"
-  "  --via-sba\ttwo-steps: TGBA -> SBA -> sDBA\n\n";
+  "Transformation type (T=transition-based, S=state-based): \n"
+  "    --via-tgba\tone-step semi-determinization: TGBA -> sDBA\n"
+  "    --via-tba\ttwo-steps: TGBA -> TBA -> sDBA\n"
+  "    --via-sba\ttwo-steps: TGBA -> SBA -> sDBA\n\n"
+  "  Multiple translation types can be chosen, the one with smallest\n"
+  "  result will be outputed. If none is chosen, all three are run.\n\n";
 
   std::cout << "Cut-edges construction:\n"
-  "  --cut-always      \tcut-edges for each edge to an accepting SCC\n"
-  "  --cut-on-SCC-entry\tcut-edges also for edges freshly entering an\n"
-  "                    \taccepting SCC\n"
-  "  --powerset-on-cut \tcreate s -a-> (δ(s),δ(s),0) instead of s -a-> ({p},∅,0)"
-  "\n\n"
-  "Cut-edges are edges between the 1st and 2nd component of the resulting\n"
-  "automaton, they are based on edges of the input automaton. By default,\n" "create cut-edges for edges with the highest mark, for edge s -a-> p build\n"
-  "cut-edge s -a-> ({p},∅,0).\n\n";
+  "    --cut-always      \tcut-edges for each edge to an accepting SCC\n"
+  "    --cut-on-SCC-entry\tcut-edges also for edges freshly entering an\n"
+  "                      \taccepting SCC\n"
+  "    --powerset-on-cut \tcreate s -a-> (δ(s),δ_0(s),0) for s -a-> p\n\n"
+  "  Cut-edges are edges between the 1st and 2nd component of the result.\n"
+  "  They are based on edges of the input automaton. By default,\n"
+  "  create cut-edges for edges with the highest mark, for edge\n"
+  "  s -a-> p create cut-edge s -a-> ({p},∅,0).\n\n";
 
   std::cout << "Optimizations:\n"
   "  --powerset-for-weak\tavoid breakpoint construction for inherently weak\n" "                     \taccepting SCCs and use powerset construction instead\n"
   "  -s0                \tdisables Spot's automata reductions algorithms\n"
   "  --scc0             \tdisables scc-aware optimization\n\n";
 
-  std::cout << " Miscellaneous options: \n"
+  std::cout << "Miscellaneous options: \n"
   "  --help\tprint this help\n"
   "  --version\tprint program version" << std::endl;
 }

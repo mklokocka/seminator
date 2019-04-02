@@ -156,6 +156,10 @@ int main(int argc, char* argv[])
         }
     }
 
+    if (!(via_sba || via_tba || via_tgba)) {
+      via_sba = true; via_tba = true; via_tgba = true;
+    }
+
     if (automata_from_cin.empty() && path_to_file.empty())
     {
         std::cerr << "Seminator: No automaton to process?  Run 'seminator --help' for help." << std::endl;
@@ -184,43 +188,36 @@ int main(int argc, char* argv[])
         return 1;
     }
 
-
-    spot::twa_graph_ptr aut = parsed_aut->aut;
-    spot::twa_graph_ptr result;
+    aut_ptr aut = parsed_aut->aut;
+    aut_ptr result_sba, result_tba, result_tgba, result;
+    unsigned sba_states  = std::numeric_limits<unsigned>::max();
+    unsigned tba_states  = std::numeric_limits<unsigned>::max();
+    unsigned tgba_states = std::numeric_limits<unsigned>::max();
     try
     {
-        auto old_n = aut->get_named_prop<std::string>("automaton-name");
         if (cd_check) {
             std::cout << is_cut_deterministic(aut) << std::endl;
             return 0;
         }
+
         if (via_sba) {
-            aut = spot::degeneralize(aut);
-            result = buchi_to_semi_deterministic_buchi(aut, deterministic_first_component, optimize, preferred_output);
+            auto sba_aut = spot::degeneralize(aut);
+            result_sba = buchi_to_semi_deterministic_buchi(sba_aut, deterministic_first_component, optimize, preferred_output);
+            sba_states = result_sba->num_states();
         }
-        else if (via_tba) {
-            aut = spot::degeneralize_tba(aut);
-            result = buchi_to_semi_deterministic_buchi(aut, deterministic_first_component, optimize, preferred_output);
-        }
-        else if (via_tgba) {
-            result = buchi_to_semi_deterministic_buchi(aut, deterministic_first_component, optimize, preferred_output);
-        }
-        else
-        {
-            auto res1 = buchi_to_semi_deterministic_buchi(aut, deterministic_first_component, optimize, preferred_output);
-
+        if (via_tba) {
             auto tba_aut = spot::degeneralize_tba(aut);
-            auto res2 = buchi_to_semi_deterministic_buchi(tba_aut,
-            deterministic_first_component, optimize, preferred_output);
-
-            auto nba_aut = spot::degeneralize(aut);
-            auto res3 = buchi_to_semi_deterministic_buchi(nba_aut, deterministic_first_component, optimize, preferred_output);
-
-            result = (res2->num_states() < res1->num_states()) ? res2 : res1;
-            if (res3->num_states() < result->num_states())
-                result = res3;
+            result_tba = buchi_to_semi_deterministic_buchi(tba_aut, deterministic_first_component, optimize, preferred_output);
+            tba_states = result_tba->num_states();
         }
+        if (via_tgba) {
+            result_tgba = buchi_to_semi_deterministic_buchi(aut, deterministic_first_component, optimize, preferred_output);
+            tgba_states = result_tgba->num_states();
+        }
+        result = (sba_states < tba_states) ? result_sba : result_tba;
+        result = (result->num_states() < tgba_states) ? result : result_tgba;
 
+        auto old_n = aut->get_named_prop<std::string>("automaton-name");
         if (old_n)
         {
           std::stringstream ss;
