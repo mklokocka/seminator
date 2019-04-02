@@ -47,7 +47,6 @@ int main(int argc, char* argv[])
 
     bool deterministic_first_component = false;
     bool optimize = true;
-    bool cy_alg = false;
     bool cd_check = false;
     bool via_tgba = false;
     bool via_tba = false;
@@ -103,7 +102,8 @@ int main(int argc, char* argv[])
         }
         else if (arg.compare("--cy") == 0)
         {
-            cy_alg = true;
+            std::cerr << "Invalid option --cy. Use --via-sba -s0 instead."
+            return 2;
         }
         else if (arg.compare("--ba") == 0)
         {
@@ -194,12 +194,7 @@ int main(int argc, char* argv[])
             std::cout << is_cut_deterministic(aut) << std::endl;
             return 0;
         }
-        if (cy_alg)
-        {
-            aut = spot::degeneralize(aut);
-            result = buchi_to_semi_deterministic_buchi(aut, deterministic_first_component, optimize, preferred_output);
-        }
-        else if (via_sba) {
+        if (via_sba) {
             aut = spot::degeneralize(aut);
             result = buchi_to_semi_deterministic_buchi(aut, deterministic_first_component, optimize, preferred_output);
         }

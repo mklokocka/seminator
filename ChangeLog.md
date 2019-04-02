@@ -16,7 +16,10 @@ The code was almost completely rewritten.
 * Also compare Seminator with the `--cut-on-SCC-entry` option
 * Also compare Seminator with the `--cut-always` option
 
-### Fixes
+### Removed
+* `--cy` option is now depracated
+
+### Fixed
 * jumps to the deterministic component after seeing highest mark (instead of 0) also for cut-deterministic automata
 
 ## [1.2.0] - 2017-11-06
