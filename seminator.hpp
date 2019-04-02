@@ -110,11 +110,13 @@ void print_help() {
   "    -f FILENAME\treads the input from FILENAME instead of stdin\n\n";
 
   std::cout << "Output options: \n"
-  "    --cs   \tcut-deterministic automaton\n"
-  "    --tgba \tTGBA output (default)\n"
-  "    --tba\t\tTBA output\n"
-  "    --ba \t\tSBA output\n"
-  "    --is-cd\tdo not run the translation, check whether the input is \n"
+  "    --cd   \tcut-deterministic automaton\n"
+  "    --sd   \tsemi-deterministic automaton (default)\n\n"
+  "    --ba   \tSBA output\n"
+  "    --tba  \tTBA output\n"
+  "    --tgba \tTGBA output (default)\n\n"
+
+  "    --is-cd\tdo not run transformation, check whether input is \n"
   "           \tcut-deterministic. Outputs 1 if it is, 0 otherwise.\n"
   "           \t(Spot's autfilt offers --is-semideterministic check)\n\n";
 
@@ -124,7 +126,7 @@ void print_help() {
   "    --via-tba\ttwo-steps: TGBA -> TBA -> sDBA\n"
   "    --via-sba\ttwo-steps: TGBA -> SBA -> sDBA\n\n"
   "  Multiple translation types can be chosen, the one with smallest\n"
-  "  result will be outputed. If none is chosen, all three are run.\n\n";
+  "  result will be outputted. If none is chosen, all three are run.\n\n";
 
   std::cout << "Cut-edges construction:\n"
   "    --cut-always      \tcut-edges for each edge to an accepting SCC\n"

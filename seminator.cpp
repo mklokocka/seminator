@@ -60,6 +60,10 @@ int main(int argc, char* argv[])
         {
             deterministic_first_component = true;
         }
+        else if (arg.compare("--sd") == 0)
+        {
+            deterministic_first_component = false;
+        }
         else if (arg.compare("--via-sba") == 0)
         {
             via_sba = true;
