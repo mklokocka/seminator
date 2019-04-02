@@ -77,21 +77,21 @@ int main(int argc, char* argv[])
         {
             cd_check = true;
         }
-        else if (arg.compare("--jump-enter") == 0)
+        else if (arg.compare("--cut-on-SCC-entry") == 0)
         {
-            jump_enter = true;
+            cut_on_SCC_entry = true;
         }
-        else if (arg.compare("--jump-always") == 0)
+        else if (arg.compare("--cut-always") == 0)
         {
-            jump_always = true;
+            cut_always = true;
         }
-        else if (arg.compare("--weak-powerset") == 0)
+        else if (arg.compare("--powerset-for-weak") == 0)
         {
-            weak_powerset = true;
+            powerset_for_weak = true;
         }
-        else if (arg.compare("--breakpoint-jump") == 0)
+        else if (arg.compare("--powerset-on-cut") == 0)
         {
-            breakpoint_jump = true;
+            powerset_on_cut = true;
         }
         else if (arg.compare("--scc0") == 0)
         {
@@ -149,10 +149,10 @@ int main(int argc, char* argv[])
                 std::endl << "\t\tbefore being transformed" << std::endl;
             std::cout << "  --via-sba\tthe input automaton is first degeneralized into a BA" <<
                 std::endl << "\t\tbefore being transformed" << std::endl;
-            std::cout << "  --jump-enter\tjump to deterministic component also when freshly entering an accepting SCC" << std::endl;
-            std::cout << "  --jump-always\tjump to deterministic component on each transition to an accepting SCC" << std::endl;
-            std::cout << "  --weak-powerset\tdo not use breakpoint construction for inherently weak accepting SCCs" << std::endl;
-            std::cout << "  --breakpoint-jump\tuse breakpoint construction already on cut transitions" << std::endl;
+            std::cout << "  --cut-on-SCC-entry\tjump to deterministic component also when freshly entering an accepting SCC" << std::endl;
+            std::cout << "  --cut-always\tjump to deterministic component on each transition to an accepting SCC" << std::endl;
+            std::cout << "  --powerset-for-weak\tdo not use breakpoint construction for inherently weak accepting SCCs" << std::endl;
+            std::cout << "  --powerset-on-cut\tuse breakpoint construction already on cut transitions" << std::endl;
             std::cout << "  --scc0\tdisables scc-aware optimization (enabled by default)" << std::endl;
             std::cout << "   -s0\t\tdisables spot automata reductions algorithms" << std::endl;
 
@@ -331,7 +331,7 @@ spot::twa_graph_ptr buchi_to_semi_deterministic_buchi(spot::twa_graph_ptr& aut, 
     else
     {   // Use the breakpoint construction
         bp_twa resbp(aut, deterministic_first_component,
-          weak_powerset, breakpoint_jump, scc_aware, jump_condition);
+          powerset_for_weak, powerset_on_cut, scc_aware, cut_condition);
         result = resbp.res_aut();
     }
 

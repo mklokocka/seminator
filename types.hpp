@@ -63,6 +63,6 @@ typedef spot::twa_graph::edge_storage_t spot_edge;
 
 typedef std::unique_ptr<succ_vect> succ_vect_ptr;
 
-typedef bool (*jump_condition_t)(const_aut_ptr, spot_edge);
+typedef bool (*cut_condition_t)(const_aut_ptr, spot_edge);
 
 static const state_set empty_set;

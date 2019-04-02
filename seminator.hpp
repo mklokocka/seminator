@@ -32,10 +32,10 @@ static const unsigned TGBA = 0;
 static const unsigned TBA = 1;
 static const unsigned BA = 2;
 
-bool jump_enter = false;
-bool jump_always = false;
-bool weak_powerset = false;
-bool breakpoint_jump = false;
+bool cut_on_SCC_entry = false;
+bool cut_always = false;
+bool powerset_for_weak = false;
+bool powerset_on_cut = false;
 bool scc_aware = true;
 
 /**
@@ -71,10 +71,10 @@ bool is_cut_deterministic(const spot::twa_graph_ptr& aut, std::set<unsigned>* no
 *
 * Currently, 4 conditions trigger the jump:
 *  1. If the edge has the highest mark
-*  2. If we freshly enter accepting scc (--jump-enter only)
-*  3. If e leads to accepting SCC (--jump-always only)
+*  2. If we freshly enter accepting scc (--cut-on-SCC-entry only)
+*  3. If e leads to accepting SCC (--cut-always only)
 */
-bool jump_condition(const_aut_ptr aut, edge_t e) {
+bool cut_condition(const_aut_ptr aut, edge_t e) {
   spot::scc_info si(aut);
   unsigned u = si.scc_of(e.src);
   unsigned v = si.scc_of(e.dst);
@@ -83,8 +83,8 @@ bool jump_condition(const_aut_ptr aut, edge_t e) {
   return
     si.is_accepting_scc(v) && (
       e.acc.has(highest_mark) || //1
-      (jump_enter && u != v) || // 2
-      jump_always // 3
+      (cut_on_SCC_entry && u != v) || // 2
+      cut_always // 3
   );
 }
 

@@ -91,7 +91,7 @@ void
 bp_twa::create_all_cut_transitions() {
   for (auto& edge : src_->edges())
   {
-    if (jump_condition_(src_, edge))
+    if (cut_condition_(src_, edge))
     {
       if (cut_det_) {
         // in cDBA, add cut-edge from each state that contains edge.src
@@ -243,11 +243,11 @@ bp_twa::add_cut_transition(state_t from, edge_t edge) {
 
   state_t target_state;
 
-  if (!breakpoint_jump_)
+  if (!powerset_on_cut_)
   {
     // create the target state
     state_set new_set{edge.dst};
-    if (weak_powerset_ && weak)
+    if (powerset_for_weak_ && weak)
       target_state = ps_state(new_set, false);
     else
     {
@@ -258,7 +258,7 @@ bp_twa::add_cut_transition(state_t from, edge_t edge) {
     res_->new_edge(from, target_state, edge.cond);
   } else {
     state_set start({edge.src});
-    if (weak_powerset_ && weak)
+    if (powerset_for_weak_ && weak)
       compute_successors(start, from, &scc_states, false, edge.cond);
     else
     {

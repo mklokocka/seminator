@@ -28,13 +28,13 @@ std::string bp_name(breakpoint_state);
 class bp_twa {
   public:
     bp_twa(const_aut_ptr src_aut,
-      bool cut_det, bool weak_powerset, bool breakpoint_jump, bool scc_aware,
-      jump_condition_t jump_condition) :
-    cut_det_(cut_det), weak_powerset_(weak_powerset),
-    breakpoint_jump_(breakpoint_jump),
+      bool cut_det, bool powerset_for_weak, bool powerset_on_cut, bool scc_aware,
+      cut_condition_t cut_condition) :
+    cut_det_(cut_det), powerset_for_weak_(powerset_for_weak),
+    powerset_on_cut_(powerset_on_cut),
     scc_aware_(scc_aware),
     src_(src_aut), src_si_(spot::scc_info(src_aut)),
-    jump_condition_(jump_condition),
+    cut_condition_(cut_condition),
     psb_(new powerset_builder(src_)) {
       res_ = spot::make_twa_graph(src_->get_dict());
       res_->copy_ap_of(src_);
@@ -109,7 +109,7 @@ class bp_twa {
     * \brief Creates cut transitions after the first component was build.
     *
     * Iterates over the edges of the original automaton and if
-    * `jump-condition()` is `true` it iterates over the states of the
+    * `cut-condition()` is `true` it iterates over the states of the
     * sd-automaton (res_) and add a corresponding cut-transitions to those
     * that qualify:
     *   - for edge.src                      for sDBA
@@ -130,8 +130,8 @@ class bp_twa {
 
   private:
     bool cut_det_; // true if cut-determinism is requested
-    bool weak_powerset_;
-    bool breakpoint_jump_; //start bp already on cut
+    bool powerset_for_weak_;
+    bool powerset_on_cut_; //start bp already on cut
     bool scc_aware_;
 
     // input and result automata
@@ -148,7 +148,7 @@ class bp_twa {
     //  2. edge_t edge
     //
     // The edge is an edge from src_
-    jump_condition_t jump_condition_;
+    cut_condition_t cut_condition_;
 
     // mapping between power_states and their indices
     //(1st comp. of res_ or 2nd comp. of res for weak components)
