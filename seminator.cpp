@@ -189,7 +189,9 @@ int main(int argc, char* argv[])
     }
 
     aut_ptr aut = parsed_aut->aut;
-    aut_ptr result_sba, result_tba, result_tgba, result;
+    aut_ptr result_sba = nullptr,
+            result_tba = nullptr,
+            result_tgba = nullptr, result;
     unsigned sba_states  = std::numeric_limits<unsigned>::max();
     unsigned tba_states  = std::numeric_limits<unsigned>::max();
     unsigned tgba_states = std::numeric_limits<unsigned>::max();
@@ -215,7 +217,9 @@ int main(int argc, char* argv[])
             tgba_states = result_tgba->num_states();
         }
         result = (sba_states < tba_states) ? result_sba : result_tba;
-        result = (result->num_states() < tgba_states) ? result : result_tgba;
+        if (!result || (result->num_states() >= tgba_states)) {
+            result = result_tgba;
+        }
 
         auto old_n = aut->get_named_prop<std::string>("automaton-name");
         if (old_n)
