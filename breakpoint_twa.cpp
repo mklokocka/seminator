@@ -91,7 +91,7 @@ void
 bp_twa::create_all_cut_transitions() {
   for (auto& edge : src_->edges())
   {
-    if (cut_condition_(src_, edge))
+    if (cut_condition_(src_, edge, om_))
     {
       if (cut_det_) {
         // in cDBA, add cut-edge from each state that contains edge.src

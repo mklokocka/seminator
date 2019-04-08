@@ -29,6 +29,7 @@
 #include <spot/twa/twa.hh>
 #include <spot/twaalgos/powerset.hh>
 #include <spot/misc/bitvect.hh>
+#include <spot/misc/optionmap.hh>
 #include <spot/twaalgos/hoa.hh>
 #include <spot/twa/bddprint.hh>
 #include <spot/twaalgos/sccinfo.hh>
@@ -69,6 +70,8 @@ typedef std::vector<std::string>* state_names;
 
 typedef std::unique_ptr<succ_vect> succ_vect_ptr;
 
-typedef bool (*cut_condition_t)(const_aut_ptr, edge_t);
+typedef const spot::option_map* const_om_ptr;
+
+typedef bool (*cut_condition_t)(const_aut_ptr, edge_t, const_om_ptr);
 
 static const state_set empty_set;

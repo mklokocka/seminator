@@ -33,18 +33,12 @@ static const unsigned TGBA = 0;
 static const unsigned TBA = 1;
 static const unsigned BA = 2;
 
-bool cut_on_SCC_entry = false;
-bool cut_always = false;
-bool powerset_for_weak = false;
-bool powerset_on_cut = false;
-bool scc_aware = true;
-
 /**
  * The semi-determinization algorithm as thought of by F. Blahoudek, J. Strejcek and M. Kretinsky.
  *
  * @param[in] aut TGBA to transform to a semi-deterministic TBA.
  */
-aut_ptr buchi_to_semi_deterministic_buchi(aut_ptr aut, bool deterministic_first_component, bool optimization, unsigned output);
+aut_ptr buchi_to_semi_deterministic_buchi(aut_ptr aut, bool optimization, unsigned output, const_om_ptr trans_options = nullptr);
 
 /**
  * Determinizes the first part of input. The first part is given by to_determinize
@@ -68,6 +62,7 @@ bool is_cut_deterministic(const_aut_ptr aut, std::set<unsigned>* non_det_states 
 *
 * @param[in] aut                The input automaton_stream_parser
 * @param[in] e                  The edge beeing processed
+* @param[in] om                 Options map
 * @return True if some jump condition is satisfied
 *
 * Currently, 4 conditions trigger the jump:
@@ -75,8 +70,15 @@ bool is_cut_deterministic(const_aut_ptr aut, std::set<unsigned>* non_det_states 
 *  2. If we freshly enter accepting scc (--cut-on-SCC-entry option)
 *  3. If e leads to accepting SCC (--cut-always option)
 */
-bool cut_condition(const_aut_ptr aut, edge_t e) {
+bool cut_condition(const_aut_ptr aut, edge_t e, const_om_ptr om = nullptr) {
   spot::scc_info si(aut);
+  bool cut_on_SCC_entry = false;
+  bool cut_always = false;
+  if (om)
+  {
+    cut_on_SCC_entry = om->get("cut-on-SCC-entry", 0);
+    cut_always = om->get("cut-always", 0);
+  }
   unsigned u = si.scc_of(e.src);
   unsigned v = si.scc_of(e.dst);
   unsigned highest_mark(aut->acc().num_sets() - 1);

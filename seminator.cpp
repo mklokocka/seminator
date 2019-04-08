@@ -47,12 +47,12 @@ int main(int argc, char* argv[])
 
     // Declaration for input options. The rest is in seminator.hpp
     // as they need to be included in other files.
-    bool deterministic_first_component = false;
     bool optimize = true;
     bool cd_check = false;
     unsigned preferred_output = TGBA;
     std::string path_to_file;
 
+    spot::option_map om;
     trans_types jobs = 0;
 
     for (int i = 1; i < argc; i++)
@@ -74,24 +74,24 @@ int main(int argc, char* argv[])
 
         // Cut edges
         else if (arg.compare("--cut-on-SCC-entry") == 0) {
-            cut_on_SCC_entry = true;
+            om.set("cut-on-SCC-entry", true);
 
         } else if (arg.compare("--cut-always") == 0)
-            cut_always = true;
+            om.set("cut-always", true);
 
         else if (arg.compare("--powerset-on-cut") == 0)
-            powerset_on_cut = true;
+            om.set("powerset-on-cut", true);
 
         // Optimizations
         else if (arg.compare("--powerset-for-weak") == 0)
-            powerset_for_weak = true;
+            om.set("powerset-for-weak", true);
 
         else if (arg.compare("--scc0") == 0)
-            scc_aware = false;
+            om.set("scc-aware", false);
         else if (arg.compare("--no-scc-aware") == 0)
-            scc_aware = false;
+            om.set("scc-aware", false);
         else if (arg.compare("--scc-aware") == 0)
-            scc_aware = true;
+            om.set("scc-aware", true);
 
         else if (arg.compare("-s0") == 0)
             optimize = false;
@@ -101,10 +101,10 @@ int main(int argc, char* argv[])
 
         // Prefered output
         else if (arg.compare("--cd") == 0)
-            deterministic_first_component = true;
+            om.set("cut-deterministic", true);
 
         else if (arg.compare("--sd") == 0)
-            deterministic_first_component = false;
+            om.set("cut-deterministic", false);
 
         else if (arg.compare("--ba") == 0)
             preferred_output = BA;
@@ -200,16 +200,16 @@ int main(int argc, char* argv[])
 
         if (jobs & ViaSBA) {
             auto sba_aut = spot::degeneralize(aut);
-            result_sba = buchi_to_semi_deterministic_buchi(sba_aut, deterministic_first_component, optimize, preferred_output);
+            result_sba = buchi_to_semi_deterministic_buchi(sba_aut, optimize, preferred_output, &om);
             sba_states = result_sba->num_states();
         }
         if (jobs & ViaTBA) {
             auto tba_aut = spot::degeneralize_tba(aut);
-            result_tba = buchi_to_semi_deterministic_buchi(tba_aut, deterministic_first_component, optimize, preferred_output);
+            result_tba = buchi_to_semi_deterministic_buchi(tba_aut, optimize, preferred_output, &om);
             tba_states = result_tba->num_states();
         }
         if (jobs & Onestep) {
-            result_tgba = buchi_to_semi_deterministic_buchi(aut, deterministic_first_component, optimize, preferred_output);
+            result_tgba = buchi_to_semi_deterministic_buchi(aut, optimize, preferred_output, &om);
             tgba_states = result_tgba->num_states();
         }
         result = (sba_states < tba_states) ? result_sba : result_tba;
@@ -221,7 +221,7 @@ int main(int argc, char* argv[])
         if (old_n)
         {
           std::stringstream ss;
-          ss << (deterministic_first_component ? "cDBA for " : "sDBA for ") << *old_n;
+          ss << (om.get("cut-deterministic",0) ? "cDBA for " : "sDBA for ") << *old_n;
           std::string * name = new std::string(ss.str());
           result->set_named_prop("automaton-name", name);
         }
@@ -249,10 +249,11 @@ int main(int argc, char* argv[])
     }
 }
 
-aut_ptr buchi_to_semi_deterministic_buchi(aut_ptr aut, bool deterministic_first_component, bool optimization, unsigned output)
+aut_ptr buchi_to_semi_deterministic_buchi(aut_ptr aut, bool optimization, unsigned output, const_om_ptr trans_options)
 {
     // Remove dead and unreachable states and prune accepting conditions in non-accepting SCCs.
     aut = spot::scc_filter(aut, true);
+    bool cut_det_ = trans_options->get("cut-deterministic",0);
 
     aut_ptr result;
 
@@ -273,7 +274,7 @@ aut_ptr buchi_to_semi_deterministic_buchi(aut_ptr aut, bool deterministic_first_
     // Check if semi-deterministic already.
     else if (spot::is_semi_deterministic(aut))
     {
-      if (deterministic_first_component)
+      if (cut_det_)
       {
         auto non_det_states = new state_set;
         if (is_cut_deterministic(aut, non_det_states))
@@ -287,8 +288,7 @@ aut_ptr buchi_to_semi_deterministic_buchi(aut_ptr aut, bool deterministic_first_
     }
     else
     {   // Use the breakpoint construction
-        bp_twa resbp(aut, deterministic_first_component,
-          powerset_for_weak, powerset_on_cut, scc_aware, cut_condition);
+        bp_twa resbp(aut, trans_options, cut_condition);
         result = resbp.res_aut();
     }
 
@@ -300,7 +300,7 @@ aut_ptr buchi_to_semi_deterministic_buchi(aut_ptr aut, bool deterministic_first_
     {
 
         spot::postprocessor postprocessor;
-        if (deterministic_first_component)
+        if (cut_det_)
         {
           static spot::option_map extra_options;
           extra_options.set("ba_simul",1);
@@ -317,7 +317,7 @@ aut_ptr buchi_to_semi_deterministic_buchi(aut_ptr aut, bool deterministic_first_
 
     if (!spot::is_semi_deterministic(result))
         throw not_semi_deterministic_exception();
-    else if (deterministic_first_component && !is_cut_deterministic(result))
+    else if (cut_det_ && !is_cut_deterministic(result))
         throw not_cut_deterministic_exception();
 
     return result;

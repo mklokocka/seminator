@@ -27,15 +27,17 @@ std::string bp_name(breakpoint_state);
 
 class bp_twa {
   public:
-    bp_twa(const_aut_ptr src_aut,
-      bool cut_det, bool powerset_for_weak, bool powerset_on_cut, bool scc_aware,
+    bp_twa(const_aut_ptr src_aut, const_om_ptr om,
       cut_condition_t cut_condition) :
-    cut_det_(cut_det), powerset_for_weak_(powerset_for_weak),
-    powerset_on_cut_(powerset_on_cut),
-    scc_aware_(scc_aware),
     src_(src_aut), src_si_(spot::scc_info(src_aut)),
-    cut_condition_(cut_condition),
+    om_(om), cut_condition_(cut_condition),
     psb_(new powerset_builder(src_)) {
+      if (om) {
+        scc_aware_ = om->get("scc-aware",1);
+        powerset_for_weak_ = om->get("powerset-for-weak",0);
+        powerset_on_cut_ = om->get("powerset-on-cut",0);
+        cut_det_ = om->get("cut-deterministic",0);
+      }
       res_ = spot::make_twa_graph(src_->get_dict());
       res_->copy_ap_of(src_);
       create_first_component();
@@ -129,45 +131,6 @@ class bp_twa {
     void print_res(std::string * name = nullptr);
 
   private:
-    bool cut_det_; // true if cut-determinism is requested
-    bool powerset_for_weak_;
-    bool powerset_on_cut_; //start bp already on cut
-    bool scc_aware_;
-
-    // input and result automata
-    const_aut_ptr src_;
-    aut_ptr res_;
-
-    // scc info of src (needed for scc-aware optimization)
-    spot::scc_info src_si_;
-
-    // fcnPointer to decide when jump from 1st to 2nd component (cut-transition)
-    // The function should take 2 arguments:
-    //
-    //  1. const_aut_ptr src_
-    //  2. edge_t edge
-    //
-    // The edge is an edge from src_
-    cut_condition_t cut_condition_;
-
-    // mapping between power_states and their indices
-    //(1st comp. of res_ or 2nd comp. of res for weak components)
-    power_map ps2num1_ = power_map();
-    succ_vect num2ps1_ = succ_vect();
-    power_map ps2num2_ = power_map();
-    succ_vect num2ps2_ = succ_vect();
-
-    // mapping between states of 2nd comp. of res_ and their content
-    breakpoint_map bp2num_ = breakpoint_map();        // bp_state -> state_t
-    std::vector<breakpoint_state>
-          num2bp_ = std::vector<breakpoint_state>();  // state_t  -> bp_state
-
-    // names of res automata states
-    state_names names_ = new std::vector<std::string>;
-
-    // Builder of powerset successors
-    powerset_builder* psb_;
-
     // Creates res_ and its 1st component
     //
     // * for semi-deterministic automata only copy states and edges of src_ to
@@ -214,4 +177,48 @@ class bp_twa {
       bool first_comp = false, bdd cond_constrain = bddtrue) {
         compute_successors<T>(from, src, new state_vect(), first_comp, cond_constrain);
       }
+
+
+    // Construction modifiers
+    bool cut_det_ = false; // true if cut-determinism is requested
+    bool powerset_for_weak_ = false;
+    bool powerset_on_cut_ = false; //start bp already on cut
+    bool scc_aware_ = true;
+
+    // input and result automata
+    const_aut_ptr src_;
+    aut_ptr res_;
+
+    // scc info of src (needed for scc-aware optimization)
+    spot::scc_info src_si_;
+
+    // Transformation options
+    const_om_ptr om_;
+
+    // fcnPointer to decide when jump from 1st to 2nd component (cut-ransition)
+    // The function should take 2 arguments:
+    //
+    //  1. const_aut_ptr src_
+    //  2. edge_t edge
+    //
+    // The edge is an edge from src_
+    cut_condition_t cut_condition_;
+
+    // mapping between power_states and their indices
+    //(1st comp. of res_ or 2nd comp. of res for weak components)
+    power_map ps2num1_ = power_map();
+    succ_vect num2ps1_ = succ_vect();
+    power_map ps2num2_ = power_map();
+    succ_vect num2ps2_ = succ_vect();
+
+    // mapping between states of 2nd comp. of res_ and their content
+    breakpoint_map bp2num_ = breakpoint_map();        // bp_state -> state_t
+    std::vector<breakpoint_state>
+          num2bp_ = std::vector<breakpoint_state>();  // state_t  -> bp_state
+
+    // names of res automata states
+    state_names names_ = new std::vector<std::string>;
+
+    // Builder of powerset successors
+    powerset_builder* psb_;
 };
