@@ -50,11 +50,10 @@ int main(int argc, char* argv[])
     bool deterministic_first_component = false;
     bool optimize = true;
     bool cd_check = false;
-    bool via_tgba = false;
-    bool via_tba = false;
-    bool via_sba = false;
     unsigned preferred_output = TGBA;
     std::string path_to_file;
+
+    trans_types jobs = 0;
 
     for (int i = 1; i < argc; i++)
     {
@@ -62,13 +61,13 @@ int main(int argc, char* argv[])
 
         // Transformation types
         if (arg.compare("--via-sba") == 0)
-            via_sba = true;
+            jobs |= ViaSBA;
 
         else if (arg.compare("--via-tba") == 0)
-            via_tba = true;
+            jobs |= ViaTBA;
 
         else if (arg.compare("--via-tgba") == 0)
-            via_tgba = true;
+            jobs |= Onestep;
 
         else if (arg.compare("--is-cd") == 0)
             cd_check = true;
@@ -156,9 +155,8 @@ int main(int argc, char* argv[])
             path_to_file = argv[i];
     }
 
-    if (!(via_sba || via_tba || via_tgba)) {
-      via_sba = true; via_tba = true; via_tgba = true;
-    }
+    if (jobs == 0)
+      jobs = AllTypes;
 
     if (automata_from_cin.empty() && path_to_file.empty())
     {
@@ -200,17 +198,17 @@ int main(int argc, char* argv[])
             return 0;
         }
 
-        if (via_sba) {
+        if (jobs & ViaSBA) {
             auto sba_aut = spot::degeneralize(aut);
             result_sba = buchi_to_semi_deterministic_buchi(sba_aut, deterministic_first_component, optimize, preferred_output);
             sba_states = result_sba->num_states();
         }
-        if (via_tba) {
+        if (jobs & ViaTBA) {
             auto tba_aut = spot::degeneralize_tba(aut);
             result_tba = buchi_to_semi_deterministic_buchi(tba_aut, deterministic_first_component, optimize, preferred_output);
             tba_states = result_tba->num_states();
         }
-        if (via_tgba) {
+        if (jobs & Onestep) {
             result_tgba = buchi_to_semi_deterministic_buchi(aut, deterministic_first_component, optimize, preferred_output);
             tgba_states = result_tgba->num_states();
         }

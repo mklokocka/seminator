@@ -47,9 +47,15 @@ typedef typename state_set::iterator ss_it;
 typedef typename state_vect::iterator sv_it;
 
 // TODO: change to class/struct
-typedef std::tuple<int, state_set, state_set> breakpoint_state;
+typedef std::tuple<unsigned, state_set, state_set> breakpoint_state;
 // In text, P corresponds to R and Q to B.
 struct Bp{enum size_t {LEVEL = 0, P = 1, Q = 2};};
+
+enum { Onestep = 1,
+       ViaTBA = 2,
+       ViaSBA = 4,
+       AllTypes = Onestep | ViaTBA | ViaSBA};
+typedef int trans_types;
 
 
 typedef std::vector<state_set> succ_vect;
