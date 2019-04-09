@@ -42,6 +42,7 @@ class bp_twa {
       res_->copy_ap_of(src_);
       create_first_component();
 
+
       const auto first_comp_size = res_->num_states();
       // Resize the num2bp_ for new states to be at appropriete indices.
       num2bp_.resize(first_comp_size);

@@ -24,9 +24,47 @@
 #include <spot/twaalgos/isdet.hh>
 #include <spot/twaalgos/sccinfo.hh>
 #include <spot/misc/optionmap.hh>
-#include <spot/twaalgos/postproc.hh>
 #include <spot/twaalgos/sccfilter.hh>
 #include <spot/twa/bddprint.hh>
+
+/**
+* Checks the input automaton if it is of requested type and returns it back.
+* If not, checks for easy cases first and only after that runs seminator.
+*/
+aut_ptr check_and_compute(aut_ptr aut, jobs_type jobs, const_om_ptr opt)
+{
+  if (spot::is_deterministic(aut))
+    return aut;
+
+  bool cut_det_ = opt->get("cut-deterministic",0);
+
+  if (spot::is_semi_deterministic(aut))
+  {
+    if (!cut_det_)
+      return aut;
+
+    auto non_det_states = new state_set;
+    aut_ptr result;
+
+    if (is_cut_deterministic(aut, non_det_states))
+      result = aut;
+    else
+      result = determinize_first_component(aut, non_det_states);
+    delete non_det_states;
+    return result;
+  }
+
+  // Safety automata can be determinized using powerset construction
+  if (aut->acc().is_all())
+  {
+    auto result = spot::tba_determinize(aut);
+    result->set_acceptance(0, spot::acc_cond::acc_code::t());
+    return result;
+  }
+
+  seminator sem(aut, jobs, opt);
+  return sem.run();
+}
 
 int main(int argc, char* argv[])
 {
@@ -47,13 +85,11 @@ int main(int argc, char* argv[])
 
     // Declaration for input options. The rest is in seminator.hpp
     // as they need to be included in other files.
-    bool optimize = true;
     bool cd_check = false;
-    unsigned preferred_output = TGBA;
     std::string path_to_file;
 
     spot::option_map om;
-    trans_types jobs = 0;
+    jobs_type jobs = 0;
 
     for (int i = 1; i < argc; i++)
     {
@@ -94,10 +130,10 @@ int main(int argc, char* argv[])
             om.set("scc-aware", true);
 
         else if (arg.compare("-s0") == 0)
-            optimize = false;
+            om.set("postprocess", false);
 
         else if (arg.compare("--no-reductions") == 0)
-            optimize = false;
+            om.set("postprocess", false);
 
         // Prefered output
         else if (arg.compare("--cd") == 0)
@@ -107,13 +143,13 @@ int main(int argc, char* argv[])
             om.set("cut-deterministic", false);
 
         else if (arg.compare("--ba") == 0)
-            preferred_output = BA;
+            om.set("output", BA);
 
         else if (arg.compare("--tba") == 0)
-            preferred_output = TBA;
+            om.set("output", TBA);
 
         else if (arg.compare("--tgba") == 0)
-            preferred_output = TGBA;
+            om.set("output", TGBA);
 
         else if (arg.compare("-f") == 0)
         {
@@ -156,7 +192,7 @@ int main(int argc, char* argv[])
     }
 
     if (jobs == 0)
-      jobs = AllTypes;
+      jobs = AllJobs;
 
     if (automata_from_cin.empty() && path_to_file.empty())
     {
@@ -185,38 +221,27 @@ int main(int argc, char* argv[])
     }
 
     aut_ptr aut = parsed_aut->aut;
-    aut_ptr result_sba = nullptr,
-            result_tba = nullptr,
-            result_tgba = nullptr, result;
-    unsigned sba_states  = std::numeric_limits<unsigned>::max();
-    unsigned tba_states  = std::numeric_limits<unsigned>::max();
-    unsigned tgba_states = std::numeric_limits<unsigned>::max();
+    // Remove dead and unreachable states and prune accepting conditions in non-accepting SCCs.
+    aut = spot::scc_filter(aut, true);
+
+    // Check if input is TGBA
+    if (!aut->acc().is_generalized_buchi())
+    {
+      std::cerr << "Seminator: The tool requires a TGBA on input" << std::endl;
+      return 1;
+    }
+
+    if (cd_check)
+    {
+      std::cout << is_cut_deterministic(aut) << std::endl;
+      return 0;
+    }
+
     try
     {
-        if (cd_check) {
-            std::cout << is_cut_deterministic(aut) << std::endl;
-            return 0;
-        }
-
-        if (jobs & ViaSBA) {
-            auto sba_aut = spot::degeneralize(aut);
-            result_sba = buchi_to_semi_deterministic_buchi(sba_aut, optimize, preferred_output, &om);
-            sba_states = result_sba->num_states();
-        }
-        if (jobs & ViaTBA) {
-            auto tba_aut = spot::degeneralize_tba(aut);
-            result_tba = buchi_to_semi_deterministic_buchi(tba_aut, optimize, preferred_output, &om);
-            tba_states = result_tba->num_states();
-        }
-        if (jobs & Onestep) {
-            result_tgba = buchi_to_semi_deterministic_buchi(aut, optimize, preferred_output, &om);
-            tgba_states = result_tgba->num_states();
-        }
-        result = (sba_states < tba_states) ? result_sba : result_tba;
-        if (!result || (result->num_states() >= tgba_states)) {
-            result = result_tgba;
-        }
-
+      auto result = check_and_compute(aut, jobs, &om);
+      if (result != aut)
+      {
         auto old_n = aut->get_named_prop<std::string>("automaton-name");
         if (old_n)
         {
@@ -225,14 +250,9 @@ int main(int argc, char* argv[])
           std::string * name = new std::string(ss.str());
           result->set_named_prop("automaton-name", name);
         }
-
-        spot::print_hoa(std::cout, result) << '\n';
-        return 0;
-    }
-    catch (const not_tgba_exception& e)
-    {
-        std::cerr << "Seminator: The tool requires a TGBA on input" << std::endl;
-        return 1;
+      }
+      spot::print_hoa(std::cout, result) << '\n';
+      return 0;
     }
     catch (const mismatched_bdd_dict_exception& e)
     {
@@ -249,293 +269,100 @@ int main(int argc, char* argv[])
     }
 }
 
-aut_ptr buchi_to_semi_deterministic_buchi(aut_ptr aut, bool optimization, unsigned output, const_om_ptr trans_options)
+void seminator::parse_options()
 {
-    // Remove dead and unreachable states and prune accepting conditions in non-accepting SCCs.
-    aut = spot::scc_filter(aut, true);
-    bool cut_det_ = trans_options->get("cut-deterministic",0);
+  postproc_ = opt_->get("postprocess", 1);
+  cut_det_  = opt_->get("cut-deterministic", 0);
 
-    aut_ptr result;
+  output_  = static_cast<output_type>(opt_->get("output", TGBA));
+}
 
-    // Check if input is TGBA
-    if (!aut->acc().is_generalized_buchi())
-      throw not_tgba_exception();
+void seminator::prepare_inputs(jobs_type jobs)
+{
+  if (!jobs)
+    jobs = jobs_;
 
-    // Check if automaton is deterministic already.
-    else if (spot::is_deterministic(aut))
-      result = aut;
+  // TODO check what makes sense
+  if (jobs & Onestep)
+    inputs_.emplace(Onestep, input_);
+  if (jobs & ViaTBA)
+    inputs_.emplace(ViaTBA, spot::degeneralize_tba(input_));
+  if (jobs & ViaSBA)
+    inputs_.emplace(ViaSBA, spot::degeneralize(input_));
+}
 
-    // Safety automata can be determinized using powerset construction
-    else if (aut->acc().is_all()) {
-      result = spot::tba_determinize(aut);
-      result->set_acceptance(0, spot::acc_cond::acc_code::t());
-    }
-
-    // Check if semi-deterministic already.
-    else if (spot::is_semi_deterministic(aut))
+void seminator::run_jobs(jobs_type jobs)
+{
+  if (!jobs)
+    jobs = jobs_;
+  for (auto job : unitjobs)
+  {
+    if (job & jobs)
     {
-      if (cut_det_)
+      // Prepare the desired input
+      if (!inputs_[job])
+        prepare_inputs(job);
+      assert(inputs_[job]);
+
+      // Run the breakpoint algorithm
+      bp_twa resbp(inputs_[job], opt_, cut_condition);
+      results_[job] = resbp.res_aut();
+      results_[job]->purge_dead_states();
+
+      // Check the result
+      assert(spot::is_semi_deterministic(results_[job]));
+      assert(!cut_det_ || is_cut_deterministic(results_[job]));
+      assert(results_[job]->acc().is_generalized_buchi());
+
+      if (postproc_)
+        results_[job] = postprocessor_.run(results_[job]);
+
+      switch (output_)
       {
-        auto non_det_states = new state_set;
-        if (is_cut_deterministic(aut, non_det_states))
-          result = aut;
-        else
-          result = determinize_first_component(aut, non_det_states);
-        delete non_det_states;
+      case TBA:
+        results_[job] = spot::degeneralize_tba(results_[job]);
+        if (postproc_)
+          results_[job] = postprocessor_.run(results_[job]);
+        break;
+      case BA:
+        results_[job] = spot::degeneralize(results_[job]);
+        if (postproc_)
+          results_[job] = postprocessor_.run(results_[job]);
+        break;
+      default:
+        break;
       }
-      else
-        result = aut;
     }
-    else
-    {   // Use the breakpoint construction
-        bp_twa resbp(aut, trans_options, cut_condition);
-        result = resbp.res_aut();
-    }
-
-    // Optimization
-    // Purge dead and unreachable states.
-    result->purge_dead_states();
-
-    if (optimization)
-    {
-
-        spot::postprocessor postprocessor;
-        if (cut_det_)
-        {
-          static spot::option_map extra_options;
-          extra_options.set("ba_simul",1);
-          extra_options.set("simul",1);
-          postprocessor = spot::postprocessor(&extra_options);
-        }
-        result = postprocessor.run(result);
-    }
-
-    if (output == TBA && result->acc().is_generalized_buchi())
-        result = spot::degeneralize_tba(result);
-    else if (output == BA)
-        result = spot::degeneralize(result);
-
-    if (!spot::is_semi_deterministic(result))
-        throw not_semi_deterministic_exception();
-    else if (cut_det_ && !is_cut_deterministic(result))
-        throw not_cut_deterministic_exception();
-
-    return result;
+  }
 }
 
-bool is_cut_deterministic(const_aut_ptr aut, std::set<unsigned>* non_det_states)
+jobs_type seminator::best_from(jobs_type jobs)
 {
-    unsigned UNKNOWN = 0;
-    unsigned IN_CUT = 1;
-    unsigned NOT_IN_CUT = 2;
-
-    // Take the basic semi-determinism check as implemented in SPOT.
-    spot::scc_info si(aut);
-    si.determine_unknown_acceptance();
-    unsigned nscc = si.scc_count();
-    assert(nscc);
-    std::vector<bool> reachable_from_acc(nscc);
-
-    std::vector<unsigned> cut(si.scc_count());
-
-    bool cut_det = true;
-
-    do // iterator of SCCs in reverse topological order
-    {
-        --nscc;
-        if (si.is_accepting_scc(nscc) || reachable_from_acc[nscc])
-        {
-            cut[nscc] = IN_CUT;
-
-            for (unsigned succ: si.succ(nscc))
-                reachable_from_acc[succ] = true;
-
-            for (unsigned src: si.states_of(nscc))
-            {
-                bdd available = bddtrue;
-                for (auto& t: aut->out(src))
-                    if (!bdd_implies(t.cond, available)) // Not even semi-deterministic.
-                      cut_det = false;
-                    else
-                      available -= t.cond;
-            }
-        }
-    }
-    while (nscc);
-
-    for (unsigned i = 0; i < si.scc_count(); i++)
-    {
-        if (!si.is_accepting_scc(i) && !reachable_from_acc[i])
-        {
-            for (unsigned succ: si.succ(i))
-              if (cut[succ] == NOT_IN_CUT)
-                  cut[i] = NOT_IN_CUT;
-
-            std::set<unsigned> edge_states;
-
-            // Check determinism of this component.
-            for (unsigned src: si.states_of(i))
-            {
-                bdd available = bddtrue;
-                for (auto& t: aut->out(src))
-                {
-                    // We check whether the state is at the edge of the SCC.
-                    if (si.scc_of(t.dst) != i)
-                      edge_states.insert(src);
-                    else if (!bdd_implies(t.cond, available))
-                      cut_det = false;// SCC not det. => automaton not cut-det.
-                    else
-                      available -= t.cond;
-                }
-            }
-
-            if (cut[i] == UNKNOWN)
-            {
-                bool is_in_cut = true;
-                // Inner part of SCC deterministic, what about the outgoing edges?
-                for (unsigned edge_state : edge_states)
-                {
-                    bdd available = bddtrue;
-                    for (auto& t: aut->out(edge_state))
-                      if (!bdd_implies(t.cond, available))
-                        is_in_cut = false;
-                      else
-                        available -= t.cond;
-                }
-
-                cut[i] = is_in_cut ? IN_CUT : NOT_IN_CUT;
-            }
-            else if (cut_det)
-            {
-                // SCC cannot be in the cut, check if transitions outside cut
-                // are deterministic.
-                for (unsigned edge_state : edge_states)
-                {
-                    bdd available = bddtrue;
-                    for (auto& t: aut->out(edge_state))
-                        if (cut[si.scc_of(t.dst)] != IN_CUT) {
-                            if (!bdd_implies(t.cond, available))
-                                cut_det = false;
-                            else
-                                available -= t.cond;
-                        }
-                }
-            }
-        }
-        else
-            cut[i] = IN_CUT;
-    }
-
-    if (non_det_states != nullptr)
-        for (unsigned scc = 0; scc < cut.size(); scc++)
-            if (cut[scc] != IN_CUT)
-                for (unsigned state: si.states_of(scc))
-                    non_det_states->insert(state);
-
-    return cut_det;
-}
-
-aut_ptr determinize_first_component(const_aut_ptr src, state_set * to_determinize)
-{
-  auto res = spot::make_twa_graph(src->get_dict());
-  res->copy_ap_of(src);
-  res->set_acceptance(src->get_acceptance());
-  auto names = new std::vector<std::string>;
-
-  // Setup the powerset construction
-  auto ps2num = std::unique_ptr<power_map>(new power_map);
-  auto num2ps = std::unique_ptr<succ_vect>(new succ_vect);
-  auto psb = std::unique_ptr<powerset_builder>(new powerset_builder(src));
-
-  // returns the state`s index, creates a new state if needed
-  auto get_state = [&](state_set ps) {
-    if (ps2num->count(ps) == 0)
-    {
-      // create a new state
-      assert(num2ps->size() == res->num_states());
-      num2ps->emplace_back(ps);
-      auto state = res->new_state();
-      (*ps2num)[ps] = state;
-      //TODO add to bp1 states
-
-      names->emplace_back(powerset_name(&ps));
-      return state;
-    } else
-      return ps2num->at(ps);
-
-  };
-
-  // Set the initial state
-  state_t init_num = src->get_init_state_number();
-  state_set ps{init_num};
-  res->set_init_state(get_state(ps));
-
-  // Compute powerset with respect to to_determinize
-  for (state_t s = 0; s < res->num_states(); ++s)
+  if (!jobs)
+    jobs = jobs_;
+  jobs_type res = 0;
+  for (auto job : unitjobs)
   {
-    auto ps = num2ps->at(s);
-    auto succs = std::unique_ptr<succ_vect>(psb->get_succs(&ps,
-                                            to_determinize->begin(),
-                                            to_determinize->end()));
-    for(size_t c = 0; c < psb->nc_; ++c)
+    if (job & jobs)
     {
-      auto cond = psb->num2bdd_[c];
-      auto d_ps = succs->at(c);
-      // Skip transitions to ∅
-      if (d_ps == empty_set)
-        continue;
-      auto dst = get_state(d_ps);
-      res->new_edge(s, dst, cond);
+      if (!results_[job])
+        run_jobs(job);
+      if (!res ||
+        (results_[res]->num_states() > results_[job]->num_states()))
+          res = job;
     }
   }
-
-  // remeber for later stop iteration when adding cut transitions
-  auto lsize = res->num_states();
-
-  // Copy the second part
-  typedef std::map<state_t, state_t> state_map;
-  state_map old2new;
-  state_map new2old;
-  for (state_t s = 0; s < src->num_states(); s++)
-  {
-    if (to_determinize->count(s) > 0) // skip states from the 1st component
-      continue;
-    auto ns = res->new_state();
-    old2new[s] = ns;
-    new2old[ns] = s;
-    names->emplace_back(std::to_string(s));
-  }
-  // Now copy the transitions
-  for (state_t s = 0; s < src->num_states(); s++)
-  {
-    if (to_determinize->count(s) > 0) // skip states from the 1st component
-      continue;
-    for (auto e : src->out(s))
-      res->new_edge(old2new[e.src],old2new[e.dst],e.cond,e.acc);
-  }
-
-  for (state_t ns = 0; ns < lsize; ns++)
-  {
-    auto ps = num2ps->at(ns);
-    auto succs = std::unique_ptr<succ_vect>(psb->get_succs(&ps,
-                                            to_determinize->begin(),
-                                            to_determinize->end(),
-                                            true
-                                           ));
-    for(size_t c = 0; c < psb->nc_; ++c)
-    {
-      auto cond = psb->num2bdd_[c];
-      auto d_ps = succs->at(c);
-      // Skip transitions to ∅
-      if (d_ps == empty_set)
-        continue;
-      for (auto s : d_ps)
-        res->new_edge(ns, old2new[s], cond);
-    }
-  }
-
-
-  res->merge_edges();
-  res->set_named_prop("state-names", names);
   return res;
+}
+
+aut_ptr seminator::get(jobs_type job)
+{
+  assert (unitjobs.count(job));
+  return results_[job];
+}
+
+aut_ptr seminator::run(jobs_type jobs)
+{
+  prepare_inputs(jobs);
+  return results_[best_from(jobs)];
 }

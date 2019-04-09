@@ -22,39 +22,14 @@
 #include <limits>
 
 #include <types.hpp>
+#include <cutdet.hpp>
 #include <breakpoint_twa.hpp>
 
 #include <spot/misc/bddlt.hh>
+#include <spot/twaalgos/postproc.hh>
 
 
 static const std::string VERSION_TAG = "v1.2.0dev";
-
-static const unsigned TGBA = 0;
-static const unsigned TBA = 1;
-static const unsigned BA = 2;
-
-/**
- * The semi-determinization algorithm as thought of by F. Blahoudek, J. Strejcek and M. Kretinsky.
- *
- * @param[in] aut TGBA to transform to a semi-deterministic TBA.
- */
-aut_ptr buchi_to_semi_deterministic_buchi(aut_ptr aut, bool optimization, unsigned output, const_om_ptr trans_options = nullptr);
-
-/**
- * Determinizes the first part of input. The first part is given by to_determinize
- * that can be obtained by `is_cut_deterministic`. Returns a new automaton.
- */
-aut_ptr determinize_first_component(const_aut_ptr, state_set * to_determinize);
-
-
-/**
- * A function that checks whether a given automaton is cut-deterministic.
- *
- * @param[in] aut               The automata to check for cut-determinism.
- * @param[out] non_det_states   Vector of the states that block cut-determinism.
- * @return Whether the automaton is cut-deterministic or not.
- */
-bool is_cut_deterministic(const_aut_ptr aut, std::set<unsigned>* non_det_states = nullptr);
 
 /**
 * Returns whether a cut transition (jump to the deterministic component)
@@ -154,41 +129,105 @@ void print_help() {
 }
 
 /**
- * Class representing an exception thrown when the algorithm is not run on a proper SBwA automata.
+ * Class running possible multiple types of the transformation
+ * and returns the best result. It also handles pre- and post-
+ * processing of the automata.
  */
-class not_tgba_exception: public std::runtime_error {
+class seminator {
 public:
-    not_tgba_exception()
-        : std::runtime_error("algorithm excepts a TGBA")
-        {}
-};
+  /**
+  * Constructor for seminator.
+  *
+  * @param[in] input the input automaton
+  * @param[in] jobs the jobs to be performed
+  * @param[in] opt (optinial, nullptr) options that tweak transformations
+  */
+  seminator(aut_ptr input,
+            jobs_type jobs, const_om_ptr opt = nullptr) :
+            input_(input), jobs_(jobs), opt_(opt)
+  {
+    if (!opt)
+      opt_ = new const spot::option_map;
+    parse_options();
 
-/**
- * Class representing an exception thrown when trying to copy to an automata with a different BDD dictionary.
- */
-class mismatched_bdd_dict_exception: public std::runtime_error {
-public:
-    mismatched_bdd_dict_exception()
-        : std::runtime_error("the source and destination automata require to have the same BDD dictionary")
-        {}
-};
+    // Set postprocess options that preserve cut-determinism
+    if (cut_det_)
+    {
+      static spot::option_map extra_options;
+      extra_options.set("ba_simul",1);
+      extra_options.set("simul",1);
+      postprocessor_ = spot::postprocessor(&extra_options);
+    }
+  }
 
-/**
- * Class representing an exception thrown when the resulting automata is not semi-deterministic (this, of course, should not happen).
- */
-class not_semi_deterministic_exception: public std::runtime_error {
-public:
-    not_semi_deterministic_exception()
-        : std::runtime_error("the resulting automata is not semi-deterministic")
-        {}
-};
+  seminator(aut_ptr input, const_om_ptr opt = nullptr) :
+    seminator(input, AllJobs, opt) {};
 
-/**
- * Class representing an exception thrown when the resulting automata is not cut-deterministic (this, of course, should not happen).
- */
-class not_cut_deterministic_exception: public std::runtime_error {
-public:
-    not_cut_deterministic_exception()
-        : std::runtime_error("the resulting automata is not cut-deterministic")
-        {}
+  /**
+  * Run the algorithm for all jobs and returns the smallest automaton
+  *
+  * @param[in] jobs may specify more jobs, 0 (default) means jobs_
+  */
+  aut_ptr run(jobs_type jobs = 0);
+
+  /**
+  * Run requested jobs
+  *
+  * @param[in] jobs may specify more jobs, 0 (default) means jobs_
+  */
+  void run_jobs(jobs_type jobs = 0);
+
+  /**
+  * Choose best from given jobs. Run the algo if not done before.
+  *
+  * @param[in] jobs may specify more jobs, 0 (default) means jobs_
+  * Returns the job with lowest number of states
+  */
+  jobs_type best_from(jobs_type jobs = 0);
+
+
+  /**
+  * Return the automaton of the job.
+  *
+  * @param[in] jobs must be an unique job index
+  */
+  aut_ptr get(jobs_type job);
+
+private:
+  /**
+  * Read options from opt into variables
+  */
+  void parse_options();
+
+  /**
+  * Prepare input for requested jobs.
+  *
+  * @param[in] jobs may specify more jobs, 0 (default) means jobs_
+  */
+  void prepare_inputs(jobs_type jobs = 0);
+
+  /**
+  * Decide what jobs are reasonable
+  */
+  void choose_jobs();
+
+  aut_ptr input_;
+  jobs_type jobs_;
+  const_om_ptr opt_;
+
+  // Intermediate results
+  typedef std::map<jobs_type, aut_ptr> aut_ptr_dict;
+  aut_ptr_dict inputs_ = aut_ptr_dict();
+  aut_ptr_dict results_ = aut_ptr_dict();
+  aut_ptr best_ = nullptr;
+
+  // Simplifications options (from opt, see parse_options for defaults)
+  bool postproc_;
+  bool cut_det_;
+
+  // Prefered output types
+  output_type output_;
+
+  // Spot's postprocesssor
+  spot::postprocessor postprocessor_;
 };
