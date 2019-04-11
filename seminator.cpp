@@ -237,36 +237,20 @@ int main(int argc, char* argv[])
       return 0;
     }
 
-    try
+    auto result = check_and_compute(aut, jobs, &om);
+    if (result != aut)
     {
-      auto result = check_and_compute(aut, jobs, &om);
-      if (result != aut)
+      auto old_n = aut->get_named_prop<std::string>("automaton-name");
+      if (old_n)
       {
-        auto old_n = aut->get_named_prop<std::string>("automaton-name");
-        if (old_n)
-        {
-          std::stringstream ss;
-          ss << (om.get("cut-deterministic",0) ? "cDBA for " : "sDBA for ") << *old_n;
-          std::string * name = new std::string(ss.str());
-          result->set_named_prop("automaton-name", name);
-        }
+        std::stringstream ss;
+        ss << (om.get("cut-deterministic",0) ? "cDBA for " : "sDBA for ") << *old_n;
+        std::string * name = new std::string(ss.str());
+        result->set_named_prop("automaton-name", name);
       }
-      spot::print_hoa(std::cout, result) << '\n';
-      return 0;
     }
-    catch (const mismatched_bdd_dict_exception& e)
-    {
-        std::cerr << "Seminator: Mismatched BDD dict" << std::endl;
-        return 1;
-    }
-    catch (const not_semi_deterministic_exception& e)
-    {
-        std::cerr << "Seminator: The tool could not properly semi-determinize the automata" << std::endl;
-    }
-    catch (const not_cut_deterministic_exception& e)
-    {
-        std::cerr << "Seminator: The tool could not properly cut-determinize the automata" << std::endl;
-    }
+    spot::print_hoa(std::cout, result) << '\n';
+    return 0;
 }
 
 void seminator::parse_options()
