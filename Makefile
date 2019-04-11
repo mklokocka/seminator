@@ -41,6 +41,6 @@ distclean: clean ; $(RM) seminator
 test: tests/test
 
 tests/test: seminator
-	cd tests; ./run_tests.sh && touch test
-
+	make -C tests
+	
 .PHONY: all clean distclean
