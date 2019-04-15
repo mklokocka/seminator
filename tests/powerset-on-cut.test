@@ -1,0 +1,61 @@
+#!/bin/bash
+set -e
+
+cat >powerset-on-cut.hoa <<EOF
+HOA: v1
+States: 2
+Start: 0
+AP: 1 "a"
+acc-name: generalized-Buchi 2
+Acceptance: 2 Inf(0)&Inf(1)
+properties: trans-labels explicit-labels trans-acc complete
+--BODY--
+State: 0
+[0] 0 {0}
+[0] 1
+[!0] 0
+State: 1
+[!0] 1 {1}
+[!0] 0
+[0] 1
+--END--
+EOF
+
+cat >powerset-on-cut.expect <<EOF
+HOA: v1
+States: 6
+Start: 0
+AP: 1 "a"
+acc-name: Buchi
+Acceptance: 1 Inf(0)
+properties: trans-labels explicit-labels trans-acc complete
+properties: semi-deterministic
+--BODY--
+State: 0 "0"
+[t] 0
+[0] 1
+State: 1 "1"
+[!0] 0
+[t] 1
+[!0] 2
+State: 2 "{0,1} , ∅ , 0"
+[!0] 2
+[0] 3
+State: 3 "{0,1} , {0} , 0"
+[!0] 3
+[0] 4 {0}
+State: 4 "{0,1} , ∅ , 1"
+[0] 4
+[!0] 5
+State: 5 "{0,1} , {1} , 1"
+[!0] 2 {0}
+[0] 5
+--END--
+EOF
+
+../seminator -s0 --powerset-on-cut powerset-on-cut.hoa > powerset-on-cut.out
+cat powerset-on-cut.out
+diff powerset-on-cut.out powerset-on-cut.expect
+
+rm powerset-on-cut.out powerset-on-cut.hoa powerset-on-cut.expect
+
