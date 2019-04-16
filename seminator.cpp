@@ -173,9 +173,10 @@ int main(int argc, char* argv[])
             print_help();
             return 1;
         }
-        else if ((arg.compare("--version") == 0) | (arg.compare("-v") == 0))
+        else if (arg.compare("--version") == 0)
         {
-            std::cout << "Seminator (" << VERSION_TAG << ")" << std::endl;
+            std::cout << "Seminator (" << VERSION_TAG <<
+            ") compiled with Spot " << SPOT_PACKAGE_VERSION <<  std::endl;
 
             std::cout << "License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>." << std::endl;
             std::cout << "This is free software: you are free to change and redistribute it." << std::endl;

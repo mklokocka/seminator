@@ -12,10 +12,11 @@ The code was almost completely rewritten.
 * `--sd` option for semi-deterministic output (and not cut-deterministic)
 * `--no-reduction` is a synonym for `s0` (disables reductions by Spot)
 * `--highlight` colors states regarding the part of sDBA: violet for the 1st (nondeterministic) part, green for the 2nd (deterministic) part. Cut edges are colored by red.
-* Seminator now understands `-h` and `-v` for help and version.
+* Seminator now understands `-h` for help.
 
 ### Changed
 * When a breakpoint is reached (R = B), track accepting transitions of the next level in B (it was set to ∅ before).
+* `--version` now also prints version of Spot
 
 #### Evaluation
 * Use the new version of owl for comparison (18.06)

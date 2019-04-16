@@ -127,8 +127,8 @@ void print_help() {
   "    --scc0, --no-scc-aware \tdisable scc-aware optimization\n\n";
 
   std::cout << "Miscellaneous options: \n"
-  "  -h, --help   \tprint this help\n"
-  "  -v, --version\tprint program version" << std::endl;
+  "  -h, --help \tprint this help\n"
+  "  --version  \tprint program version" << std::endl;
 }
 
 /**
