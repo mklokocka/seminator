@@ -13,6 +13,7 @@ The code was almost completely rewritten.
 * `--no-reduction` is a synonym for `s0` (disables reductions by Spot)
 * `--highlight` colors states regarding the part of sDBA: violet for the 1st (nondeterministic) part, green for the 2nd (deterministic) part. Cut edges are colored by red.
 * Seminator now understands `-h` for help.
+* Seminator now detects unsupported options (exits with return status 2)
 
 ### Changed
 * When a breakpoint is reached (R = B), track accepting transitions of the next level in B (it was set to ∅ before).

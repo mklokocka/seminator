@@ -192,6 +192,12 @@ int main(int argc, char* argv[])
             std::cerr << "Invalid option --cy. Use --via-sba -s0 instead.";
             return 2;
         }
+        // Detection of unsupported options
+        else if (arg.compare(0, 1, "-") == 0)
+        {
+          std::cout << "Unsupported option " << arg << std::endl;
+          return 2;
+        }
         else if (path_to_file.empty())
             path_to_file = argv[i];
     }
