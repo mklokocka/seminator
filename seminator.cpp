@@ -168,12 +168,12 @@ int main(int argc, char* argv[])
                 i++;
             }
         }
-        else if (arg.compare("--help") == 0)
+        else if ((arg.compare("--help") == 0) | (arg.compare("-h") == 0))
         {
             print_help();
             return 1;
         }
-        else if (arg.compare("--version") == 0)
+        else if ((arg.compare("--version") == 0) | (arg.compare("-v") == 0))
         {
             std::cout << "Seminator (" << VERSION_TAG << ")" << std::endl;
 
