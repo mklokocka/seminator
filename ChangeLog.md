@@ -29,6 +29,7 @@ The code was almost completely rewritten.
 
 ### Fixed
 * jumps to the deterministic component after seeing highest mark (instead of 0) also for cut-deterministic automata
+* Handling of stdin; thanks Alexandre Duret-Lutz for the fix.
 
 ## [1.2.0] - 2017-11-06
 ### Added

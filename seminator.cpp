@@ -68,21 +68,6 @@ aut_ptr check_and_compute(aut_ptr aut, jobs_type jobs, const_om_ptr opt)
 
 int main(int argc, char* argv[])
 {
-    // Setting up the configurations flags for the user.
-
-    std::string automata_from_cin;
-    if (!isatty(fileno(stdin)))
-    {
-        // don't skip the whitespace while reading
-        std::cin >> std::noskipws;
-
-        // use stream iterators to copy the stream to a string
-        std::istream_iterator<char> it(std::cin);
-        std::istream_iterator<char> end;
-        std::string result(it, end);
-        automata_from_cin.append(result);
-    }
-
     // Declaration for input options. The rest is in seminator.hpp
     // as they need to be included in other files.
     bool cd_check = false;
@@ -189,7 +174,7 @@ int main(int argc, char* argv[])
         // removed
         else if (arg.compare("--cy") == 0)
         {
-            std::cerr << "Invalid option --cy. Use --via-sba -s0 instead.";
+            std::cerr << "Invalid option --cy. Use --via-sba -s0 instead.\n";
             return 2;
         }
         // Detection of unsupported options
@@ -202,34 +187,28 @@ int main(int argc, char* argv[])
             path_to_file = argv[i];
     }
 
+    if (path_to_file.empty() && isatty(STDIN_FILENO))
+    {
+      std::cerr << "Seminator: No automaton to process? Run\n"
+            "'seminator --help' for more help" << std::endl;
+      print_usage(std::cerr);
+      return 1;
+
+    }
+
     if (jobs == 0)
       jobs = AllJobs;
-
-    if (automata_from_cin.empty() && path_to_file.empty())
-    {
-        std::cerr << "Seminator: No automaton to process?  Run 'seminator --help' for help." << std::endl;
-        print_usage(std::cerr);
-        return 1;
-    }
 
     auto dict = spot::make_bdd_dict();
 
     spot::parsed_aut_ptr parsed_aut;
 
-    if (!path_to_file.empty())
-        parsed_aut = parse_aut(path_to_file, dict);
-    else
-    {
-        const std::string filename = "Reading from std::cin pipe";
-        spot::automaton_stream_parser parser(automata_from_cin.c_str(), filename);
-        parsed_aut = parser.parse(dict);
-    }
+    if (path_to_file.empty())
+        path_to_file = "-";
+    parsed_aut = parse_aut(path_to_file, dict);
 
-    if (!parsed_aut->errors.empty() || parsed_aut->aborted)
-    {
-        std::cerr << "Seminator: Failed to read automaton from " << path_to_file << std::endl;
-        return 1;
-    }
+    if (parsed_aut->format_errors(std::cerr))
+      return 1;
 
     aut_ptr aut = parsed_aut->aut;
     // Remove dead and unreachable states and prune accepting conditions in non-accepting SCCs.
