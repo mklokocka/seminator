@@ -168,7 +168,7 @@ bp_twa::create_first_component()
       names_->emplace_back(std::to_string(i));
 
     // Copy edges
-    for (auto e : src_->edges()) {
+    for (auto& e : src_->edges()) {
       res_->new_edge(e.src, e.dst, e.cond);
     }
   }

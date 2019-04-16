@@ -86,6 +86,7 @@ int main(int argc, char* argv[])
     // Declaration for input options. The rest is in seminator.hpp
     // as they need to be included in other files.
     bool cd_check = false;
+    bool high = false;
     std::string path_to_file;
 
     spot::option_map om;
@@ -150,6 +151,9 @@ int main(int argc, char* argv[])
 
         else if (arg.compare("--tgba") == 0)
             om.set("output", TGBA);
+
+        else if (arg.compare("--highlight") == 0)
+            high = true;
 
         else if (arg.compare("-f") == 0)
         {
@@ -249,7 +253,9 @@ int main(int argc, char* argv[])
         result->set_named_prop("automaton-name", name);
       }
     }
-    spot::print_hoa(std::cout, result) << '\n';
+    if (high)
+      highlight(result);
+    spot::print_hoa(std::cout, result, "1.1") << '\n';
     return 0;
 }
 

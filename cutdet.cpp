@@ -17,6 +17,10 @@
 
 #include<cutdet.hpp>
 
+static unsigned NONDET_C = 3;
+static unsigned DET_C = 4;
+static unsigned CUT_C = 5;
+
 bool is_cut_deterministic(const_aut_ptr aut, std::set<unsigned>* non_det_states)
 {
     unsigned UNKNOWN = 0;
@@ -232,4 +236,62 @@ aut_ptr determinize_first_component(const_aut_ptr src, state_set * to_determiniz
   res->merge_edges();
   res->set_named_prop("state-names", names);
   return res;
+}
+
+void highlight(aut_ptr aut, bool edges, state_set * nondet)
+{
+  assert(spot::is_semi_deterministic(aut));
+  bool del = false;
+  if (nondet == nullptr)
+  {
+    nondet = new state_set();
+    is_cut_deterministic(aut,  nondet);
+    del = true;
+  }
+  assert(nondet);
+
+  auto* highlight = aut->get_or_set_named_prop<std::map<unsigned, unsigned>>
+      ("highlight-states");
+  state_t ns = aut->num_states();
+  for (state_t src = 0; src < ns; ++src)
+  {
+    if (nondet->count(src))
+      (*highlight)[src] = NONDET_C;
+    else
+      (*highlight)[src] = DET_C;
+  }
+
+  if (edges)
+    highlight_cut(aut, nondet);
+
+  if (del)
+    delete(nondet);
+}
+
+void highlight_cut(aut_ptr aut, state_set * nondet)
+{
+  assert(spot::is_semi_deterministic(aut));
+  bool del = false;
+  if (nondet == nullptr)
+  {
+    nondet = new state_set();
+    is_cut_deterministic(aut,  nondet);
+    del = true;
+  }
+  assert(nondet);
+
+  auto* highlight = aut->get_or_set_named_prop<std::map<unsigned, unsigned>>
+      ("highlight-edges");
+  for (auto& e : aut->edges())
+  {
+    // Cut is between nondet and det
+    if (!nondet->count(e.src))
+      continue;
+    if (nondet->count(e.dst))
+      continue;
+    (*highlight)[aut->edge_number(e)] = CUT_C;
+  }
+
+  if (del)
+    delete(nondet);
 }

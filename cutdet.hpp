@@ -20,6 +20,8 @@
 #include <types.hpp>
 #include <breakpoint_twa.hpp>
 
+#include <spot/twaalgos/isdet.hh>
+
 /**
  * Determinizes the first part of input. The first part is given by to_determinize
  * that can be obtained by `is_cut_deterministic`. Returns a new automaton.
@@ -35,3 +37,21 @@ aut_ptr determinize_first_component(const_aut_ptr, state_set * to_determinize);
  * @return Whether the automaton is cut-deterministic or not.
  */
 bool is_cut_deterministic(const_aut_ptr aut, std::set<unsigned>* non_det_states = nullptr);
+
+/**
+* Colors components and cut-edges of the given semi-deterministic automaton
+*
+* @param[in] aut                Semi-deterministic automaton
+* @param[in, optional] nondet   States of the 1st component.
+*                               Will be computed if nullptr (default)
+*/
+void highlight(aut_ptr, bool edges = true, state_set * nondet = nullptr);
+
+/**
+* Colors cut-edges of the given semi-deterministic automaton
+*
+* @param[in] aut                Semi-deterministic automaton
+* @param[in, optional] nondet   States of the 1st component.
+*                               Will be computed if nullptr (default)
+*/
+void highlight_cut(aut_ptr, state_set * nondet = nullptr);

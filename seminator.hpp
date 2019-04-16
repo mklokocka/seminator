@@ -87,15 +87,18 @@ void print_help() {
   "    -f FILENAME\treads the input from FILENAME instead of stdin\n\n";
 
   std::cout << "Output options: \n"
-  "    --cd   \tcut-deterministic automaton\n"
-  "    --sd   \tsemi-deterministic automaton (default)\n\n"
-  "    --ba   \tSBA output\n"
-  "    --tba  \tTBA output\n"
-  "    --tgba \tTGBA output (default)\n\n"
+  "    --cd       \tcut-deterministic automaton\n"
+  "    --sd       \tsemi-deterministic automaton (default)\n\n"
+  "    --ba       \tSBA output\n"
+  "    --tba      \tTBA output\n"
+  "    --tgba     \tTGBA output (default)\n\n"
 
-  "    --is-cd\tdo not run transformation, check whether input is \n"
-  "           \tcut-deterministic. Outputs 1 if it is, 0 otherwise.\n"
-  "           \t(Spot's autfilt offers --is-semideterministic check)\n\n";
+  "    --highlight\tcolor states of 1st component by violet, 2nd by green,\n"
+  "               \tcut-edges by red\n\n"
+
+  "    --is-cd    \tdo not run transformation, check whether input is \n"
+  "               \tcut-deterministic. Outputs 1 if it is, 0 otherwise.\n"
+  "               \t(Spot's autfilt offers --is-semideterministic check)\n\n";
 
   std::cout <<
   "Transformation type (T=transition-based, S=state-based): \n"
