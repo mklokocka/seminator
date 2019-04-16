@@ -240,8 +240,11 @@ int main(int argc, char* argv[])
       }
     }
     if (high)
+    {
       highlight(result);
-    spot::print_hoa(std::cout, result, "1.1") << '\n';
+      spot::print_hoa(std::cout, result, "1.1") << '\n';
+    }
+    spot::print_hoa(std::cout, result) << '\n';
     return 0;
 }
 
