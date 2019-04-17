@@ -55,3 +55,12 @@ void highlight(aut_ptr, bool edges = true, state_set * nondet = nullptr);
 *                               Will be computed if nullptr (default)
 */
 void highlight_cut(aut_ptr, state_set * nondet = nullptr);
+
+/**
+* Decide whether the given scc is is_deterministic
+*
+* @param inside_only    Checks only edges inside the scc
+*/
+bool
+is_deterministic_scc(unsigned scc, spot::scc_info& si,
+                     bool inside_only=true);

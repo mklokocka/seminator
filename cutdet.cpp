@@ -295,3 +295,23 @@ void highlight_cut(aut_ptr aut, state_set * nondet)
   if (del)
     delete(nondet);
 }
+
+bool
+is_deterministic_scc(unsigned scc, spot::scc_info& si,
+                     bool inside_only)
+{
+  for (unsigned src: si.states_of(scc))
+  {
+    bdd available = bddtrue;
+    for (auto& t: si.get_aut()->out(src))
+    {
+      if (inside_only & (si.scc_of(t.dst) != scc))
+        continue;
+      if (!bdd_implies(t.cond, available))
+        return false;
+      else
+        available -= t.cond;
+    }
+  }
+  return true;
+}

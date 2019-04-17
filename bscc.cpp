@@ -16,6 +16,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <bscc.hpp>
+#include <cutdet.hpp>
 
 bool is_bottom_scc(unsigned scc,
                    spot::scc_info* si)
@@ -39,7 +40,10 @@ void print_scc_info(const_aut_ptr aut)
   for (unsigned scc = 0; scc < nc; ++scc)
   {
     std::cout << "SCC " << scc << " is bottom: " <<
-                  is_bottom_scc(scc, &si) << "\n  ";
+                  is_bottom_scc(scc, &si) << "\n  "
+                  "    is det:    " << is_deterministic_scc(scc, si, false)
+                  << "\n      is det_in: "
+                  << is_deterministic_scc(scc, si, true) << "\n  ";
     for (auto s: si.states_of(scc))
       std::cout << s << " ";
     std::cout << "\n\n";
