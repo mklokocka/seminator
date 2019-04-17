@@ -10,5 +10,6 @@ owl-*
 seminator
 tests/test
 
-# RStudio and R tmp files
+# RStudio and R tmp files + atom tmpfiles
 data/.R*
+.tags
