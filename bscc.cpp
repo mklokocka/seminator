@@ -17,23 +17,17 @@
 
 #include <bscc.hpp>
 
-bool is_bottom_scc(const_aut_ptr aut,
-                   unsigned scc,
+bool is_bottom_scc(unsigned scc,
                    spot::scc_info* si)
 {
   assert(si);
-  for (auto s: si->states_of(scc))
-    for (auto& t: aut->out(s))
-      if (si->scc_of(t.dst) != scc)
-        return false;
-
-  return true;
+  return (si->succ(scc)).empty();
 }
 
-bool is_bottom_scc(const_aut_ptr aut, unsigned scc)
+bool is_bottom_scc(unsigned scc, const_aut_ptr aut)
 {
   auto si = new spot::scc_info(aut);
-  bool res = is_bottom_scc(aut, scc, si);
+  bool res = is_bottom_scc(scc, si);
   delete si;
   return res;
 }
@@ -45,7 +39,7 @@ void print_scc_info(const_aut_ptr aut)
   for (unsigned scc = 0; scc < nc; ++scc)
   {
     std::cout << "SCC " << scc << " is bottom: " <<
-                  is_bottom_scc(aut, scc, &si) << "\n  ";
+                  is_bottom_scc(scc, &si) << "\n  ";
     for (auto s: si.states_of(scc))
       std::cout << s << " ";
     std::cout << "\n\n";
