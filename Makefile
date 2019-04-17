@@ -42,5 +42,5 @@ test: tests/test
 
 tests/test: seminator
 	make -C tests
-	
+
 .PHONY: all clean distclean

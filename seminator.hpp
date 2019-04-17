@@ -23,6 +23,7 @@
 
 #include <types.hpp>
 #include <cutdet.hpp>
+#include <bscc.hpp>
 #include <breakpoint_twa.hpp>
 
 #include <spot/misc/bddlt.hh>
@@ -49,14 +50,25 @@ bool cut_condition(const_aut_ptr aut, edge_t e, const_om_ptr om = nullptr) {
   spot::scc_info si(aut);
   bool cut_on_SCC_entry = false;
   bool cut_always = false;
+  bool bscc_avoid = false;
   if (om)
   {
     cut_on_SCC_entry = om->get("cut-on-SCC-entry", 0);
     cut_always = om->get("cut-always", 0);
+    bscc_avoid = om->get("bscc-avoid", 0);
   }
   unsigned u = si.scc_of(e.src);
   unsigned v = si.scc_of(e.dst);
   unsigned highest_mark(aut->acc().num_sets() - 1);
+
+  // The states of u are not present in the 1st component
+  // when it is deterministic BSCC and bscc_avoid is true
+  // Maybe add avoid_scc(scc)?
+  if (bscc_avoid && is_bottom_scc(u, &si) && is_deterministic_scc(u, si))
+   return false;
+  // This is basically cut_on_SCC_entry for detBSCC as u != v
+  if (bscc_avoid && is_bottom_scc(v, &si) && is_deterministic_scc(v, si))
+   return true;
 
   return
     si.is_accepting_scc(v) && (
@@ -119,6 +131,8 @@ void print_help() {
   "  s -a-> p create cut-edge s -a-> ({p},∅,0).\n\n";
 
   std::cout << "Optimizations:\n"
+  "    --bscc-avoid           \tavoid deterministic bottom SCC in 1st\n"
+  "                           \tcomponent and jump directly to 2nd component\n"
   "    --powerset-for-weak    \tavoid breakpoint construction for\n"
   "                           \tinherently weak accepting SCCs and use\n"
   "                           \tpowerset construction instead\n"

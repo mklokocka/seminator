@@ -17,6 +17,8 @@
 
 #include <types.hpp>
 #include <breakpoint_twa.hpp>
+#include <bscc.hpp>
+#include <cutdet.hpp>
 
 std::string bp_name(breakpoint_state bps) {
   state_set p = std::get<Bp::P>(bps);
@@ -96,6 +98,7 @@ bp_twa::create_all_cut_transitions() {
       if (cut_det_) {
         // in cDBA, add cut-edge from each state that contains edge.src
         for (unsigned s = 0; s < ps2num1_.size(); ++s) {
+          // Can we iterate over keys of ps2num1_?
           state_set * current_states = &(num2ps1_.at(s));
           if (current_states->count(edge.src))
             add_cut_transition(s, edge);
@@ -137,11 +140,16 @@ bp_twa::compute_successors<state_set>(state_set ps, state_t src,
   }
 }
 
+// Decides whether state should be avoided during bscc-avoid optimization
+bool avoid_state(state_t s, spot::scc_info& si)
+{
+  unsigned scc = si.scc_of(s);
+  return is_bottom_scc(scc, &si) & is_deterministic_scc(scc, si);
+}
 
 void
 bp_twa::create_first_component()
 {
-
   if (cut_det_) {
     // Set the initial state
     state_t num = res_->new_state();
@@ -152,11 +160,25 @@ bp_twa::create_first_component()
     num2ps1_.emplace_back(ps);
     names_->emplace_back(powerset_name(&ps));
 
+    assert(!avoid_state(init_num, src_si_));
+
     // Build the transitions
+    // For the bscc-avoid we create intersection with states that are not avoided
+    auto not_avoided = state_vect();
+    for (unsigned scc = 0; scc < src_si_.scc_count(); ++scc)
+    {
+      if (bscc_avoid_ &
+          is_bottom_scc(scc, &src_si_) & is_deterministic_scc(scc, src_si_))
+        continue;
+      not_avoided.insert(not_avoided.end(),
+                         src_si_.states_of(scc).begin(),
+                         src_si_.states_of(scc).end());
+    }
+
     for (state_t src = 0; src < res_->num_states(); ++src)
     {
       auto ps = num2ps1_.at(src);
-      compute_successors(ps, src, true);
+      compute_successors(ps, src, &not_avoided, true);
     }
     res_->merge_edges();
   } else { // Just copy the states and transitions
@@ -168,7 +190,11 @@ bp_twa::create_first_component()
       names_->emplace_back(std::to_string(i));
 
     // Copy edges
-    for (auto& e : src_->edges()) {
+    for (auto& e : src_->edges())
+    {
+      if (bscc_avoid_ &
+               (avoid_state(e.dst, src_si_) | (avoid_state(e.src, src_si_))))
+        continue;
       res_->new_edge(e.src, e.dst, e.cond);
     }
   }
@@ -291,13 +317,13 @@ bp_twa::finish_second_component(state_t start) {
     // Resolve the type of state and run compute_successors
     auto ps = num2ps2_.at(src);
     if (ps == empty_set)
-    {
+    { // breakpoint
       auto bps = num2bp_.at(src);
       auto intersection = get_and_check_scc(std::get<Bp::P>(bps));
       compute_successors(bps, src, &intersection);
     }
     else
-    {
+    { // powerset
       auto intersection = get_and_check_scc(ps);
       compute_successors(ps, src, &intersection);
     }

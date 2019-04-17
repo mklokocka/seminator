@@ -22,14 +22,11 @@
 /*
 * Determine whether given SCC is bottom (has no successor SCC)
 *
-* @param[in] aut    automaton
 * @param[in] scc    scc to check
 * @param[in] ss     precomputed scc_info
 * @return           true if scc is bottom scc, false otherwise
 */
-bool is_bottom_scc(const_aut_ptr aut,
-                    unsigned scc,
-                    spot::scc_info* si);
+bool is_bottom_scc(unsigned scc, spot::scc_info* si);
 
 bool is_bottom_scc(const_aut_ptr aut, unsigned scc);
 

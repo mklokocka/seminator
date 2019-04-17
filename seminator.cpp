@@ -107,6 +107,8 @@ int main(int argc, char* argv[])
         // Optimizations
         else if (arg.compare("--powerset-for-weak") == 0)
             om.set("powerset-for-weak", true);
+        else if (arg.compare("--bscc-avoid") == 0)
+            om.set("bscc-avoid", true);
 
         else if (arg.compare("--scc0") == 0)
             om.set("scc-aware", false);

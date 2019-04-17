@@ -1,0 +1,100 @@
+#!/bin/bash
+set -e
+
+cat >bscc-avoid.hoa <<EOF
+HOA: v1
+States: 5
+Start: 0
+AP: 2 "p2" "p1"
+acc-name: Buchi
+Acceptance: 1 Inf(0)
+properties: trans-labels explicit-labels trans-acc stutter-invariant
+--BODY--
+State: 0
+[!0] 1
+[!0] 2
+[t] 3
+State: 1
+[t] 1
+[0] 4
+State: 2
+[!0] 1
+[!0] 2 {0}
+State: 3
+[!1] 3
+[1] 3 {0}
+State: 4
+[0] 4 {0}
+--END--
+EOF
+
+cat >bscc-avoid.expect <<EOF
+HOA: v1
+States: 6
+Start: 0
+AP: 2 "p2" "p1"
+acc-name: Buchi
+Acceptance: 1 Inf(0)
+properties: trans-labels explicit-labels trans-acc semi-deterministic
+--BODY--
+State: 0 "0"
+[!0] 1
+[!0] 2
+[t] 3
+State: 1 "1"
+[t] 1
+[0] 4
+State: 2 "2"
+[!0] 1
+[!0] 2
+[!0] 5
+State: 3 "{3} , ∅ , 0"
+[!1] 3
+[1] 3 {0}
+State: 4 "{4} , ∅ , 0"
+[0] 4 {0}
+State: 5 "{2} , ∅ , 0"
+[!0] 5 {0}
+--END--
+EOF
+
+cat >bscc-avoid.cd.expect <<EOF
+HOA: v1
+States: 6
+Start: 0
+AP: 2 "p2" "p1"
+acc-name: Buchi
+Acceptance: 1 Inf(0)
+properties: trans-labels explicit-labels trans-acc semi-deterministic
+--BODY--
+State: 0 "{0}"
+[!0] 1
+[t] 3
+State: 1 "{1,2}"
+[!0] 1
+[0] 2
+[0] 4
+[!0] 5
+State: 2 "{1}"
+[t] 2
+[0] 4
+State: 3 "{3} , ∅ , 0"
+[!1] 3
+[1] 3 {0}
+State: 4 "{4} , ∅ , 0"
+[0] 4 {0}
+State: 5 "{2} , ∅ , 0"
+[!0] 5 {0}
+--END--
+EOF
+
+
+../seminator -s0 --bscc-avoid bscc-avoid.hoa > bscc-avoid.out
+../seminator -s0 --bscc-avoid --cd bscc-avoid.hoa > bscc-avoid.cd.out
+cat bscc-avoid.out
+cat bscc-avoid.cd.out
+diff bscc-avoid.out bscc-avoid.expect
+diff bscc-avoid.cd.out bscc-avoid.cd.expect
+
+rm bscc-avoid.hoa bscc-avoid.out bscc-avoid.expect bscc-avoid.cd.out bscc-avoid.cd.expect
+

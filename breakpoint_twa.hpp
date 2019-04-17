@@ -37,6 +37,7 @@ class bp_twa {
         powerset_for_weak_ = om->get("powerset-for-weak",0);
         powerset_on_cut_ = om->get("powerset-on-cut",0);
         cut_det_ = om->get("cut-deterministic",0);
+        bscc_avoid_ = om->get("bscc-avoid",0);
       }
       res_ = spot::make_twa_graph(src_->get_dict());
       res_->copy_ap_of(src_);
@@ -180,7 +181,8 @@ class bp_twa {
       }
 
 
-    // Construction modifiers
+    // Construction modifiers; Change the default also in constructor
+    bool bscc_avoid_ = false;
     bool cut_det_ = false; // true if cut-determinism is requested
     bool powerset_for_weak_ = false;
     bool powerset_on_cut_ = false; //start bp already on cut
