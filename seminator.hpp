@@ -136,9 +136,12 @@ void print_help() {
   "    --powerset-for-weak    \tavoid breakpoint construction for\n"
   "                           \tinherently weak accepting SCCs and use\n"
   "                           \tpowerset construction instead\n"
-  "    -s0,    --no-reductions\tdisable Spot automata post-reductions\n"
-  "    --scc-aware            \tenable scc-aware optimization (default on)\n"
+  "    --scc-aware            \tenable scc-aware optimization (default)\n"
   "    --scc0, --no-scc-aware \tdisable scc-aware optimization\n\n";
+
+  std::cout << "Pre- and Post-processing:\n"
+  "    -s0,    --no-reductions\tdisable Spot automata post-reductions\n"
+  "    --simplify-input       \tenable simplification of input automaton\n\n";
 
   std::cout << "Miscellaneous options: \n"
   "  -h, --help \tprint this help\n"
@@ -240,6 +243,7 @@ private:
 
   // Simplifications options (from opt, see parse_options for defaults)
   bool postproc_;
+  bool preproc_;
   bool cut_det_;
 
   // Prefered output types
@@ -247,4 +251,5 @@ private:
 
   // Spot's postprocesssor
   spot::postprocessor postprocessor_;
+  spot::postprocessor preprocessor_;
 };

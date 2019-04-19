@@ -36,11 +36,19 @@ aut_ptr check_and_compute(aut_ptr aut, jobs_type jobs, const_om_ptr opt)
   if (spot::is_deterministic(aut))
     return aut;
 
-  bool cut_det_ = opt->get("cut-deterministic",0);
+  bool cut_det = opt->get("cut-deterministic",0);
+  bool preproc = opt->get("preprocess",0);
+
+  if (preproc)
+  {
+    spot::postprocessor preprocessor;
+    preprocessor.set_pref(spot::postprocessor::Deterministic);
+    preprocessor.run(aut);
+  }
 
   if (spot::is_semi_deterministic(aut))
   {
-    if (!cut_det_)
+    if (!cut_det)
       return aut;
 
     auto non_det_states = new state_set;
@@ -122,6 +130,9 @@ int main(int argc, char* argv[])
 
         else if (arg.compare("--no-reductions") == 0)
             om.set("postprocess", false);
+
+        else if (arg.compare("--simplify-input") == 0)
+            om.set("preprocess", true);
 
         // Prefered output
         else if (arg.compare("--cd") == 0)
@@ -252,8 +263,13 @@ int main(int argc, char* argv[])
 
 void seminator::parse_options()
 {
-  postproc_ = opt_->get("postprocess", 1);
   cut_det_  = opt_->get("cut-deterministic", 0);
+  preproc_  = opt_->get("preprocess",0);
+  postproc_ = opt_->get("postprocess", 1);
+
+  // The deterministic attempt was done in check_and_compute
+  if (preproc_)
+    preprocessor_.set_pref(spot::postprocessor::Small);
 
   output_  = static_cast<output_type>(opt_->get("output", TGBA));
 }
@@ -267,9 +283,20 @@ void seminator::prepare_inputs(jobs_type jobs)
   if (jobs & Onestep)
     inputs_.emplace(Onestep, input_);
   if (jobs & ViaTBA)
+  {
     inputs_.emplace(ViaTBA, spot::degeneralize_tba(input_));
+    if (preproc_)
+      inputs_[ViaTBA] = preprocessor_.run(inputs_[ViaTBA]);
+  }
   if (jobs & ViaSBA)
+  {
     inputs_.emplace(ViaSBA, spot::degeneralize(input_));
+    if (preproc_)
+    {
+      preprocessor_.set_type(spot::postprocessor::BA);
+      inputs_[ViaSBA] = preprocessor_.run(inputs_[ViaSBA]);
+    }
+  }
 }
 
 void seminator::run_jobs(jobs_type jobs)

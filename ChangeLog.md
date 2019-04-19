@@ -12,6 +12,7 @@ The code was almost completely rewritten.
 * `--scc0` and `--no-scc-aware` disables the SCC-aware optimization
 * `--sd` option for semi-deterministic output (and not cut-deterministic)
 * `--no-reduction` is a synonym for `s0` (disables reductions by Spot)
+* `--simplify-input` enables preprocessing of input by Spot
 * `--highlight` colors states regarding the part of sDBA: violet for the 1st (nondeterministic) part, green for the 2nd (deterministic) part. Cut edges are colored by red.
 * Seminator now understands `-h` for help.
 * Seminator now detects unsupported options (exits with return status 2)
