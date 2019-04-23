@@ -258,8 +258,8 @@ int main(int argc, char* argv[])
     {
       highlight(result);
       spot::print_hoa(std::cout, result, "1.1") << '\n';
-    }
-    spot::print_hoa(std::cout, result) << '\n';
+    } else
+      spot::print_hoa(std::cout, result) << '\n';
     return 0;
 }
 

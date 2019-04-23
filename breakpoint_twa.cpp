@@ -113,7 +113,7 @@ bp_twa::create_all_cut_transitions() {
 
 // This is to be used for weak components or for 1st component of
 // cut-deterministic automata (the fc switch)
-// The edges in 2nd component are all is_accepting
+// The edges in 2nd component are all accepting
 // No edges are accepting in the first component
 template <> void
 bp_twa::compute_successors<state_set>(state_set ps, state_t src,
