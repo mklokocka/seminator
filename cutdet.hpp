@@ -18,7 +18,7 @@
 #pragma once
 
 #include <types.hpp>
-#include <breakpoint_twa.hpp>
+#include <powerset.hpp>
 
 #include <spot/twaalgos/isdet.hh>
 
@@ -64,3 +64,8 @@ void highlight_cut(aut_ptr, state_set * nondet = nullptr);
 bool
 is_deterministic_scc(unsigned scc, spot::scc_info& si,
                      bool inside_only=true);
+
+/*
+* whether all successors of given SCC are deterministic
+*/
+std::vector<bool> get_semidet_sccs(spot::scc_info& si);

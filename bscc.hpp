@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include <spot/twaalgos/isdet.hh>
+
 #include <types.hpp>
 
 /*
@@ -26,10 +28,15 @@
 * @param[in] ss     precomputed scc_info
 * @return           true if scc is bottom scc, false otherwise
 */
-bool is_bottom_scc(unsigned scc, spot::scc_info* si);
+bool is_bottom_scc(unsigned scc, spot::scc_info& si);
 
-bool is_bottom_scc(const_aut_ptr aut, unsigned scc);
+/*
+* decide whether the given SCC should be avoided in the 1st component
+*/
+bool avoid_scc(unsigned scc, spot::scc_info &si);
 
+// Decides whether state should be avoided during bscc-avoid optimization
+bool avoid_state(state_t s, spot::scc_info& si);
 
 /*
 * Prints information about (non-)bottom SCC. For testing purposes only

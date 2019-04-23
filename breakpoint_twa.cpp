@@ -93,7 +93,7 @@ void
 bp_twa::create_all_cut_transitions() {
   for (auto& edge : src_->edges())
   {
-    if (cut_condition_(src_, edge, om_))
+    if (cut_condition_(src_si_, edge, om_))
     {
       if (cut_det_) {
         // in cDBA, add cut-edge from each state that contains edge.src
@@ -140,13 +140,6 @@ bp_twa::compute_successors<state_set>(state_set ps, state_t src,
   }
 }
 
-// Decides whether state should be avoided during bscc-avoid optimization
-bool avoid_state(state_t s, spot::scc_info& si)
-{
-  unsigned scc = si.scc_of(s);
-  return is_bottom_scc(scc, &si) & is_deterministic_scc(scc, si);
-}
-
 void
 bp_twa::create_first_component()
 {
@@ -167,8 +160,7 @@ bp_twa::create_first_component()
     auto not_avoided = state_vect();
     for (unsigned scc = 0; scc < src_si_.scc_count(); ++scc)
     {
-      if (bscc_avoid_ &
-          is_bottom_scc(scc, &src_si_) & is_deterministic_scc(scc, src_si_))
+      if (bscc_avoid_ & avoid_scc(scc, src_si_))
         continue;
       not_avoided.insert(not_avoided.end(),
                          src_si_.states_of(scc).begin(),
@@ -314,6 +306,15 @@ bp_twa::get_and_check_scc(state_set ps) {
   if (scc_aware_)
   { // create set of states from current SCC
     auto scc = src_si_.scc_of(*(ps.begin()));
+
+    // For the bottom-SCC optimization we have to be carefull.
+    // The components C that are in the cut (already satisfy the semi-det
+    // property) we have to avoid the SCC optimization as they may have
+    // some successor SCCs that would not be reachable if C is not in
+    // the 1st component.
+    if (bscc_avoid_ & avoid_scc(scc, src_si_))
+      return intersection;
+
     for (auto s : ps)
       assert(src_si_.scc_of(s) == scc);
     intersection = src_si_.states_of(scc);

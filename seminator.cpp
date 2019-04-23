@@ -314,10 +314,23 @@ void seminator::run_jobs(jobs_type jobs)
         prepare_inputs(job);
       assert(inputs_[job]);
 
-      // Run the breakpoint algorithm
-      bp_twa resbp(inputs_[job], opt_, cut_condition);
-      results_[job] = resbp.res_aut();
-      results_[job]->purge_dead_states();
+      state_set non_det_states;
+      if (spot::is_deterministic(inputs_[job]) |
+          is_cut_deterministic(inputs_[job], &non_det_states))
+        results_[job] = inputs_[job];
+      else if (spot::is_semi_deterministic(inputs_[job]))
+      {
+        if (!cut_det_)
+          results_[job] = inputs_[job];
+        else
+          results_[job] = determinize_first_component(inputs_[job], &non_det_states);
+      } else
+      {
+        // Run the breakpoint algorithm
+        bp_twa resbp(inputs_[job], opt_, cut_condition);
+        results_[job] = resbp.res_aut();
+        results_[job]->purge_dead_states();
+      }
 
       // Check the result
       assert(spot::is_semi_deterministic(results_[job]));

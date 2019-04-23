@@ -18,6 +18,7 @@
 
 #include <types.hpp>
 #include <powerset.hpp>
+#include <cutdet.hpp>
 
 /*
 * Gives the name for a breakpoint state of the form: P, Q, level

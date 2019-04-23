@@ -315,3 +315,27 @@ is_deterministic_scc(unsigned scc, spot::scc_info& si,
   }
   return true;
 }
+
+std::vector<bool>
+get_semidet_sccs(spot::scc_info& si)
+  {
+    unsigned nscc = si.scc_count();
+    assert(nscc);
+    std::vector<bool> res(nscc);
+
+    for (unsigned scc = 0; scc < nscc; ++scc)
+    {
+      res[scc] = true;
+      for (auto succ : si.succ(scc))
+      {
+        if (!res[succ])
+        {
+          res[scc] = false;
+          break;
+        }
+      }
+      res[scc] = res[scc] & is_deterministic_scc(scc, si, false);
+    }
+
+    return res;
+  }

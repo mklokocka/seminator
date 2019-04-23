@@ -36,7 +36,7 @@ static const std::string VERSION_TAG = "v1.2.0dev";
 * Returns whether a cut transition (jump to the deterministic component)
 * for the current edge should be created.
 *
-* @param[in] aut                The input automaton_stream_parser
+* @param[in] aut                The input automaton
 * @param[in] e                  The edge beeing processed
 * @param[in] om                 Options map
 * @return True if some jump condition is satisfied
@@ -46,8 +46,8 @@ static const std::string VERSION_TAG = "v1.2.0dev";
 *  2. If we freshly enter accepting scc (--cut-on-SCC-entry option)
 *  3. If e leads to accepting SCC (--cut-always option)
 */
-bool cut_condition(const_aut_ptr aut, edge_t e, const_om_ptr om = nullptr) {
-  spot::scc_info si(aut);
+bool cut_condition(spot::scc_info& si, edge_t e, const_om_ptr om = nullptr) {
+  auto aut = si.get_aut();
   bool cut_on_SCC_entry = false;
   bool cut_always = false;
   bool bscc_avoid = false;
@@ -64,10 +64,10 @@ bool cut_condition(const_aut_ptr aut, edge_t e, const_om_ptr om = nullptr) {
   // The states of u are not present in the 1st component
   // when it is deterministic BSCC and bscc_avoid is true
   // Maybe add avoid_scc(scc)?
-  if (bscc_avoid && is_bottom_scc(u, &si) && is_deterministic_scc(u, si))
+  if (bscc_avoid && avoid_scc(u, si))
    return false;
   // This is basically cut_on_SCC_entry for detBSCC as u != v
-  if (bscc_avoid && is_bottom_scc(v, &si) && is_deterministic_scc(v, si))
+  if (bscc_avoid && avoid_scc(v, si))
    return true;
 
   return
@@ -131,7 +131,7 @@ void print_help() {
   "  s -a-> p create cut-edge s -a-> ({p},∅,0).\n\n";
 
   std::cout << "Optimizations:\n"
-  "    --bscc-avoid           \tavoid deterministic bottom SCC in 1st\n"
+  "    --bscc-avoid           \tavoid deterministic bottom part of input in 1st\n"
   "                           \tcomponent and jump directly to 2nd component\n"
   "    --powerset-for-weak    \tavoid breakpoint construction for\n"
   "                           \tinherently weak accepting SCCs and use\n"

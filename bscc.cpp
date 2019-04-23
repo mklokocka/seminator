@@ -18,19 +18,9 @@
 #include <bscc.hpp>
 #include <cutdet.hpp>
 
-bool is_bottom_scc(unsigned scc,
-                   spot::scc_info* si)
+bool is_bottom_scc(unsigned scc, spot::scc_info& si)
 {
-  assert(si);
-  return (si->succ(scc)).empty();
-}
-
-bool is_bottom_scc(unsigned scc, const_aut_ptr aut)
-{
-  auto si = new spot::scc_info(aut);
-  bool res = is_bottom_scc(scc, si);
-  delete si;
-  return res;
+  return (si.succ(scc)).empty();
 }
 
 void print_scc_info(const_aut_ptr aut)
@@ -40,7 +30,7 @@ void print_scc_info(const_aut_ptr aut)
   for (unsigned scc = 0; scc < nc; ++scc)
   {
     std::cout << "SCC " << scc << " is bottom: " <<
-                  is_bottom_scc(scc, &si) << "\n  "
+                  is_bottom_scc(scc, si) << "\n  "
                   "    is det:    " << is_deterministic_scc(scc, si, false)
                   << "\n      is det_in: "
                   << is_deterministic_scc(scc, si, true) << "\n  ";
@@ -49,4 +39,17 @@ void print_scc_info(const_aut_ptr aut)
     std::cout << "\n\n";
   }
   std::cout.flush();
+}
+
+bool avoid_scc(unsigned scc, spot::scc_info &si)
+{
+  //return is_deterministic_scc(scc, si, false) & is_bottom_scc(scc, si);
+  auto det_sccs = get_semidet_sccs(si);
+  return det_sccs[scc];
+}
+
+bool avoid_state(state_t s, spot::scc_info& si)
+{
+  unsigned scc = si.scc_of(s);
+  return avoid_scc(scc, si);
 }
