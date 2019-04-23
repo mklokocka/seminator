@@ -136,6 +136,8 @@ void print_help() {
   "    --powerset-for-weak    \tavoid breakpoint construction for\n"
   "                           \tinherently weak accepting SCCs and use\n"
   "                           \tpowerset construction instead\n"
+  "    --skip-levels          \tallow multiple breakpoints on 1 edge; a trick\n"
+  "                           \twell known from degeneralization\n"
   "    --scc-aware            \tenable scc-aware optimization (default)\n"
   "    --scc0, --no-scc-aware \tdisable scc-aware optimization\n\n";
 

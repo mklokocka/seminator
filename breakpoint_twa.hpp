@@ -38,6 +38,7 @@ class bp_twa {
         powerset_on_cut_ = om->get("powerset-on-cut",0);
         cut_det_ = om->get("cut-deterministic",0);
         bscc_avoid_ = om->get("bscc-avoid",0);
+        skip_levels_ = om->get("skip-levels",0);
       }
       res_ = spot::make_twa_graph(src_->get_dict());
       res_->copy_ap_of(src_);
@@ -187,6 +188,7 @@ class bp_twa {
     bool powerset_for_weak_ = false;
     bool powerset_on_cut_ = false; //start bp already on cut
     bool scc_aware_ = true;
+    bool skip_levels_ = false;
 
     // input and result automata
     const_aut_ptr src_;

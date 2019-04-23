@@ -220,8 +220,11 @@ bp_twa::compute_successors<breakpoint_state>(breakpoint_state bps, state_t src,
   succ_vect_ptr p_k_succs (psb_->get_succs(&p, k, // go to Q
                           intersection->begin(), intersection->end()));
 
-  for(size_t c = 0; c < psb_->nc_; ++c) {
+  for(size_t c = 0; c < psb_->nc_; ++c)
+  {
     bdd cond = psb_->num2bdd_[c];
+
+    // don't build edges not satisfying cond_constraint
     if (!bdd_implies(cond, cond_constrain))
       continue;
     auto p2   = p_succs->at(c);
@@ -235,16 +238,24 @@ bp_twa::compute_successors<breakpoint_state>(breakpoint_state bps, state_t src,
     auto k2 = k;
     // Check p == q
     auto acc = spot::acc_cond::mark_t();
-    if (p2 == q2) {
-      k2 = (k + 1) % src_->num_sets();
-      acc = {0};
-      // Take the k2-succs of p
-      succ_vect_ptr tmp (psb_->get_succs(&p, k2,
-                        intersection->begin(), intersection->end()));
-      q2 = tmp->at(c);
-      if (p2 == q2)
-        q2 = empty_set;
-    }
+
+    do
+    {
+      if (p2 == q2) {
+        k2 = (k2 + 1) % src_->num_sets();
+        acc = {0};
+        // Take the k2-succs of p
+        succ_vect_ptr tmp (psb_->get_succs(&p, k2,
+                          intersection->begin(), intersection->end()));
+        q2 = tmp->at(c);
+      } else
+        break;
+    } while ((k2 != k) & skip_levels_);
+
+    // keep Q empty if all breakpoints were reached
+    if (p2 == q2)
+      q2 = empty_set;
+
     // Construct the breakpoint_state. We use get just to be error-prone
     breakpoint_state bpd;
     std::get<Bp::LEVEL>(bpd) = k2;

@@ -117,6 +117,8 @@ int main(int argc, char* argv[])
             om.set("powerset-for-weak", true);
         else if (arg.compare("--bscc-avoid") == 0)
             om.set("bscc-avoid", true);
+        else if (arg.compare("--skip-levels") == 0)
+            om.set("skip-levels", true);
 
         else if (arg.compare("--scc0") == 0)
             om.set("scc-aware", false);
