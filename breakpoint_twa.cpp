@@ -264,6 +264,7 @@ bp_twa::add_cut_transition(state_t from, edge_t edge) {
 
   auto scc = src_si_.scc_of(edge.dst);
   bool weak = src_si_.weak_sccs()[scc];
+  bool reuse = avoid_scc(scc, src_si_);
 
   state_vect scc_states;
   if (scc_aware_)
@@ -276,7 +277,7 @@ bp_twa::add_cut_transition(state_t from, edge_t edge) {
   {
     // create the target state
     state_set new_set{edge.dst};
-    if (powerset_for_weak_ && weak)
+    if (powerset_for_weak_ && weak && !(reuse && bscc_avoid_))
       target_state = ps_state(new_set, false);
     else
     {
@@ -287,7 +288,7 @@ bp_twa::add_cut_transition(state_t from, edge_t edge) {
     res_->new_edge(from, target_state, edge.cond);
   } else {
     state_set start({edge.src});
-    if (powerset_for_weak_ && weak)
+    if (powerset_for_weak_ && weak && !(reuse && bscc_avoid_))
       compute_successors(start, from, &scc_states, false, edge.cond);
     else
     {
