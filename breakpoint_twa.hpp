@@ -40,14 +40,30 @@ class bp_twa {
         cut_det_ = om->get("cut-deterministic",0);
         bscc_avoid_ = om->get("bscc-avoid",0);
         skip_levels_ = om->get("skip-levels",0);
+        reuse_SCC_ = om->get("reuse-SCC",0);
+
+        if (reuse_SCC_)
+          bscc_avoid_ = true;
       }
+
       res_ = spot::make_twa_graph(src_->get_dict());
       res_->copy_ap_of(src_);
+
+      // Set the acceptance conditions
+      // Büchi, unless reuse_SCC_ option declared, which reuses the input acc
+      if(reuse_SCC_)
+      {
+        acc_mark_ = src_->get_acceptance().used_sets();
+        res_->set_acceptance(src_->get_acceptance());
+      } else
+        res_->set_buchi();
+
       create_first_component();
 
-
+      old2new2_.resize(src_->num_states());
       const auto first_comp_size = res_->num_states();
       // Resize the num2bp_ for new states to be at appropriete indices.
+      new2old2_.resize(first_comp_size);
       num2bp_.resize(first_comp_size);
       num2ps2_.resize(first_comp_size);
       assert(names_->size() == first_comp_size);
@@ -61,7 +77,6 @@ class bp_twa {
 
       // print_res('After cut');
 
-      res_->set_buchi();
       finish_second_component(first_comp_size);
 
       res_->merge_edges();
@@ -99,6 +114,16 @@ class bp_twa {
     * returns    state (unsigned)
     */
     state_t bp_state(breakpoint_state);
+
+    /**
+    * \brief Returns state for given state from src_.
+    *
+    * In case we have not seen this state before, establishes the mapping.
+    *
+    * @param[in] state_t
+    * returns    state_t (unsigned)
+    */
+    state_t reuse_state(state_t);
 
     /**
     * \brief Returns state for given value.
@@ -188,6 +213,7 @@ class bp_twa {
     bool cut_det_ = false; // true if cut-determinism is requested
     bool powerset_for_weak_ = false;
     bool powerset_on_cut_ = false; //start bp already on cut
+    bool reuse_SCC_ = false;
     bool scc_aware_ = true;
     bool skip_levels_ = false;
 
@@ -197,6 +223,7 @@ class bp_twa {
 
     // scc info of src (needed for scc-aware optimization)
     spot::scc_info src_si_;
+    acc_mark acc_mark_ = acc_mark({0});
 
     // Transformation options
     const_om_ptr om_;
@@ -212,15 +239,19 @@ class bp_twa {
 
     // mapping between power_states and their indices
     //(1st comp. of res_ or 2nd comp. of res for weak components)
-    power_map ps2num1_ = power_map();
-    succ_vect num2ps1_ = succ_vect();
-    power_map ps2num2_ = power_map();
-    succ_vect num2ps2_ = succ_vect();
+    power_map  ps2num1_  = power_map();
+    succ_vect  num2ps1_  = succ_vect();
+    power_map  ps2num2_  = power_map();
+    succ_vect  num2ps2_  = succ_vect();
 
     // mapping between states of 2nd comp. of res_ and their content
     breakpoint_map bp2num_ = breakpoint_map();        // bp_state -> state_t
     std::vector<breakpoint_state>
           num2bp_ = std::vector<breakpoint_state>();  // state_t  -> bp_state
+
+    // mapping between reused semi-det states.
+    state_vect old2new2_;
+    state_vect new2old2_ = state_vect();
 
     // names of res automata states
     state_names names_ = new std::vector<std::string>;

@@ -15,6 +15,8 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+#include <string>
+
 #include <types.hpp>
 #include <breakpoint_twa.hpp>
 #include <bscc.hpp>
@@ -54,6 +56,7 @@ bp_twa::bp_state(breakpoint_state bps) {
     result = res_->new_state();
     num2bp_.emplace_back(bps);
     num2ps2_.resize(num2bp_.size());
+    new2old2_.resize(num2bp_.size());
     bp2num_[bps] = result;
     //TODO add to bp2 states
 
@@ -62,6 +65,28 @@ bp_twa::bp_state(breakpoint_state bps) {
   }  else {
     // return the existing one
     result = bp2num_.at(bps);
+  }
+  return result;
+}
+
+state_t
+bp_twa::reuse_state(state_t old) {
+  unsigned result;
+  if (!old2new2_[old]) {
+    // create a new state
+    assert(new2old2_.size() == res_->num_states());
+    result = res_->new_state();
+    new2old2_.emplace_back(old);
+    num2ps2_.resize(new2old2_.size());
+    num2bp_.resize(new2old2_.size());
+    old2new2_[old] = result;
+    //TODO add to bp2 states
+
+    auto name = std::to_string(old);
+    names_->emplace_back(name);
+  }  else {
+    // return the existing one
+    result = old2new2_.at(old);
   }
   return result;
 }
@@ -77,8 +102,10 @@ bp_twa::ps_state(state_set ps, bool fc) {
     // create a new state
     assert(num2ps->size() == res_->num_states());
     num2ps->emplace_back(ps);
-    if (!fc)
+    if (!fc) {
       num2bp_.resize(num2ps2_.size());
+      new2old2_.resize(num2ps2_.size());
+    }
     auto state = res_->new_state();
     (*ps2num)[ps] = state;
     //TODO add to bp1 states
@@ -110,6 +137,23 @@ bp_twa::create_all_cut_transitions() {
   }
 }
 
+// This is to be used for reused SCC during --reuse-good-SCC
+// Basicaly only copies the edges
+template <> void
+bp_twa::compute_successors<state_t>(state_t old, state_t src,
+  state_vect * intersection,
+  bool fc, bdd cond_constrain)
+{
+  assert(src == old2new2_[old]);
+  assert(old == new2old2_[src]);
+
+  for (auto& e : src_->out(old))
+  {
+    auto new_dst = reuse_state(e.dst);
+    res_->new_edge(src, new_dst, e.cond, e.acc);
+  }
+}
+
 
 // This is to be used for weak components or for 1st component of
 // cut-deterministic automata (the fc switch)
@@ -122,8 +166,6 @@ bp_twa::compute_successors<state_set>(state_set ps, state_t src,
 {
   assert(ps != empty_set);
 
-  typedef spot::acc_cond::mark_t acc_mark;
-
   auto succs = psb_->get_succs<>(&ps, intersection->begin(), intersection->end());
   for(size_t c = 0; c < psb_->nc_; ++c) {
     auto cond = psb_->num2bdd_[c];
@@ -134,9 +176,10 @@ bp_twa::compute_successors<state_set>(state_set ps, state_t src,
     if (d_ps == empty_set)
       continue;
     auto dst = ps_state(d_ps, fc);
-    res_->new_edge(src, dst, cond, fc ?
-      acc_mark() :
-      acc_mark({0}));
+    acc_mark mark = acc_mark();
+    if (!fc)
+      mark = acc_mark(acc_mark_);
+    res_->new_edge(src, dst, cond, mark);
   }
 }
 
@@ -235,7 +278,7 @@ bp_twa::compute_successors<breakpoint_state>(breakpoint_state bps, state_t src,
     {
       if (p2 == q2) {
         k2 = (k2 + 1) % src_->num_sets();
-        acc = {0};
+        acc = acc_mark_;
         // Take the k2-succs of p
         succ_vect_ptr tmp (psb_->get_succs(&p, k2,
                           intersection->begin(), intersection->end()));
@@ -270,8 +313,13 @@ bp_twa::add_cut_transition(state_t from, edge_t edge) {
   if (scc_aware_)
     scc_states = src_si_.states_of(scc);
 
-
   state_t target_state;
+
+  if (reuse_SCC_ && reuse)
+  {
+    res_->new_edge(from, reuse_state(edge.dst), edge.cond);
+    return;
+  }
 
   if (!powerset_on_cut_)
   {
@@ -330,11 +378,14 @@ bp_twa::finish_second_component(state_t start) {
     // Resolve the type of state and run compute_successors
     auto ps = num2ps2_.at(src);
     if (ps == empty_set)
-    { // breakpoint
-      auto bps = num2bp_.at(src);
-      auto intersection = get_and_check_scc(std::get<Bp::P>(bps));
-      compute_successors(bps, src, &intersection);
-    }
+      if (new2old2_[src])
+        compute_successors<state_t>(new2old2_[src], src);
+      else
+      { // breakpoint
+        auto bps = num2bp_.at(src);
+        auto intersection = get_and_check_scc(std::get<Bp::P>(bps));
+        compute_successors(bps, src, &intersection);
+      }
     else
     { // powerset
       auto intersection = get_and_check_scc(ps);

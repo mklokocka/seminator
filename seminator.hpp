@@ -55,7 +55,7 @@ bool cut_condition(spot::scc_info& si, edge_t e, const_om_ptr om = nullptr) {
   {
     cut_on_SCC_entry = om->get("cut-on-SCC-entry", 0);
     cut_always = om->get("cut-always", 0);
-    bscc_avoid = om->get("bscc-avoid", 0);
+    bscc_avoid = om->get("bscc-avoid", 0) | om->get("reuse-SCC", 0);
   }
   unsigned u = si.scc_of(e.src);
   unsigned v = si.scc_of(e.dst);
@@ -136,6 +136,8 @@ void print_help() {
   "    --powerset-for-weak    \tavoid breakpoint construction for\n"
   "                           \tinherently weak accepting SCCs and use\n"
   "                           \tpowerset construction instead\n"
+  "    --reuse-good-SCC       \tsimilar as --bscc-avoid, but uses the SCCs\n"
+  "                           \tunmodified with (potentialy) TGBA acceptance\n"
   "    --skip-levels          \tallow multiple breakpoints on 1 edge; a trick\n"
   "                           \twell known from degeneralization\n"
   "    --scc-aware            \tenable scc-aware optimization (default)\n"

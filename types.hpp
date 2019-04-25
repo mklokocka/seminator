@@ -44,6 +44,8 @@ typedef spot::twa_graph::edge_storage_t edge_t;
 typedef std::set<state_t> state_set;
 typedef std::vector<state_t> state_vect;
 
+typedef spot::acc_cond::mark_t acc_mark;
+
 typedef typename state_set::iterator ss_it;
 typedef typename state_vect::iterator sv_it;
 
