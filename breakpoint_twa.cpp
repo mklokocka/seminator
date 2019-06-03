@@ -246,7 +246,7 @@ bp_twa::compute_successors<breakpoint_state>(breakpoint_state bps, state_t src,
   int k       = std::get<Bp::LEVEL>(bps);
 
   assert(p != empty_set);
-  assert(!fc);
+  //assert(!fc);
 
   succ_vect_ptr p_succs   (psb_->get_succs(&p,
                           intersection->begin(), intersection->end()));
@@ -276,7 +276,7 @@ bp_twa::compute_successors<breakpoint_state>(breakpoint_state bps, state_t src,
 
     do
     {
-      if (p2 == q2) {
+      if (!fc && p2 == q2) {
         k2 = (k2 + 1) % src_->num_sets();
         acc = acc_mark_;
         // Take the k2-succs of p
@@ -344,7 +344,7 @@ bp_twa::add_cut_transition(state_t from, edge_t edge) {
       std::get<Bp::LEVEL>(bps) = 0;
       std::get<Bp::P>    (bps) = start;
       std::get<Bp::Q>    (bps) = empty_set;
-      compute_successors(bps, from, &scc_states, false, edge.cond);
+      compute_successors(bps, from, &scc_states, true, edge.cond);
     }
   }
 }
