@@ -1,4 +1,4 @@
-// Copyright (C) 2017, Fakulta Informatiky Masarykovy univerzity
+// Copyright (C) 2017, 2019, Fakulta Informatiky Masarykovy univerzity
 //
 // This file is a part of Seminator, a tool for semi-determinization of omega automata.
 //
@@ -49,24 +49,21 @@ bp_twa::names() {
 
 state_t
 bp_twa::bp_state(breakpoint_state bps) {
-  unsigned result;
-  if (bp2num_.count(bps) == 0) {
-    // create a new state
-    assert(num2bp_.size() == res_->num_states());
-    result = res_->new_state();
-    bp2num_[bps] = result;
+  auto loc = bp2num_.lower_bound(bps);
+  if (loc != bp2num_.end() && loc->first == bps)
+    return loc->second;         // existing state
 
-    // Update the state vectors to correct size
-    num2bp_.emplace_back(bps);
-    num2ps2_.resize(num2bp_.size());
-    //TODO add to bp2 states
+  // create a new state
+  assert(num2bp_.size() == res_->num_states());
+  unsigned result = res_->new_state();
+  bp2num_.emplace_hint(loc, bps, result);
 
-    auto name = bp_name(bps);
-    names_->emplace_back(name);
-  }  else {
-    // return the existing one
-    result = bp2num_.at(bps);
-  }
+  // Update the state vectors to correct size
+  num2bp_.emplace_back(bps);
+  num2ps2_.resize(num2bp_.size());
+  //TODO add to bp2 states
+
+  names_->emplace_back(bp_name(bps));
   return result;
 }
 
@@ -79,7 +76,7 @@ bp_twa::reuse_state(state_t old) {
     return result_it->second;
 
   // else create a new state
-  auto result = res_->new_state();
+  unsigned result = res_->new_state();
   new2old2_[result] = old;
   old2new2_[old] = result;
 
@@ -88,8 +85,7 @@ bp_twa::reuse_state(state_t old) {
   num2bp_.emplace_back(breakpoint_state());
   //TODO add to bp2 states
 
-  auto name = std::to_string(old);
-  names_->emplace_back(name);
+  names_->emplace_back(std::to_string(old));
   return result;
 }
 
@@ -100,21 +96,22 @@ bp_twa::ps_state(state_set ps, bool fc) {
   auto num2ps = fc ? &num2ps1_ : &num2ps2_;
   auto ps2num = fc ? &ps2num1_ : &ps2num2_;
 
-  if (ps2num->count(ps) == 0) {
-    // create a new state
-    assert(num2ps->size() == res_->num_states());
-    num2ps->emplace_back(ps);
-    if (!fc) {
-      num2bp_.resize(num2ps2_.size());
-    }
-    auto state = res_->new_state();
-    (*ps2num)[ps] = state;
-    //TODO add to bp1 states
+  auto loc = ps2num->lower_bound(ps);
+  if (loc != ps2num->end() && loc->first == ps)
+    return loc->second;         // existing state
 
-    names_->emplace_back(powerset_name(&ps));
-    return state;
-  } else
-    return ps2num->at(ps);
+  // create a new state
+  assert(num2ps->size() == res_->num_states());
+  num2ps->emplace_back(ps);
+  if (!fc) {
+    num2bp_.resize(num2ps2_.size());
+  }
+  auto state = res_->new_state();
+  ps2num->emplace_hint(loc, ps, state);
+  //TODO add to bp1 states
+
+  names_->emplace_back(powerset_name(&ps));
+  return state;
 };
 
 void
