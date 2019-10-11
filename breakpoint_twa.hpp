@@ -1,4 +1,4 @@
-// Copyright (C) 2017, Fakulta Informatiky Masarykovy univerzity
+// Copyright (C) 2017, 2019, Fakulta Informatiky Masarykovy univerzity
 //
 // This file is a part of Seminator, a tool for semi-determinization of omega automata.
 //
@@ -83,13 +83,7 @@ class bp_twa {
 
       auto old_n = src_->get_named_prop<std::string>("automaton-name");
       if (old_n)
-      {
-      std::stringstream ss;
-      ss << (cut_det_ ? "cDBA for " : "sDBA for ") << old_n;
-
-      std::string * name = new std::string(ss.str());
-      res_->set_named_prop("automaton-name", name);
-      }
+        *old_n = (cut_det_ ? "cDBA for " : "sDBA for ") + *old_n;
     }
 
     ~bp_twa()
