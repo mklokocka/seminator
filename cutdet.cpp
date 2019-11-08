@@ -21,6 +21,8 @@ static unsigned NONDET_C = 3;
 static unsigned DET_C = 4;
 static unsigned CUT_C = 5;
 
+std::map<const_aut_ptr, std::vector<bool> > semidet_sccs_cache;
+
 bool is_cut_deterministic(const_aut_ptr aut, std::set<unsigned>* non_det_states)
 {
     unsigned UNKNOWN = 0;
@@ -319,6 +321,12 @@ is_deterministic_scc(unsigned scc, spot::scc_info& si,
 std::vector<bool>
 get_semidet_sccs(spot::scc_info& si)
   {
+    auto search = semidet_sccs_cache.find(si.get_aut());
+    if (search != semidet_sccs_cache.end())
+      return search->second;
+
+    std::cerr << "Compute SCCs" << std::endl;
+
     unsigned nscc = si.scc_count();
     assert(nscc);
     std::vector<bool> res(nscc);
@@ -336,6 +344,8 @@ get_semidet_sccs(spot::scc_info& si)
       }
       res[scc] = res[scc] & is_deterministic_scc(scc, si, false);
     }
+
+    semidet_sccs_cache[si.get_aut()] = res;
 
     return res;
   }
