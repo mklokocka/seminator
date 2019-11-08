@@ -54,10 +54,11 @@ bp_twa::bp_state(breakpoint_state bps) {
     // create a new state
     assert(num2bp_.size() == res_->num_states());
     result = res_->new_state();
+    bp2num_[bps] = result;
+
+    // Update the state vectors to correct size
     num2bp_.emplace_back(bps);
     num2ps2_.resize(num2bp_.size());
-    new2old2_.resize(num2bp_.size());
-    bp2num_[bps] = result;
     //TODO add to bp2 states
 
     auto name = bp_name(bps);
@@ -74,12 +75,13 @@ bp_twa::reuse_state(state_t old) {
   unsigned result;
   if (!old2new2_[old]) {
     // create a new state
-    assert(new2old2_.size() == res_->num_states());
     result = res_->new_state();
-    new2old2_.emplace_back(old);
-    num2ps2_.resize(new2old2_.size());
-    num2bp_.resize(new2old2_.size());
+    new2old2_[result] = old;
     old2new2_[old] = result;
+
+    // Update the vector maps to be of the correct size
+    num2ps2_.emplace_back(empty_set);
+    num2bp_.emplace_back(breakpoint_state());
     //TODO add to bp2 states
 
     auto name = std::to_string(old);
@@ -104,7 +106,6 @@ bp_twa::ps_state(state_set ps, bool fc) {
     num2ps->emplace_back(ps);
     if (!fc) {
       num2bp_.resize(num2ps2_.size());
-      new2old2_.resize(num2ps2_.size());
     }
     auto state = res_->new_state();
     (*ps2num)[ps] = state;
@@ -378,7 +379,7 @@ bp_twa::finish_second_component(state_t start) {
     // Resolve the type of state and run compute_successors
     auto ps = num2ps2_.at(src);
     if (ps == empty_set)
-      if (new2old2_[src])
+      if (new2old2_.find(src) != new2old2_.end())
         compute_successors<state_t>(new2old2_[src], src);
       else
       { // breakpoint

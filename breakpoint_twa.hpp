@@ -63,7 +63,6 @@ class bp_twa {
       old2new2_.resize(src_->num_states());
       const auto first_comp_size = res_->num_states();
       // Resize the num2bp_ for new states to be at appropriete indices.
-      new2old2_.resize(first_comp_size);
       num2bp_.resize(first_comp_size);
       num2ps2_.resize(first_comp_size);
       assert(names_->size() == first_comp_size);
@@ -71,7 +70,7 @@ class bp_twa {
       // spot::print_hoa(std::cout, src_);
       // std::cout << "\n\n" << std::endl;
 
-      // print_res('After 1st component built');
+      // print_res(new std::string("After 1st component built"));
 
       create_all_cut_transitions();
 
@@ -251,7 +250,7 @@ class bp_twa {
 
     // mapping between reused semi-det states.
     state_vect old2new2_;
-    state_vect new2old2_ = state_vect();
+    state_map new2old2_ = state_map();
 
     // names of res automata states
     state_names names_ = new std::vector<std::string>;

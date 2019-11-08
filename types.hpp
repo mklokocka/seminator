@@ -68,6 +68,7 @@ typedef std::vector<state_set> succ_vect;
 
 typedef std::map<breakpoint_state, state_t> breakpoint_map;
 typedef std::map<state_set, state_t> power_map;
+typedef std::map<state_t, state_t> state_map;
 
 typedef spot::const_twa_graph_ptr const_aut_ptr;
 typedef spot::twa_graph_ptr aut_ptr;
