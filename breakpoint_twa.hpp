@@ -60,7 +60,6 @@ class bp_twa {
 
       create_first_component();
 
-      old2new2_.resize(src_->num_states());
       const auto first_comp_size = res_->num_states();
       // Resize the num2bp_ for new states to be at appropriete indices.
       num2bp_.resize(first_comp_size);
@@ -249,7 +248,7 @@ class bp_twa {
           num2bp_ = std::vector<breakpoint_state>();  // state_t  -> bp_state
 
     // mapping between reused semi-det states.
-    state_vect old2new2_;
+    state_map old2new2_ = state_map();
     state_map new2old2_ = state_map();
 
     // names of res automata states

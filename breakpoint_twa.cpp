@@ -72,24 +72,24 @@ bp_twa::bp_state(breakpoint_state bps) {
 
 state_t
 bp_twa::reuse_state(state_t old) {
-  unsigned result;
-  if (!old2new2_[old]) {
-    // create a new state
-    result = res_->new_state();
-    new2old2_[result] = old;
-    old2new2_[old] = result;
+  auto result_it = old2new2_.find(old);
 
-    // Update the vector maps to be of the correct size
-    num2ps2_.emplace_back(empty_set);
-    num2bp_.emplace_back(breakpoint_state());
-    //TODO add to bp2 states
+  // state already exists, return it
+  if (result_it != old2new2_.end())
+    return result_it->second;
 
-    auto name = std::to_string(old);
-    names_->emplace_back(name);
-  }  else {
-    // return the existing one
-    result = old2new2_.at(old);
-  }
+  // else create a new state
+  auto result = res_->new_state();
+  new2old2_[result] = old;
+  old2new2_[old] = result;
+
+  // Update the vector maps to be of the correct size
+  num2ps2_.emplace_back(empty_set);
+  num2bp_.emplace_back(breakpoint_state());
+  //TODO add to bp2 states
+
+  auto name = std::to_string(old);
+  names_->emplace_back(name);
   return result;
 }
 
