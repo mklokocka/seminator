@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 set -e
 
 cat >powerset-on-cut.hoa <<EOF
@@ -57,5 +57,5 @@ EOF
 cat powerset-on-cut.out
 diff powerset-on-cut.out powerset-on-cut.expect
 
-rm powerset-on-cut.out powerset-on-cut.hoa powerset-on-cut.expect
+rm -f powerset-on-cut.out powerset-on-cut.hoa powerset-on-cut.expect
 

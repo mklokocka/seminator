@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 set -e
 
 cat >bscc-avoid.hoa <<EOF
@@ -96,5 +96,5 @@ cat bscc-avoid.cd.out
 diff bscc-avoid.out bscc-avoid.expect
 diff bscc-avoid.cd.out bscc-avoid.cd.expect
 
-rm bscc-avoid.hoa bscc-avoid.out bscc-avoid.expect bscc-avoid.cd.out bscc-avoid.cd.expect
+rm -f bscc-avoid.hoa bscc-avoid.out bscc-avoid.expect bscc-avoid.cd.out bscc-avoid.cd.expect
 

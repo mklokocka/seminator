@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 set -e
 
 cat >skip-levels.hoa <<EOF
@@ -122,5 +122,5 @@ EOF
 cat skip-levels.out
 diff skip-levels.out skip-levels.expect
 
-rm skip-levels.hoa skip-levels.out skip-levels.expect
+rm -f skip-levels.hoa skip-levels.out skip-levels.expect
 
