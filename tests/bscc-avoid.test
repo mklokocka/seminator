@@ -89,8 +89,8 @@ State: 5 "{2} , ∅ , 0"
 EOF
 
 
-../seminator -s0 --bscc-avoid bscc-avoid.hoa > bscc-avoid.out
-../seminator -s0 --bscc-avoid --cd bscc-avoid.hoa > bscc-avoid.cd.out
+seminator -s0 --bscc-avoid bscc-avoid.hoa > bscc-avoid.out
+seminator -s0 --bscc-avoid --cd bscc-avoid.hoa > bscc-avoid.cd.out
 cat bscc-avoid.out
 cat bscc-avoid.cd.out
 diff bscc-avoid.out bscc-avoid.expect

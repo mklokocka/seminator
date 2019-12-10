@@ -144,8 +144,8 @@ State: 10 "6"
 EOF
 
 
-../seminator -s0 --reuse-good-SCC reuse-good-SCC.hoa > reuse-good-SCC.out
-../seminator -s0 --reuse-good-SCC --cd reuse-good-SCC.hoa > reuse-good-SCC.cd.out
+seminator -s0 --reuse-good-SCC reuse-good-SCC.hoa > reuse-good-SCC.out
+seminator -s0 --reuse-good-SCC --cd reuse-good-SCC.hoa > reuse-good-SCC.cd.out
 cat reuse-good-SCC.out
 cat reuse-good-SCC.cd.out
 diff reuse-good-SCC.out reuse-good-SCC.expect

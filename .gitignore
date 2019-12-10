@@ -1,15 +1,27 @@
 __pycache__
 .ipynb_checkpoints
-# Generated files
-#formulae/literature*.ltl
-#formulae/random*.ltl
 formulae/tmp.ltl
 lcr-*
 owl-*
 *.o
 seminator
-tests/test
-
+*.log
+*.trs
+\#*
+.#*
+stamp-*
+*~
+config.h
+*.in
+autom4te.cache
+INSTALL
+.deps
+aclocal.m4
+configure
+config.status
+*.tar.gz
+Makefile
+tools/
 # RStudio and R tmp files + atom tmpfiles
 data/.R*
 .tags

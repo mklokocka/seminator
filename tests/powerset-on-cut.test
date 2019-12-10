@@ -53,7 +53,7 @@ State: 5 "{0,1} , {1} , 1"
 --END--
 EOF
 
-../seminator -s0 --powerset-on-cut powerset-on-cut.hoa > powerset-on-cut.out
+seminator -s0 --powerset-on-cut powerset-on-cut.hoa > powerset-on-cut.out
 cat powerset-on-cut.out
 diff powerset-on-cut.out powerset-on-cut.expect
 
