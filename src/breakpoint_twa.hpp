@@ -19,6 +19,7 @@
 #include <types.hpp>
 #include <powerset.hpp>
 #include <cutdet.hpp>
+#include <bscc.hpp>
 
 /*
 * Gives the name for a breakpoint state of the form: P, Q, level
@@ -28,22 +29,20 @@ std::string bp_name(breakpoint_state);
 
 class bp_twa {
   public:
-    bp_twa(const_aut_ptr src_aut, const_om_ptr om,
-      cut_condition_t cut_condition) :
+    bp_twa(const_aut_ptr src_aut, const_om_ptr om) :
     src_(src_aut), src_si_(spot::scc_info(src_aut)),
-    om_(om), cut_condition_(cut_condition),
-    psb_(new powerset_builder(src_)) {
+    om_(om), psb_(new powerset_builder(src_)) {
       if (om) {
         scc_aware_ = om->get("scc-aware",1);
         powerset_for_weak_ = om->get("powerset-for-weak",0);
         powerset_on_cut_ = om->get("powerset-on-cut",0);
         cut_det_ = om->get("cut-deterministic",0);
-        bscc_avoid_ = om->get("bscc-avoid",0);
         skip_levels_ = om->get("skip-levels",0);
         reuse_SCC_ = om->get("reuse-SCC",0);
-
-        if (reuse_SCC_)
-          bscc_avoid_ = true;
+        cut_always_ = om->get("cut-always",0);
+        cut_on_SCC_entry_ = om->get("cut-on-SCC-entry",0);
+        bscc_avoid_ = (om->get("bscc-avoid", 0) || reuse_SCC_) ?
+          std::make_unique<bscc_avoid>(src_si_) : nullptr;
       }
 
       res_ = spot::make_twa_graph(src_->get_dict());
@@ -200,14 +199,22 @@ class bp_twa {
       }
 
 
+    /**
+     * Returns whether a cut transition (jump to the deterministic component)
+     * for the current edge should be created.
+     */
+    bool cut_condition(const edge_t& e);
+
     // Construction modifiers; Change the default also in constructor
-    bool bscc_avoid_ = false;
+    std::unique_ptr<bscc_avoid> bscc_avoid_ = nullptr;
     bool cut_det_ = false; // true if cut-determinism is requested
     bool powerset_for_weak_ = false;
     bool powerset_on_cut_ = false; //start bp already on cut
     bool reuse_SCC_ = false;
     bool scc_aware_ = true;
     bool skip_levels_ = false;
+    bool cut_always_ = false;
+    bool cut_on_SCC_entry_ = false;
 
     // input and result automata
     const_aut_ptr src_;
@@ -219,15 +226,6 @@ class bp_twa {
 
     // Transformation options
     const_om_ptr om_;
-
-    // fcnPointer to decide when jump from 1st to 2nd component (cut-ransition)
-    // The function should take 2 arguments:
-    //
-    //  1. const_aut_ptr src_
-    //  2. edge_t edge
-    //
-    // The edge is an edge from src_
-    cut_condition_t cut_condition_;
 
     // mapping between power_states and their indices
     //(1st comp. of res_ or 2nd comp. of res for weak components)

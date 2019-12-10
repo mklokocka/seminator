@@ -1,4 +1,4 @@
-// Copyright (C) 2017, Fakulta Informatiky Masarykovy univerzity
+// Copyright (C) 2017, 2019, Fakulta Informatiky Masarykovy univerzity
 //
 // This file is a part of Seminator, a tool for semi-determinization of omega automata.
 //
@@ -329,7 +329,7 @@ void seminator::run_jobs(jobs_type jobs)
       } else
       {
         // Run the breakpoint algorithm
-        bp_twa resbp(inputs_[job], opt_, cut_condition);
+        bp_twa resbp(inputs_[job], opt_);
         results_[job] = resbp.res_aut();
         results_[job]->purge_dead_states();
       }

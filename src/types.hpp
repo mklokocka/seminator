@@ -1,4 +1,4 @@
-// Copyright (C) 2017, Fakulta Informatiky Masarykovy univerzity
+// Copyright (C) 2017, 2019, Fakulta Informatiky Masarykovy univerzity
 //
 // This file is a part of Seminator, a tool for semi-determinization of omega automata.
 //
@@ -77,7 +77,5 @@ typedef std::vector<std::string>* state_names;
 typedef std::unique_ptr<succ_vect> succ_vect_ptr;
 
 typedef const spot::option_map* const_om_ptr;
-
-typedef bool (*cut_condition_t)(spot::scc_info&, edge_t, const_om_ptr);
 
 static const state_set empty_set;

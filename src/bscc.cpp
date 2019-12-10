@@ -1,4 +1,4 @@
-// Copyright (C) 2017, Fakulta Informatiky Masarykovy univerzity
+// Copyright (C) 2017, 2019, Fakulta Informatiky Masarykovy univerzity
 //
 // This file is a part of Seminator, a tool for semi-determinization of omega automata.
 //
@@ -41,15 +41,26 @@ void print_scc_info(const_aut_ptr aut)
   std::cout.flush();
 }
 
-bool avoid_scc(unsigned scc, spot::scc_info &si)
+bscc_avoid::bscc_avoid(spot::scc_info& si)
+  : si_(si)
 {
-  //return is_deterministic_scc(scc, si, false) & is_bottom_scc(scc, si);
-  auto det_sccs = get_semidet_sccs(si);
-  return det_sccs[scc];
+  unsigned nscc = si.scc_count();
+  assert(nscc);
+  semidetsccs_.reserve(nscc);
+
+  for (unsigned scc = 0; scc < nscc; ++scc)
+    {
+      bool r = true;
+      for (auto succ : si.succ(scc))
+        {
+          assert(succ < scc);
+          if (!semidetsccs_[succ])
+            {
+              r = false;
+              break;
+            }
+        }
+      semidetsccs_.push_back(r && is_deterministic_scc(scc, si, false));
+    }
 }
 
-bool avoid_state(state_t s, spot::scc_info& si)
-{
-  unsigned scc = si.scc_of(s);
-  return avoid_scc(scc, si);
-}

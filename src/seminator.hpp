@@ -1,4 +1,4 @@
-// Copyright (C) 2017, Fakulta Informatiky Masarykovy univerzity
+// Copyright (C) 2017, 2019, Fakulta Informatiky Masarykovy univerzity
 //
 // This file is a part of Seminator, a tool for semi-determinization of omega automata.
 //
@@ -32,51 +32,6 @@
 
 static const std::string VERSION_TAG = "v1.2.0dev";
 
-/**
-* Returns whether a cut transition (jump to the deterministic component)
-* for the current edge should be created.
-*
-* @param[in] aut                The input automaton
-* @param[in] e                  The edge beeing processed
-* @param[in] om                 Options map
-* @return True if some jump condition is satisfied
-*
-* Currently, 4 conditions trigger the jump:
-*  1. If the edge has the highest mark
-*  2. If we freshly enter accepting scc (--cut-on-SCC-entry option)
-*  3. If e leads to accepting SCC (--cut-always option)
-*/
-bool cut_condition(spot::scc_info& si, edge_t e, const_om_ptr om = nullptr) {
-  auto aut = si.get_aut();
-  bool cut_on_SCC_entry = false;
-  bool cut_always = false;
-  bool bscc_avoid = false;
-  if (om)
-  {
-    cut_on_SCC_entry = om->get("cut-on-SCC-entry", 0);
-    cut_always = om->get("cut-always", 0);
-    bscc_avoid = om->get("bscc-avoid", 0) | om->get("reuse-SCC", 0);
-  }
-  unsigned u = si.scc_of(e.src);
-  unsigned v = si.scc_of(e.dst);
-  unsigned highest_mark(aut->acc().num_sets() - 1);
-
-  // The states of u are not present in the 1st component
-  // when it is deterministic BSCC and bscc_avoid is true
-  // Maybe add avoid_scc(scc)?
-  if (bscc_avoid && avoid_scc(u, si))
-   return false;
-  // This is basically cut_on_SCC_entry for detBSCC as u != v
-  if (bscc_avoid && avoid_scc(v, si))
-   return true;
-
-  return
-    si.is_accepting_scc(v) && (
-      e.acc.has(highest_mark) || //1
-      (cut_on_SCC_entry && u != v) || // 2
-      cut_always // 3
-  );
-}
 
 void print_usage(std::ostream& os) {
   os << "Usage: seminator [OPTION...] [FILENAME]" << std::endl;

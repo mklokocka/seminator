@@ -1,4 +1,4 @@
-// Copyright (C) 2017, Fakulta Informatiky Masarykovy univerzity
+// Copyright (C) 2017, 2019, Fakulta Informatiky Masarykovy univerzity
 //
 // This file is a part of Seminator, a tool for semi-determinization of omega automata.
 //
@@ -20,12 +20,6 @@
 static unsigned NONDET_C = 3;
 static unsigned DET_C = 4;
 static unsigned CUT_C = 5;
-
-// A map to store computed data. We store the semi-det SCC for each
-// input automaton. We can't use scc_info as (1) there is no comparator
-// for scc_info, and (2) the pointer remains the same even when the input
-// automaton changes.
-std::map<const_aut_ptr, std::vector<bool> > semidet_sccs_cache;
 
 bool is_cut_deterministic(const_aut_ptr aut, std::set<unsigned>* non_det_states)
 {
@@ -322,33 +316,3 @@ is_deterministic_scc(unsigned scc, spot::scc_info& si,
   return true;
 }
 
-std::vector<bool>
-get_semidet_sccs(spot::scc_info& si)
-  {
-    // First check whether we have computed it already
-    auto search = semidet_sccs_cache.find(si.get_aut());
-    if (search != semidet_sccs_cache.end())
-      return search->second;
-
-    unsigned nscc = si.scc_count();
-    assert(nscc);
-    std::vector<bool> res(nscc);
-
-    for (unsigned scc = 0; scc < nscc; ++scc)
-    {
-      res[scc] = true;
-      for (auto succ : si.succ(scc))
-      {
-        if (!res[succ])
-        {
-          res[scc] = false;
-          break;
-        }
-      }
-      res[scc] = res[scc] & is_deterministic_scc(scc, si, false);
-    }
-
-    semidet_sccs_cache[si.get_aut()] = res;
-
-    return res;
-  }
