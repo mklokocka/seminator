@@ -22,6 +22,7 @@ config.status
 *.tar.gz
 Makefile
 tools/
+.dirstamp
 # RStudio and R tmp files + atom tmpfiles
 data/.R*
 .tags

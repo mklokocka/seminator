@@ -3,19 +3,20 @@
 bin_PROGRAMS = seminator
 
 seminator_LDADD = -L$(SPOTPREFIX)/lib -lspot -lbddx
+seminator_CPPFLAGS = -I$(srcdir)/src
 
 seminator_SOURCES =				\
-  breakpoint_twa.cpp				\
-  breakpoint_twa.hpp				\
-  bscc.cpp					\
-  bscc.hpp					\
-  cutdet.cpp					\
-  cutdet.hpp					\
-  powerset.cpp					\
-  powerset.hpp					\
-  seminator.cpp					\
-  seminator.hpp					\
-  types.hpp
+  src/breakpoint_twa.cpp			\
+  src/breakpoint_twa.hpp			\
+  src/bscc.cpp					\
+  src/bscc.hpp					\
+  src/cutdet.cpp				\
+  src/cutdet.hpp				\
+  src/powerset.cpp				\
+  src/powerset.hpp				\
+  src/seminator.cpp				\
+  src/seminator.hpp				\
+  src/types.hpp
 
 AM_TESTS_ENVIRONMENT =						\
   PATH="$(abs_top_builddir):$$PATH"; export PATH;		\
