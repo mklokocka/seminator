@@ -87,5 +87,7 @@ AC_ARG_WITH([spot],
   [], [with_spot='${prefix}'])
 AC_SUBST([SPOTPREFIX], [$with_spot])
 
+LT_INIT
+
 AC_CONFIG_FILES([Makefile])
 AC_OUTPUT

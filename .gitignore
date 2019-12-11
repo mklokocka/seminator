@@ -23,6 +23,10 @@ config.status
 Makefile
 tools/
 .dirstamp
+*.lo
+*.la
+.libs
+libtool
 # RStudio and R tmp files + atom tmpfiles
 data/.R*
 .tags
