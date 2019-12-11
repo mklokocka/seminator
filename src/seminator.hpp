@@ -16,25 +16,25 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
-//#include <utility>
-#include <stdexcept>
-#include <unistd.h>
-#include <limits>
-
-#include <types.hpp>
-#include <cutdet.hpp>
-#include <bscc.hpp>
-#include <breakpoint_twa.hpp>
-
-#include <spot/misc/bddlt.hh>
+#include <set>
 #include <spot/twaalgos/postproc.hh>
+#include <spot/misc/optionmap.hh>
 
+enum { Onestep = 1,
+       ViaTBA = 2,
+       ViaSBA = 4,
+       AllJobs = Onestep | ViaTBA | ViaSBA};
+typedef int jobs_type;
+static std::set<jobs_type> unitjobs{Onestep, ViaTBA, ViaSBA};
+
+enum output_type : int {TGBA = 0, TBA = 1, BA = 2};
 
 /**
 * Checks the input automaton if it is of requested type and returns it back.
 * If not, checks for easy cases first and only after that runs seminator.
 */
-aut_ptr check_and_compute(aut_ptr aut, jobs_type jobs, const_om_ptr opt);
+spot::twa_graph_ptr check_and_compute(spot::twa_graph_ptr aut, jobs_type jobs,
+                                      const spot::option_map* opt);
 
 /**
  * Class running possible multiple types of the transformation
@@ -50,8 +50,8 @@ public:
   * @param[in] jobs the jobs to be performed
   * @param[in] opt (optinial, nullptr) options that tweak transformations
   */
-  seminator(aut_ptr input,
-            jobs_type jobs, const_om_ptr opt = nullptr) :
+  seminator(spot::twa_graph_ptr input,
+            jobs_type jobs, const spot::option_map* opt = nullptr) :
             input_(input), jobs_(jobs), opt_(opt)
   {
     if (!opt)
@@ -68,7 +68,7 @@ public:
     }
   }
 
-  seminator(aut_ptr input, const_om_ptr opt = nullptr) :
+  seminator(spot::twa_graph_ptr input, const spot::option_map* opt = nullptr) :
     seminator(input, AllJobs, opt) {};
 
   /**
@@ -76,7 +76,7 @@ public:
   *
   * @param[in] jobs may specify more jobs, 0 (default) means jobs_
   */
-  aut_ptr run(jobs_type jobs = 0);
+  spot::twa_graph_ptr run(jobs_type jobs = 0);
 
   /**
   * Run requested jobs
@@ -99,7 +99,7 @@ public:
   *
   * @param[in] jobs must be an unique job index
   */
-  aut_ptr get(jobs_type job);
+  spot::twa_graph_ptr get(jobs_type job);
 
 private:
   /**
@@ -119,15 +119,15 @@ private:
   */
   void choose_jobs();
 
-  aut_ptr input_;
+  spot::twa_graph_ptr input_;
   jobs_type jobs_;
-  const_om_ptr opt_;
+  const spot::option_map* opt_;
 
   // Intermediate results
-  typedef std::map<jobs_type, aut_ptr> aut_ptr_dict;
+  typedef std::map<jobs_type, spot::twa_graph_ptr> aut_ptr_dict;
   aut_ptr_dict inputs_ = aut_ptr_dict();
   aut_ptr_dict results_ = aut_ptr_dict();
-  aut_ptr best_ = nullptr;
+  spot::twa_graph_ptr best_ = nullptr;
 
   // Simplifications options (from opt, see parse_options for defaults)
   bool postproc_;

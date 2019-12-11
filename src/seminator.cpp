@@ -17,6 +17,10 @@
 
 #include <seminator.hpp>
 
+#include <cutdet.hpp>
+#include <bscc.hpp>
+#include <breakpoint_twa.hpp>
+
 #include <spot/twaalgos/stripacc.hh>
 #include <spot/twaalgos/degen.hh>
 #include <spot/twaalgos/isdet.hh>

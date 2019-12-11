@@ -16,7 +16,9 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "config.h"
+#include <unistd.h>
 #include "seminator.hpp"
+#include "cutdet.hpp"
 #include <spot/parseaut/public.hh>
 #include <spot/twaalgos/hoa.hh>
 #include <spot/twaalgos/sccfilter.hh>
@@ -251,7 +253,7 @@ int main(int argc, char* argv[])
     if (parsed_aut->format_errors(std::cerr))
       return 1;
 
-    aut_ptr aut = parsed_aut->aut;
+    spot::twa_graph_ptr aut = parsed_aut->aut;
     // Remove dead and unreachable states and prune accepting conditions in non-accepting SCCs.
     aut = spot::scc_filter(aut, true);
 

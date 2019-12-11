@@ -25,7 +25,7 @@
 #include <set>
 #include <iostream>
 #include <bddx.h>
-#include <spot/misc/bddlt.hh>
+
 #include <spot/twa/twa.hh>
 #include <spot/twaalgos/powerset.hh>
 #include <spot/misc/bitvect.hh>
@@ -54,14 +54,7 @@ typedef std::tuple<unsigned, state_set, state_set> breakpoint_state;
 // In text, P corresponds to R and Q to B.
 struct Bp{enum size_t {LEVEL = 0, P = 1, Q = 2};};
 
-enum output_type : int {TGBA = 0, TBA = 1, BA = 2};
 
-enum { Onestep = 1,
-       ViaTBA = 2,
-       ViaSBA = 4,
-       AllJobs = Onestep | ViaTBA | ViaSBA};
-typedef int jobs_type;
-static auto unitjobs = std::set<jobs_type>({Onestep, ViaTBA, ViaSBA});
 
 
 typedef std::vector<state_set> succ_vect;
