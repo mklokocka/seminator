@@ -30,82 +30,11 @@
 #include <spot/twaalgos/postproc.hh>
 
 
-static const std::string VERSION_TAG = "v1.2.0dev";
-
-
-void print_usage(std::ostream& os) {
-  os << "Usage: seminator [OPTION...] [FILENAME]" << std::endl;
-}
-
-void print_help() {
-  print_usage(std::cout);
-  std::cout <<
-"The tool transforms TGBA into equivalent semi- or cut-deterministic TBA.\n\n";
-
-  std::cout <<
-  "By default, it reads a generalized Büchi automaton (GBA) from standard input\n"
-  "and converts it into semi-deterministic Büchi automaton (sDBA), runs\n"
-  "Spot's simplifications on it and outputs the result in the HOA format.\n"
-  "The main algorithms are based on breakpoint construction. If the automaton\n"
-  "is already of the requested shape, only the simplifications are run.\n\n";
-
-  std::cout << "Input options:\n";
-  std::cout <<
-  "    -f FILENAME\treads the input from FILENAME instead of stdin\n\n";
-
-  std::cout << "Output options: \n"
-  "    --cd       \tcut-deterministic automaton\n"
-  "    --sd       \tsemi-deterministic automaton (default)\n\n"
-  "    --ba       \tSBA output\n"
-  "    --tba      \tTBA output\n"
-  "    --tgba     \tTGBA output (default)\n\n"
-
-  "    --highlight\tcolor states of 1st component by violet, 2nd by green,\n"
-  "               \tcut-edges by red\n\n"
-
-  "    --is-cd    \tdo not run transformation, check whether input is \n"
-  "               \tcut-deterministic. Outputs 1 if it is, 0 otherwise.\n"
-  "               \t(Spot's autfilt offers --is-semideterministic check)\n\n";
-
-  std::cout <<
-  "Transformation type (T=transition-based, S=state-based): \n"
-  "    --via-tgba\tone-step semi-determinization: TGBA -> sDBA\n"
-  "    --via-tba\ttwo-steps: TGBA -> TBA -> sDBA\n"
-  "    --via-sba\ttwo-steps: TGBA -> SBA -> sDBA\n\n"
-  "  Multiple translation types can be chosen, the one with smallest\n"
-  "  result will be outputted. If none is chosen, all three are run.\n\n";
-
-  std::cout << "Cut-edges construction:\n"
-  "    --cut-always      \tcut-edges for each edge to an accepting SCC\n"
-  "    --cut-on-SCC-entry\tcut-edges also for edges freshly entering an\n"
-  "                      \taccepting SCC\n"
-  "    --powerset-on-cut \tcreate s -a-> (δ(s),δ_0(s),0) for s -a-> p\n\n"
-  "  Cut-edges are edges between the 1st and 2nd component of the result.\n"
-  "  They are based on edges of the input automaton. By default,\n"
-  "  create cut-edges for edges with the highest mark, for edge\n"
-  "  s -a-> p create cut-edge s -a-> ({p},∅,0).\n\n";
-
-  std::cout << "Optimizations:\n"
-  "    --bscc-avoid           \tavoid deterministic bottom part of input in 1st\n"
-  "                           \tcomponent and jump directly to 2nd component\n"
-  "    --powerset-for-weak    \tavoid breakpoint construction for\n"
-  "                           \tinherently weak accepting SCCs and use\n"
-  "                           \tpowerset construction instead\n"
-  "    --reuse-good-SCC       \tsimilar as --bscc-avoid, but uses the SCCs\n"
-  "                           \tunmodified with (potentialy) TGBA acceptance\n"
-  "    --skip-levels          \tallow multiple breakpoints on 1 edge; a trick\n"
-  "                           \twell known from degeneralization\n"
-  "    --scc-aware            \tenable scc-aware optimization (default)\n"
-  "    --scc0, --no-scc-aware \tdisable scc-aware optimization\n\n";
-
-  std::cout << "Pre- and Post-processing:\n"
-  "    -s0,    --no-reductions\tdisable Spot automata post-reductions\n"
-  "    --simplify-input       \tenable simplification of input automaton\n\n";
-
-  std::cout << "Miscellaneous options: \n"
-  "  -h, --help \tprint this help\n"
-  "  --version  \tprint program version" << std::endl;
-}
+/**
+* Checks the input automaton if it is of requested type and returns it back.
+* If not, checks for easy cases first and only after that runs seminator.
+*/
+aut_ptr check_and_compute(aut_ptr aut, jobs_type jobs, const_om_ptr opt);
 
 /**
  * Class running possible multiple types of the transformation

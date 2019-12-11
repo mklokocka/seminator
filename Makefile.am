@@ -16,11 +16,11 @@ libseminator_la_SOURCES =			\
   src/cutdet.hpp				\
   src/powerset.cpp				\
   src/powerset.hpp				\
+  src/seminator.cpp				\
+  src/seminator.hpp				\
   src/types.hpp
 
-seminator_SOURCES =				\
-  src/seminator.cpp				\
-  src/seminator.hpp
+seminator_SOURCES = src/main.cpp
 
 AM_TESTS_ENVIRONMENT =						\
   PATH="$(abs_top_builddir):$$PATH"; export PATH;		\
