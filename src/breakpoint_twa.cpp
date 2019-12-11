@@ -283,7 +283,7 @@ bp_twa::compute_successors<breakpoint_state>(breakpoint_state bps, state_t src,
         q2 = tmp->at(c);
       } else
         break;
-    } while ((k2 != k) & skip_levels_);
+    } while ((k2 != k) && skip_levels_);
 
     // keep Q empty if all breakpoints were reached
     if (p2 == q2)

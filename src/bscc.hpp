@@ -43,7 +43,7 @@ public:
    */
   bool avoid_scc(unsigned scc)
   {
-    //return is_deterministic_scc(scc, si, false) & is_bottom_scc(scc, si);
+    //return is_deterministic_scc(scc, si, false) && is_bottom_scc(scc, si);
     return semidetsccs_[scc];
   }
 

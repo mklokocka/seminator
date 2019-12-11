@@ -305,7 +305,7 @@ is_deterministic_scc(unsigned scc, spot::scc_info& si,
     bdd available = bddtrue;
     for (auto& t: si.get_aut()->out(src))
     {
-      if (inside_only & (si.scc_of(t.dst) != scc))
+      if (inside_only && (si.scc_of(t.dst) != scc))
         continue;
       if (!bdd_implies(t.cond, available))
         return false;
