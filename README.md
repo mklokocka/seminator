@@ -2,12 +2,11 @@
 Seminator is a free tool for semi-determinization of omega-automata.
 
 ## Installation
-Seminator depends on the [Spot](https://spot.lrde.epita.fr/index.html) library. You need a version 2.4 or higher installed in your system before compiling Seminator.
+Seminator depends on the [Spot](https://spot.lrde.epita.fr/index.html) library. You need a version 2.8.3 or higher installed in your system before compiling Seminator.  Also, unless Python bindings are disabled (with `./configure --disable-python`), you will need Python 3 development files installed on your system.
 
 After Spot is installed you can run `./configure && make` to compile Seminator.
 
-If Spot has been installed in a non-standard location, use `./configure --with-spot=PREFIXDIR`, replacing `PREFIXDIR` by the directory that was passed to Spot's `--prefix` configuration option.
-
+You may use `./configure --prefix=PREFIXDIR && make && sudo make install` to install Seminator in the same place as Spot.  If you need to install Seminator in a different location, use `./configure --prefix=OTHERDIR --with-spot=PREFIXDIR`, replacing `PREFIXDIR` by the directory that was passed to Spot's `--prefix` configuration option.
 
 ## Basic usage
 The following command translates a possibly nondeterministic transition-based generalized Büchi automaton (TGBA) placed in file `aut.hoa` into a semi-detetrministic Büchi automaton (SDBA) and prints the result int the [HOA format](https://adl.github.io/hoaf/) to the standard output.

@@ -27,6 +27,9 @@ tools/
 *.la
 .libs
 libtool
+/tests/pyrun
+/python/spot-extra/seminator.py
+/python/spot-extra/seminator_wrap.cxx
 # RStudio and R tmp files + atom tmpfiles
 data/.R*
 .tags
