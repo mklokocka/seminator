@@ -43,7 +43,7 @@ python_spot_extra__seminator_la_LIBADD = \
 
 SWIGFLAGS = -c++ -python -py3 -O -I$(SPOTPREFIX)/include -I$(top_srcdir)/src
 
-${srcdir}/python/spot-extra/seminator_wrap.cxx: python/spot-extra/seminator.i
+${srcdir}/python/spot-extra/seminator_wrap.cxx: python/spot-extra/seminator.i src/seminator.hpp
 	$(SWIG) $(SWIGFLAGS) $(srcdir)/python/spot-extra/seminator.i
 ## work around https://github.com/swig/swig/issues/1553
 	$(PERL) -pi -e 's/^#define SWIG_Python_CallFunctor.*/#define SWIG_Python_CallFunctor(functor, obj) PyObject_CallFunctionObjArgs(functor, obj, NULL);/' $@
