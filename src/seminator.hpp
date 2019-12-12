@@ -25,7 +25,6 @@ enum { Onestep = 1,
        ViaSBA = 4,
        AllJobs = Onestep | ViaTBA | ViaSBA};
 typedef int jobs_type;
-static std::set<jobs_type> unitjobs{Onestep, ViaTBA, ViaSBA};
 
 enum output_type : int {TGBA = 0, TBA = 1, BA = 2};
 
@@ -93,13 +92,6 @@ public:
   */
   jobs_type best_from(jobs_type jobs = 0);
 
-
-  /**
-  * Return the automaton of the job.
-  *
-  * @param[in] jobs must be an unique job index
-  */
-  spot::twa_graph_ptr get(jobs_type job);
 
 private:
   /**

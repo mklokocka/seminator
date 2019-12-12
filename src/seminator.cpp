@@ -101,6 +101,8 @@ void seminator::prepare_inputs(jobs_type jobs)
   }
 }
 
+static constexpr jobs_type unitjobs[3] = {Onestep, ViaTBA, ViaSBA};
+
 void seminator::run_jobs(jobs_type jobs)
 {
   if (!jobs)
@@ -176,12 +178,6 @@ jobs_type seminator::best_from(jobs_type jobs)
     }
   }
   return res;
-}
-
-aut_ptr seminator::get(jobs_type job)
-{
-  assert (unitjobs.count(job));
-  return results_[job];
 }
 
 aut_ptr seminator::run(jobs_type jobs)
