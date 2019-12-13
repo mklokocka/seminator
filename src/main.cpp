@@ -271,17 +271,15 @@ int main(int argc, char* argv[])
     }
 
     auto result = check_and_compute(aut, jobs, &om);
-    if (result != aut)
-    {
-      auto old_n = aut->get_named_prop<std::string>("automaton-name");
-      if (old_n)
-      {
-        std::stringstream ss;
-        ss << (om.get("cut-deterministic",0) ? "cDBA for " : "sDBA for ") << *old_n;
-        std::string * name = new std::string(ss.str());
-        result->set_named_prop("automaton-name", name);
-      }
-    }
+    if (result != parsed_aut->aut)
+      if (auto old_n =
+          parsed_aut->aut->get_named_prop<std::string>("automaton-name"))
+        {
+          auto name = new std::string((om.get("cut-deterministic", 0) ?
+                                       "cDBA for " : "sDBA for ") + *old_n);
+          result->set_named_prop("automaton-name", name);
+        }
+
     if (high)
     {
       highlight(result);

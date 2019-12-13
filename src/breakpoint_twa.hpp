@@ -79,10 +79,6 @@ class bp_twa {
       res_->merge_edges();
 
       // spot::print_hoa(std::cout, src_);
-
-      auto old_n = src_->get_named_prop<std::string>("automaton-name");
-      if (old_n)
-        *old_n = (cut_det_ ? "cDBA for " : "sDBA for ") + *old_n;
     }
 
     ~bp_twa()
