@@ -82,15 +82,15 @@ void seminator::prepare_inputs(jobs_type jobs)
     jobs = jobs_;
 
   // TODO check what makes sense
-  if (jobs && Onestep)
+  if (jobs & Onestep)
     inputs_.emplace(Onestep, input_);
-  if (jobs && ViaTBA)
+  if (jobs & ViaTBA)
   {
     inputs_.emplace(ViaTBA, spot::degeneralize_tba(input_));
     if (preproc_)
       inputs_[ViaTBA] = preprocessor_.run(inputs_[ViaTBA]);
   }
-  if (jobs && ViaSBA)
+  if (jobs & ViaSBA)
   {
     inputs_.emplace(ViaSBA, spot::degeneralize(input_));
     if (preproc_)
@@ -109,7 +109,7 @@ void seminator::run_jobs(jobs_type jobs)
     jobs = jobs_;
   for (auto job : unitjobs)
   {
-    if (job && jobs)
+    if (job & jobs)
     {
       // Prepare the desired input
       if (!inputs_[job])
@@ -168,7 +168,7 @@ jobs_type seminator::best_from(jobs_type jobs)
   jobs_type res = 0;
   for (auto job : unitjobs)
   {
-    if (job && jobs)
+    if (job & jobs)
     {
       if (!results_[job])
         run_jobs(job);
