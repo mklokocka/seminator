@@ -62,6 +62,7 @@ shell_TESTS =					\
   tests/powerset-on-cut.test			\
   tests/reuse-good-SCC.test			\
   tests/skip-levels.test			\
+  tests/via.test				\
   tests/run_ltlcross.test
 
 python_TESTS =					\
