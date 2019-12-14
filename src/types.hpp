@@ -1,4 +1,4 @@
-// Copyright (C) 2017, Fakulta Informatiky Masarykovy univerzity
+// Copyright (C) 2017, 2019, Fakulta Informatiky Masarykovy univerzity
 //
 // This file is a part of Seminator, a tool for semi-determinization of omega automata.
 //
@@ -25,7 +25,7 @@
 #include <set>
 #include <iostream>
 #include <bddx.h>
-#include <spot/misc/bddlt.hh>
+
 #include <spot/twa/twa.hh>
 #include <spot/twaalgos/powerset.hh>
 #include <spot/misc/bitvect.hh>
@@ -54,14 +54,7 @@ typedef std::tuple<unsigned, state_set, state_set> breakpoint_state;
 // In text, P corresponds to R and Q to B.
 struct Bp{enum size_t {LEVEL = 0, P = 1, Q = 2};};
 
-enum output_type : int {TGBA = 0, TBA = 1, BA = 2};
 
-enum { Onestep = 1,
-       ViaTBA = 2,
-       ViaSBA = 4,
-       AllJobs = Onestep | ViaTBA | ViaSBA};
-typedef int jobs_type;
-static auto unitjobs = std::set<jobs_type>({Onestep, ViaTBA, ViaSBA});
 
 
 typedef std::vector<state_set> succ_vect;
@@ -77,7 +70,5 @@ typedef std::vector<std::string>* state_names;
 typedef std::unique_ptr<succ_vect> succ_vect_ptr;
 
 typedef const spot::option_map* const_om_ptr;
-
-typedef bool (*cut_condition_t)(spot::scc_info&, edge_t, const_om_ptr);
 
 static const state_set empty_set;

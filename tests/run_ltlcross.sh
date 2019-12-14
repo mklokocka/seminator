@@ -1,4 +1,0 @@
-# Run tests on random automata
-ltlcross -D -F ../formulae/random_sd.ltl -F ../formulae/random_nd.ltl --reference ltl2tgba 'ltl2tgba %f -D | ../seminator -s0 --cd > %O'  'ltl2tgba %f -D | ../seminator -s0 > %O'  'ltl2tgba %f -D | ../seminator --powerset-for-weak -s0 > %O'  'ltl2tgba %f -D | ../seminator -s0 --cd --cut-on-SCC-entry > %O'  'ltl2tgba %f -D | ../seminator -s0 --cut-always > %O'  'ltl2tgba %f -D | ../seminator --cut-on-SCC-entry --powerset-for-weak -s0 > %O' 'ltl2tgba --deterministic -f %f | ../seminator --cut-on-SCC-entry --simplify-input --powerset-for-weak --bscc-avoid --skip-levels --powerset-on-cut --cd -s0 > %O' 'ltl2tgba --deterministic -f %f | ../seminator --cut-on-SCC-entry --simplify-input --powerset-for-weak --reuse-good-SCC --skip-levels --powerset-on-cut --cd -s0 > %O'
-
-return 0

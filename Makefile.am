@@ -1,0 +1,84 @@
+
+
+bin_PROGRAMS = seminator
+lib_LTLIBRARIES = src/libseminator.la
+
+AM_CPPFLAGS = -I$(srcdir)/src
+seminator_LDADD = -L$(SPOTPREFIX)/lib src/libseminator.la -lspot -lbddx
+src_libseminator_la_LIBADD = -L$(SPOTPREFIX)/lib -lspot -lbddx
+
+src_libseminator_la_SOURCES =			\
+  src/breakpoint_twa.cpp			\
+  src/breakpoint_twa.hpp			\
+  src/bscc.cpp					\
+  src/bscc.hpp					\
+  src/cutdet.cpp				\
+  src/cutdet.hpp				\
+  src/powerset.cpp				\
+  src/powerset.hpp				\
+  src/seminator.cpp				\
+  src/seminator.hpp				\
+  src/types.hpp
+
+seminator_SOURCES = src/main.cpp
+
+if USE_PYTHON
+sempyexecdir = $(pyexecdir)/spot-extra
+sempyexec_PYTHON = python/spot-extra/seminator.py
+sempyexec_LTLIBRARIES = python/spot-extra/_seminator.la
+endif
+
+MAINTAINERCLEANFILES = python/spot/seminator.cxx
+
+## Automake 1.16 fails to remove the __pycache__/* files.
+uninstall-local:
+	rm -rf $(DESTDIR)$(pyexecdir)/spot-extra/__pycache__
+
+python_spot_extra__seminator_la_CPPFLAGS = \
+   -I$(PYTHONINC) -I$(top_srcdir)/src -DSWIG_TYPE_TABLE=spot
+python_spot_extra__seminator_la_SOURCES = python/spot-extra/seminator_wrap.cxx
+python_spot_extra__seminator_la_LDFLAGS = -avoid-version -module $(SYMBOLIC_LDFLAGS)
+python_spot_extra__seminator_la_LIBADD = \
+   src/libseminator.la -L$(SPOTPREFIX)/lib -lspot -lbddx
+
+SWIGFLAGS = -c++ -python -py3 -O -I$(SPOTPREFIX)/include -I$(top_srcdir)/src
+
+${srcdir}/python/spot-extra/seminator_wrap.cxx: python/spot-extra/seminator.i src/seminator.hpp
+	$(SWIG) $(SWIGFLAGS) $(srcdir)/python/spot-extra/seminator.i
+## work around https://github.com/swig/swig/issues/1553
+	$(PERL) -pi -e 's/^#define SWIG_Python_CallFunctor.*/#define SWIG_Python_CallFunctor(functor, obj) PyObject_CallFunctionObjArgs(functor, obj, NULL);/' $@
+
+
+AM_TESTS_ENVIRONMENT =						\
+  PATH="$(abs_top_builddir):$$PATH"; export PATH;		\
+  abs_top_srcdir="$(abs_top_srcdir)"; export abs_top_srcdir;
+
+TEST_EXTENSIONS = .test .py
+PY_LOG_COMPILER = tests/pyrun
+
+shell_TESTS =					\
+  tests/bscc-avoid.test				\
+  tests/cut-on-scc-entry.test			\
+  tests/powerset-on-cut.test			\
+  tests/reuse-good-SCC.test			\
+  tests/skip-levels.test			\
+  tests/via.test				\
+  tests/run_ltlcross.test
+
+python_TESTS =					\
+  tests/bindings.py
+
+TESTS = $(shell_TESTS)
+if USE_PYTHON
+  TESTS += $(python_TESTS)
+endif
+
+EXTRA_DIST =					\
+  README.md					\
+  ChangeLog.md					\
+  formulae/random_sd.ltl			\
+  formulae/random_nd.ltl			\
+  python/spot-extra/seminator.i			\
+  $(shell_TESTS)				\
+  $(python_TESTS)
+

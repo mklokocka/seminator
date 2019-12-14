@@ -1,4 +1,4 @@
-// Copyright (C) 2017, Fakulta Informatiky Masarykovy univerzity
+// Copyright (C) 2017, 2019, Fakulta Informatiky Masarykovy univerzity
 //
 // This file is a part of Seminator, a tool for semi-determinization of omega automata.
 //
@@ -15,63 +15,89 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#include <seminator.hpp>
-
+#include "config.h"
+#include <unistd.h>
+#include "seminator.hpp"
+#include "cutdet.hpp"
 #include <spot/parseaut/public.hh>
-#include <spot/twaalgos/dot.hh>
-#include <spot/twaalgos/stripacc.hh>
-#include <spot/twaalgos/degen.hh>
-#include <spot/twaalgos/isdet.hh>
-#include <spot/twaalgos/sccinfo.hh>
-#include <spot/misc/optionmap.hh>
+#include <spot/twaalgos/hoa.hh>
 #include <spot/twaalgos/sccfilter.hh>
-#include <spot/twa/bddprint.hh>
 
-/**
-* Checks the input automaton if it is of requested type and returns it back.
-* If not, checks for easy cases first and only after that runs seminator.
-*/
-aut_ptr check_and_compute(aut_ptr aut, jobs_type jobs, const_om_ptr opt)
-{
-  if (spot::is_deterministic(aut))
-    return aut;
+static const char* VERSION_TAG = PACKAGE_VERSION;
 
-  bool cut_det = opt->get("cut-deterministic",0);
-  bool preproc = opt->get("preprocess",0);
 
-  if (preproc)
-  {
-    spot::postprocessor preprocessor;
-    preprocessor.set_pref(spot::postprocessor::Deterministic);
-    preprocessor.run(aut);
-  }
+void print_usage(std::ostream& os) {
+  os << "Usage: seminator [OPTION...] [FILENAME]" << std::endl;
+}
 
-  if (spot::is_semi_deterministic(aut))
-  {
-    if (!cut_det)
-      return aut;
+void print_help() {
+  print_usage(std::cout);
+  std::cout <<
+"The tool transforms TGBA into equivalent semi- or cut-deterministic TBA.\n\n";
 
-    auto non_det_states = new state_set;
-    aut_ptr result;
+  std::cout <<
+  "By default, it reads a generalized Büchi automaton (GBA) from standard input\n"
+  "and converts it into semi-deterministic Büchi automaton (sDBA), runs\n"
+  "Spot's simplifications on it and outputs the result in the HOA format.\n"
+  "The main algorithms are based on breakpoint construction. If the automaton\n"
+  "is already of the requested shape, only the simplifications are run.\n\n";
 
-    if (is_cut_deterministic(aut, non_det_states))
-      result = aut;
-    else
-      result = determinize_first_component(aut, non_det_states);
-    delete non_det_states;
-    return result;
-  }
+  std::cout << "Input options:\n";
+  std::cout <<
+  "    -f FILENAME\treads the input from FILENAME instead of stdin\n\n";
 
-  // Safety automata can be determinized using powerset construction
-  if (aut->acc().is_all())
-  {
-    auto result = spot::tba_determinize(aut);
-    result->set_acceptance(0, spot::acc_cond::acc_code::t());
-    return result;
-  }
+  std::cout << "Output options: \n"
+  "    --cd       \tcut-deterministic automaton\n"
+  "    --sd       \tsemi-deterministic automaton (default)\n\n"
+  "    --ba       \tSBA output\n"
+  "    --tba      \tTBA output\n"
+  "    --tgba     \tTGBA output (default)\n\n"
 
-  seminator sem(aut, jobs, opt);
-  return sem.run();
+  "    --highlight\tcolor states of 1st component by violet, 2nd by green,\n"
+  "               \tcut-edges by red\n\n"
+
+  "    --is-cd    \tdo not run transformation, check whether input is \n"
+  "               \tcut-deterministic. Outputs 1 if it is, 0 otherwise.\n"
+  "               \t(Spot's autfilt offers --is-semideterministic check)\n\n";
+
+  std::cout <<
+  "Transformation type (T=transition-based, S=state-based): \n"
+  "    --via-tgba\tone-step semi-determinization: TGBA -> sDBA\n"
+  "    --via-tba\ttwo-steps: TGBA -> TBA -> sDBA\n"
+  "    --via-sba\ttwo-steps: TGBA -> SBA -> sDBA\n\n"
+  "  Multiple translation types can be chosen, the one with smallest\n"
+  "  result will be outputted. If none is chosen, all three are run.\n\n";
+
+  std::cout << "Cut-edges construction:\n"
+  "    --cut-always      \tcut-edges for each edge to an accepting SCC\n"
+  "    --cut-on-SCC-entry\tcut-edges also for edges freshly entering an\n"
+  "                      \taccepting SCC\n"
+  "    --powerset-on-cut \tcreate s -a-> (δ(s),δ_0(s),0) for s -a-> p\n\n"
+  "  Cut-edges are edges between the 1st and 2nd component of the result.\n"
+  "  They are based on edges of the input automaton. By default,\n"
+  "  create cut-edges for edges with the highest mark, for edge\n"
+  "  s -a-> p create cut-edge s -a-> ({p},∅,0).\n\n";
+
+  std::cout << "Optimizations:\n"
+  "    --bscc-avoid           \tavoid deterministic bottom part of input in 1st\n"
+  "                           \tcomponent and jump directly to 2nd component\n"
+  "    --powerset-for-weak    \tavoid breakpoint construction for\n"
+  "                           \tinherently weak accepting SCCs and use\n"
+  "                           \tpowerset construction instead\n"
+  "    --reuse-good-SCC       \tsimilar as --bscc-avoid, but uses the SCCs\n"
+  "                           \tunmodified with (potentialy) TGBA acceptance\n"
+  "    --skip-levels          \tallow multiple breakpoints on 1 edge; a trick\n"
+  "                           \twell known from degeneralization\n"
+  "    --scc-aware            \tenable scc-aware optimization (default)\n"
+  "    --scc0, --no-scc-aware \tdisable scc-aware optimization\n\n";
+
+  std::cout << "Pre- and Post-processing:\n"
+  "    -s0,    --no-reductions\tdisable Spot automata post-reductions\n"
+  "    --simplify-input       \tenable simplification of input automaton\n\n";
+
+  std::cout << "Miscellaneous options: \n"
+  "  -h, --help \tprint this help\n"
+  "  --version  \tprint program version" << std::endl;
 }
 
 int main(int argc, char* argv[])
@@ -170,7 +196,7 @@ int main(int argc, char* argv[])
                 i++;
             }
         }
-        else if ((arg.compare("--help") == 0) | (arg.compare("-h") == 0))
+        else if ((arg.compare("--help") == 0) || (arg.compare("-h") == 0))
         {
             print_help();
             return 1;
@@ -227,7 +253,7 @@ int main(int argc, char* argv[])
     if (parsed_aut->format_errors(std::cerr))
       return 1;
 
-    aut_ptr aut = parsed_aut->aut;
+    spot::twa_graph_ptr aut = parsed_aut->aut;
     // Remove dead and unreachable states and prune accepting conditions in non-accepting SCCs.
     aut = spot::scc_filter(aut, true);
 
@@ -245,17 +271,15 @@ int main(int argc, char* argv[])
     }
 
     auto result = check_and_compute(aut, jobs, &om);
-    if (result != aut)
-    {
-      auto old_n = aut->get_named_prop<std::string>("automaton-name");
-      if (old_n)
-      {
-        std::stringstream ss;
-        ss << (om.get("cut-deterministic",0) ? "cDBA for " : "sDBA for ") << *old_n;
-        std::string * name = new std::string(ss.str());
-        result->set_named_prop("automaton-name", name);
-      }
-    }
+    if (result != parsed_aut->aut)
+      if (auto old_n =
+          parsed_aut->aut->get_named_prop<std::string>("automaton-name"))
+        {
+          auto name = new std::string((om.get("cut-deterministic", 0) ?
+                                       "cDBA for " : "sDBA for ") + *old_n);
+          result->set_named_prop("automaton-name", name);
+        }
+
     if (high)
     {
       highlight(result);
@@ -265,129 +289,4 @@ int main(int argc, char* argv[])
     return 0;
 }
 
-void seminator::parse_options()
-{
-  cut_det_  = opt_->get("cut-deterministic", 0);
-  preproc_  = opt_->get("preprocess",0);
-  postproc_ = opt_->get("postprocess", 1);
 
-  // The deterministic attempt was done in check_and_compute
-  if (preproc_)
-    preprocessor_.set_pref(spot::postprocessor::Small);
-
-  output_  = static_cast<output_type>(opt_->get("output", TGBA));
-}
-
-void seminator::prepare_inputs(jobs_type jobs)
-{
-  if (!jobs)
-    jobs = jobs_;
-
-  // TODO check what makes sense
-  if (jobs & Onestep)
-    inputs_.emplace(Onestep, input_);
-  if (jobs & ViaTBA)
-  {
-    inputs_.emplace(ViaTBA, spot::degeneralize_tba(input_));
-    if (preproc_)
-      inputs_[ViaTBA] = preprocessor_.run(inputs_[ViaTBA]);
-  }
-  if (jobs & ViaSBA)
-  {
-    inputs_.emplace(ViaSBA, spot::degeneralize(input_));
-    if (preproc_)
-    {
-      preprocessor_.set_type(spot::postprocessor::BA);
-      inputs_[ViaSBA] = preprocessor_.run(inputs_[ViaSBA]);
-    }
-  }
-}
-
-void seminator::run_jobs(jobs_type jobs)
-{
-  if (!jobs)
-    jobs = jobs_;
-  for (auto job : unitjobs)
-  {
-    if (job & jobs)
-    {
-      // Prepare the desired input
-      if (!inputs_[job])
-        prepare_inputs(job);
-      assert(inputs_[job]);
-
-      state_set non_det_states;
-      if (spot::is_deterministic(inputs_[job]) |
-          is_cut_deterministic(inputs_[job], &non_det_states))
-        results_[job] = inputs_[job];
-      else if (spot::is_semi_deterministic(inputs_[job]))
-      {
-        if (!cut_det_)
-          results_[job] = inputs_[job];
-        else
-          results_[job] = determinize_first_component(inputs_[job], &non_det_states);
-      } else
-      {
-        // Run the breakpoint algorithm
-        bp_twa resbp(inputs_[job], opt_, cut_condition);
-        results_[job] = resbp.res_aut();
-        results_[job]->purge_dead_states();
-      }
-
-      // Check the result
-      assert(spot::is_semi_deterministic(results_[job]));
-      assert(!cut_det_ || is_cut_deterministic(results_[job]));
-      assert(results_[job]->acc().is_generalized_buchi());
-
-      if (postproc_)
-        results_[job] = postprocessor_.run(results_[job]);
-
-      switch (output_)
-      {
-      case TBA:
-        results_[job] = spot::degeneralize_tba(results_[job]);
-        if (postproc_)
-          results_[job] = postprocessor_.run(results_[job]);
-        break;
-      case BA:
-        results_[job] = spot::degeneralize(results_[job]);
-        if (postproc_)
-          results_[job] = postprocessor_.run(results_[job]);
-        break;
-      default:
-        break;
-      }
-    }
-  }
-}
-
-jobs_type seminator::best_from(jobs_type jobs)
-{
-  if (!jobs)
-    jobs = jobs_;
-  jobs_type res = 0;
-  for (auto job : unitjobs)
-  {
-    if (job & jobs)
-    {
-      if (!results_[job])
-        run_jobs(job);
-      if (!res ||
-        (results_[res]->num_states() > results_[job]->num_states()))
-          res = job;
-    }
-  }
-  return res;
-}
-
-aut_ptr seminator::get(jobs_type job)
-{
-  assert (unitjobs.count(job));
-  return results_[job];
-}
-
-aut_ptr seminator::run(jobs_type jobs)
-{
-  prepare_inputs(jobs);
-  return results_[best_from(jobs)];
-}

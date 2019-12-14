@@ -1,4 +1,4 @@
-// Copyright (C) 2017, Fakulta Informatiky Masarykovy univerzity
+// Copyright (C) 2017, 2019, Fakulta Informatiky Masarykovy univerzity
 //
 // This file is a part of Seminator, a tool for semi-determinization of omega automata.
 //
@@ -19,7 +19,6 @@
 
 #include <types.hpp>
 #include <breakpoint_twa.hpp>
-#include <bscc.hpp>
 #include <cutdet.hpp>
 
 std::string bp_name(breakpoint_state bps) {
@@ -49,24 +48,21 @@ bp_twa::names() {
 
 state_t
 bp_twa::bp_state(breakpoint_state bps) {
-  unsigned result;
-  if (bp2num_.count(bps) == 0) {
-    // create a new state
-    assert(num2bp_.size() == res_->num_states());
-    result = res_->new_state();
-    bp2num_[bps] = result;
+  auto loc = bp2num_.lower_bound(bps);
+  if (loc != bp2num_.end() && loc->first == bps)
+    return loc->second;         // existing state
 
-    // Update the state vectors to correct size
-    num2bp_.emplace_back(bps);
-    num2ps2_.resize(num2bp_.size());
-    //TODO add to bp2 states
+  // create a new state
+  assert(num2bp_.size() == res_->num_states());
+  unsigned result = res_->new_state();
+  bp2num_.emplace_hint(loc, bps, result);
 
-    auto name = bp_name(bps);
-    names_->emplace_back(name);
-  }  else {
-    // return the existing one
-    result = bp2num_.at(bps);
-  }
+  // Update the state vectors to correct size
+  num2bp_.emplace_back(bps);
+  num2ps2_.resize(num2bp_.size());
+  //TODO add to bp2 states
+
+  names_->emplace_back(bp_name(bps));
   return result;
 }
 
@@ -79,7 +75,7 @@ bp_twa::reuse_state(state_t old) {
     return result_it->second;
 
   // else create a new state
-  auto result = res_->new_state();
+  unsigned result = res_->new_state();
   new2old2_[result] = old;
   old2new2_[old] = result;
 
@@ -88,8 +84,7 @@ bp_twa::reuse_state(state_t old) {
   num2bp_.emplace_back(breakpoint_state());
   //TODO add to bp2 states
 
-  auto name = std::to_string(old);
-  names_->emplace_back(name);
+  names_->emplace_back(std::to_string(old));
   return result;
 }
 
@@ -100,28 +95,29 @@ bp_twa::ps_state(state_set ps, bool fc) {
   auto num2ps = fc ? &num2ps1_ : &num2ps2_;
   auto ps2num = fc ? &ps2num1_ : &ps2num2_;
 
-  if (ps2num->count(ps) == 0) {
-    // create a new state
-    assert(num2ps->size() == res_->num_states());
-    num2ps->emplace_back(ps);
-    if (!fc) {
-      num2bp_.resize(num2ps2_.size());
-    }
-    auto state = res_->new_state();
-    (*ps2num)[ps] = state;
-    //TODO add to bp1 states
+  auto loc = ps2num->lower_bound(ps);
+  if (loc != ps2num->end() && loc->first == ps)
+    return loc->second;         // existing state
 
-    names_->emplace_back(powerset_name(&ps));
-    return state;
-  } else
-    return ps2num->at(ps);
+  // create a new state
+  assert(num2ps->size() == res_->num_states());
+  num2ps->emplace_back(ps);
+  if (!fc) {
+    num2bp_.resize(num2ps2_.size());
+  }
+  auto state = res_->new_state();
+  ps2num->emplace_hint(loc, ps, state);
+  //TODO add to bp1 states
+
+  names_->emplace_back(powerset_name(&ps));
+  return state;
 };
 
 void
 bp_twa::create_all_cut_transitions() {
   for (auto& edge : src_->edges())
   {
-    if (cut_condition_(src_si_, edge, om_))
+    if (cut_condition(edge))
     {
       if (cut_det_) {
         // in cDBA, add cut-edge from each state that contains edge.src
@@ -197,14 +193,14 @@ bp_twa::create_first_component()
     num2ps1_.emplace_back(ps);
     names_->emplace_back(powerset_name(&ps));
 
-    assert(!avoid_state(init_num, src_si_));
+    assert(!bscc_avoid_ || !bscc_avoid_->avoid_state(init_num));
 
     // Build the transitions
     // For the bscc-avoid we create intersection with states that are not avoided
     auto not_avoided = state_vect();
     for (unsigned scc = 0; scc < src_si_.scc_count(); ++scc)
     {
-      if (bscc_avoid_ & avoid_scc(scc, src_si_))
+      if (bscc_avoid_ && bscc_avoid_->avoid_scc(scc))
         continue;
       not_avoided.insert(not_avoided.end(),
                          src_si_.states_of(scc).begin(),
@@ -228,8 +224,9 @@ bp_twa::create_first_component()
     // Copy edges
     for (auto& e : src_->edges())
     {
-      if (bscc_avoid_ &
-               (avoid_state(e.dst, src_si_) | (avoid_state(e.src, src_si_))))
+      if (bscc_avoid_
+          && (bscc_avoid_->avoid_state(e.dst)
+              || (bscc_avoid_->avoid_state(e.src))))
         continue;
       res_->new_edge(e.src, e.dst, e.cond);
     }
@@ -286,7 +283,7 @@ bp_twa::compute_successors<breakpoint_state>(breakpoint_state bps, state_t src,
         q2 = tmp->at(c);
       } else
         break;
-    } while ((k2 != k) & skip_levels_);
+    } while ((k2 != k) && skip_levels_);
 
     // keep Q empty if all breakpoints were reached
     if (p2 == q2)
@@ -308,7 +305,7 @@ bp_twa::add_cut_transition(state_t from, edge_t edge) {
 
   auto scc = src_si_.scc_of(edge.dst);
   bool weak = src_si_.weak_sccs()[scc];
-  bool reuse = avoid_scc(scc, src_si_);
+  bool reuse = bscc_avoid_ && bscc_avoid_->avoid_scc(scc);
 
   state_vect scc_states;
   if (scc_aware_)
@@ -362,7 +359,7 @@ bp_twa::get_and_check_scc(state_set ps) {
     // property) we have to avoid the SCC optimization as they may have
     // some successor SCCs that would not be reachable if C is not in
     // the 1st component.
-    if (bscc_avoid_ & avoid_scc(scc, src_si_))
+    if (bscc_avoid_ && bscc_avoid_->avoid_scc(scc))
       return intersection;
 
     for (auto s : ps)
@@ -394,6 +391,34 @@ bp_twa::finish_second_component(state_t start) {
     }
   }
 }
+
+// Returns whether a cut transition (jump to the deterministic component)
+// for the current edge should be created.
+bool bp_twa::cut_condition(const edge_t& e)
+{
+    unsigned u = src_si_.scc_of(e.src);
+    unsigned v = src_si_.scc_of(e.dst);
+    unsigned highest_mark = src_->acc().num_sets() - 1;
+
+    // The states of u are not present in the 1st component
+    // when it is deterministic BSCC and bscc_avoid is true
+    // Maybe add avoid_scc(scc)?
+    if (bscc_avoid_ && bscc_avoid_->avoid_scc(u))
+      return false;
+    // This is basically cut_on_SCC_entry for detBSCC as u != v
+    if (bscc_avoid_ && bscc_avoid_->avoid_scc(v))
+      return true;
+
+    // Currently, 3 conditions trigger the jump:
+    //  1. If the edge has the highest mark
+    //  2. If we freshly enter accepting scc (--cut-on-SCC-entry option)
+    //  3. If e leads to accepting SCC (--cut-always option)
+    return (src_si_.is_accepting_scc(v) &&
+            (cut_always_ || // 3
+             e.acc.has(highest_mark) || //1
+             (cut_on_SCC_entry_ && u != v))); // 2
+}
+
 
 void
 bp_twa::print_res(std::string * name)

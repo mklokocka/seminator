@@ -1,4 +1,4 @@
-// Copyright (C) 2017, Fakulta Informatiky Masarykovy univerzity
+// Copyright (C) 2017, 2019, Fakulta Informatiky Masarykovy univerzity
 //
 // This file is a part of Seminator, a tool for semi-determinization of omega automata.
 //
@@ -30,13 +30,29 @@
 */
 bool is_bottom_scc(unsigned scc, spot::scc_info& si);
 
-/*
-* decide whether the given SCC should be avoided in the 1st component
-*/
-bool avoid_scc(unsigned scc, spot::scc_info &si);
 
-// Decides whether state should be avoided during bscc-avoid optimization
-bool avoid_state(state_t s, spot::scc_info& si);
+class bscc_avoid
+{
+  std::vector<char> semidetsccs_;
+  spot::scc_info& si_;
+public:
+  bscc_avoid(spot::scc_info& si);
+
+  /*
+   * decide whether the given SCC should be avoided in the 1st component
+   */
+  bool avoid_scc(unsigned scc)
+  {
+    //return is_deterministic_scc(scc, si, false) && is_bottom_scc(scc, si);
+    return semidetsccs_[scc];
+  }
+
+  // Decides whether state should be avoided during bscc-avoid optimization
+  bool avoid_state(state_t s)
+  {
+    return avoid_scc(si_.scc_of(s));
+  }
+};
 
 /*
 * Prints information about (non-)bottom SCC. For testing purposes only

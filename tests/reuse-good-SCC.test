@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 set -e
 
 cat >reuse-good-SCC.hoa <<EOF
@@ -144,12 +144,12 @@ State: 10 "6"
 EOF
 
 
-../seminator -s0 --reuse-good-SCC reuse-good-SCC.hoa > reuse-good-SCC.out
-../seminator -s0 --reuse-good-SCC --cd reuse-good-SCC.hoa > reuse-good-SCC.cd.out
+seminator -s0 --reuse-good-SCC reuse-good-SCC.hoa > reuse-good-SCC.out
+seminator -s0 --reuse-good-SCC --cd reuse-good-SCC.hoa > reuse-good-SCC.cd.out
 cat reuse-good-SCC.out
 cat reuse-good-SCC.cd.out
 diff reuse-good-SCC.out reuse-good-SCC.expect
 diff reuse-good-SCC.cd.out reuse-good-SCC.cd.expect
 
-rm reuse-good-SCC.hoa reuse-good-SCC.out reuse-good-SCC.expect reuse-good-SCC.cd.out reuse-good-SCC.cd.expect
+rm -f reuse-good-SCC.hoa reuse-good-SCC.out reuse-good-SCC.expect reuse-good-SCC.cd.out reuse-good-SCC.cd.expect
 

@@ -17,6 +17,7 @@
 #pragma once
 
 #include <types.hpp>
+#include <spot/misc/bddlt.hh>
 
 /**
 * Converts a collection of states into bitvector
