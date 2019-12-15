@@ -1,5 +1,6 @@
 ## [Unpublished]
 The code was almost completely rewritten.
+
 ### Added
 * New options that control when cut-transitions (jumps to deterministic component) are created. By default a cut-transition is created when a highest mark occurs in the input automaton.
   - `--cut-on-SCC-entry`: jump also when freshly entering an accepting SCC
@@ -16,12 +17,15 @@ The code was almost completely rewritten.
 * `--no-reduction` is a synonym for `s0` (disables reductions by Spot)
 * `--simplify-input` enables preprocessing of input by Spot
 * `--highlight` colors states regarding the part of sDBA: violet for the 1st (nondeterministic) part, green for the 2nd (deterministic) part. Cut edges are colored by red.
+* `--remove-prefixes` removes states of the form `s=(R,B,l)` if there is some other state (R,B',l') from which `s` cannot be reached
 * Seminator now understands `-h` for help.
 * Seminator now detects unsupported options (exits with return status 2)
+* Python bindings
 
 ### Changed
 * When a breakpoint is reached (R = B), track accepting transitions of the next level in B (it was set to ∅ before).
 * `--version` now also prints version of Spot
+* building process now relies on autotools (`./configure; make`)
 
 #### Evaluation
 * Use the new version of owl for comparison (18.06)

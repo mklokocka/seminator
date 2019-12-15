@@ -84,6 +84,7 @@ void print_help() {
   "    --powerset-for-weak    \tavoid breakpoint construction for\n"
   "                           \tinherently weak accepting SCCs and use\n"
   "                           \tpowerset construction instead\n"
+  "    --remove-prefixes      \tremove useless prefixes of second component\n"
   "    --reuse-good-SCC       \tsimilar as --bscc-avoid, but uses the SCCs\n"
   "                           \tunmodified with (potentialy) TGBA acceptance\n"
   "    --skip-levels          \tallow multiple breakpoints on 1 edge; a trick\n"
@@ -141,6 +142,8 @@ int main(int argc, char* argv[])
         // Optimizations
         else if (arg.compare("--powerset-for-weak") == 0)
             om.set("powerset-for-weak", true);
+        else if (arg.compare("--remove-prefixes") == 0)
+            om.set("remove-prefixes", true);
         else if (arg.compare("--bscc-avoid") == 0)
             om.set("bscc-avoid", true);
         else if (arg.compare("--reuse-good-SCC") == 0)

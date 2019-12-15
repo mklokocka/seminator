@@ -428,3 +428,47 @@ bp_twa::print_res(std::string * name)
   spot::print_hoa(std::cout, res_);
   std::cout << std::endl;
 }
+
+void
+bp_twa::remove_useless_prefixes()
+{
+  auto empty_bp = breakpoint_state();
+  auto res_ns = res_->num_states();
+
+  // Compute bottommost
+  std::map<state_set, state_t> bottommost_occurence;
+  auto si_res = spot::scc_info(res_);
+  unsigned res_scc_count = si_res.scc_count();
+
+  {
+    unsigned n = res_scc_count;
+    do
+      for (unsigned s: si_res.states_of(--n))
+        {
+          auto bps = num2bp_[s];
+          if (bps == empty_bp) continue;
+          state_set R = std::get<Bp::P>(bps);
+          bottommost_occurence[R] = s;
+        }
+    while (n);
+  }
+
+  // Check what states we want to remove
+  std::vector<unsigned> retarget(res_ns);
+  for (unsigned n = 0; n < res_ns; ++n)
+  {
+    auto bps = num2bp_[n];
+    retarget[n] = n;
+    if (bps == empty_bp) continue;
+    state_set R = std::get<Bp::P>(bps);
+    unsigned other = bottommost_occurence[R];
+    retarget[n] =
+         (si_res.scc_of(n) != si_res.scc_of(other)) ? other : n;
+  }
+
+  // Retarget edges leading to to_remove states
+  for (auto& e: res_->edges())
+      e.dst = retarget[e.dst];
+  res_->set_init_state(retarget[res_->get_init_state_number()]);
+  res_->purge_unreachable_states();
+}

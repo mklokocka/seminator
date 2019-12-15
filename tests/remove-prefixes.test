@@ -1,0 +1,115 @@
+#!/bin/bash
+set -e
+
+cat >remove-prefixes.hoa <<EOF
+HOA: v1
+States: 5
+Start: 0
+AP: 2 "a" "b"
+acc-name: generalized-Buchi 2
+Acceptance: 2 Inf(0)&Inf(1)
+properties: trans-labels explicit-labels trans-acc complete
+--BODY--
+State: 0
+[t] 0
+[0] 1
+[!0] 2
+State: 1
+[0] 1 {0 1}
+[!0] 2 {0 1}
+State: 2
+[t] 2 {1}
+[0] 3 {0 1}
+State: 3
+[0&1] 1 {0 1}
+[!0&1] 2 {0 1}
+[0&!1] 3 {0}
+[!0&!1] 4 {0}
+State: 4
+[1] 2 {1}
+[0&!1] 3 {0}
+[0&1] 3 {0 1}
+[!0&!1] 4
+--END--
+EOF
+
+cat >remove-prefixes.expect <<EOF
+HOA: v1
+States: 13
+Start: 0
+AP: 2 "a" "b"
+acc-name: Buchi
+Acceptance: 1 Inf(0)
+properties: trans-labels explicit-labels trans-acc complete
+properties: semi-deterministic
+--BODY--
+State: 0 "0"
+[t] 0
+[0] 1
+[!0] 2
+State: 1 "1"
+[0] 1
+[!0] 2
+[0] 5
+[!0] 6
+State: 2 "2"
+[t] 2
+[0] 3
+[t] 6
+[0] 9
+State: 3 "3"
+[0&1] 1
+[!0&1] 2
+[0&!1] 3
+[!0&!1] 4
+[0&1] 5
+[!0&1] 6
+State: 4 "4"
+[1] 2
+[0] 3
+[!0&!1] 4
+[1] 6
+[0&1] 9
+State: 5 "{1} , ∅ , 0"
+[0] 5 {0}
+[!0] 6 {0}
+State: 6 "{2} , ∅ , 0"
+[!0] 6
+[0] 7
+State: 7 "{2,3} , {3} , 0"
+[!0&1] 6 {0}
+[0&!1] 7
+[!0&!1] 10
+[0&1] 11
+State: 8 "{4} , ∅ , 1"
+[!0&1] 6 {0}
+[0&1] 7 {0}
+[!0&!1] 8
+[0&!1] 9
+State: 9 "{3} , ∅ , 1"
+[!0&!1] 8
+[0&!1] 9
+[!0&1] 6 {0}
+[0&1] 5 {0}
+State: 10 "{2,4} , {4} , 0"
+[!0&1] 6 {0}
+[0&!1] 7
+[0&1] 7 {0}
+[!0&!1] 10
+State: 11 "{1,2,3} , {1,3} , 0"
+[!0&1] 6 {0}
+[0] 11
+[!0&!1] 12 {0}
+State: 12 "{2,4} , {2} , 1"
+[!0&1] 6 {0}
+[0] 7 {0}
+[!0&!1] 12
+--END--
+EOF
+
+seminator -s0 --skip-levels --remove-prefixes remove-prefixes.hoa > remove-prefixes.out
+cat remove-prefixes.out
+diff remove-prefixes.out remove-prefixes.expect
+
+rm -f remove-prefixes.hoa remove-prefixes.out remove-prefixes.expect
+

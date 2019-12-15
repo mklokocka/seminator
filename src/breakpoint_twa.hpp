@@ -36,6 +36,7 @@ class bp_twa {
         scc_aware_ = om->get("scc-aware",1);
         powerset_for_weak_ = om->get("powerset-for-weak",0);
         powerset_on_cut_ = om->get("powerset-on-cut",0);
+        remove_prefixes_ = om->get("remove-prefixes",0);
         cut_det_ = om->get("cut-deterministic",0);
         skip_levels_ = om->get("skip-levels",0);
         reuse_SCC_ = om->get("reuse-SCC",0);
@@ -77,6 +78,9 @@ class bp_twa {
       finish_second_component(first_comp_size);
 
       res_->merge_edges();
+
+      if(remove_prefixes_) remove_useless_prefixes();
+
 
       // spot::print_hoa(std::cout, src_);
     }
@@ -143,6 +147,17 @@ class bp_twa {
     */
     void add_cut_transition(state_t, edge_t);
 
+    /**
+     * \brief Removes states that have equivalent states in other SCCs.
+     *
+     * States of the form s=(R,B,l) are equivalent to states s'=(R',B',l')
+     * if R=R'. If we have two such states in different SCCs C and C', we
+     * can keep only the one in SCC C' iff we know that C is not reachable
+     * from C'. This assumption is guaranteed if C > C' in the reverse
+     * topological order used by Spot.
+     */
+    void remove_useless_prefixes();
+
     // \brief print the res_ automaton on std::cout and set its name to `name`
     void print_res(std::string * name = nullptr);
 
@@ -206,6 +221,7 @@ class bp_twa {
     bool cut_det_ = false; // true if cut-determinism is requested
     bool powerset_for_weak_ = false;
     bool powerset_on_cut_ = false; //start bp already on cut
+    bool remove_prefixes_ = false;
     bool reuse_SCC_ = false;
     bool scc_aware_ = true;
     bool skip_levels_ = false;
