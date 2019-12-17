@@ -29,15 +29,17 @@ std::string bp_name(breakpoint_state);
 
 class bp_twa {
   public:
-    bp_twa(const_aut_ptr src_aut, const_om_ptr om) :
-    src_(src_aut), src_si_(spot::scc_info(src_aut)),
-    om_(om), psb_(new powerset_builder(src_)) {
+    bp_twa(const_aut_ptr src_aut, bool cut_det, const_om_ptr om)
+      : cut_det_(cut_det),
+        src_(src_aut),
+        src_si_(spot::scc_info(src_aut)),
+        om_(om),
+        psb_(new powerset_builder(src_)) {
       if (om) {
         scc_aware_ = om->get("scc-aware",1);
         powerset_for_weak_ = om->get("powerset-for-weak",0);
         powerset_on_cut_ = om->get("powerset-on-cut",0);
         remove_prefixes_ = om->get("remove-prefixes",0);
-        cut_det_ = om->get("cut-deterministic",0);
         skip_levels_ = om->get("skip-levels",0);
         reuse_SCC_ = om->get("reuse-SCC",0);
         cut_always_ = om->get("cut-always",0);

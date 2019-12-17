@@ -110,6 +110,7 @@ int main(int argc, char* argv[])
     std::string path_to_file;
 
     spot::option_map om;
+    bool cut_det = false;
     jobs_type jobs = 0;
 
     for (int i = 1; i < argc; i++)
@@ -169,10 +170,10 @@ int main(int argc, char* argv[])
 
         // Prefered output
         else if (arg.compare("--cd") == 0)
-            om.set("cut-deterministic", true);
+            cut_det = true;
 
         else if (arg.compare("--sd") == 0)
-            om.set("cut-deterministic", false);
+            cut_det = false;
 
         else if (arg.compare("--ba") == 0)
             om.set("output", BA);
@@ -273,7 +274,7 @@ int main(int argc, char* argv[])
       return 0;
     }
 
-    auto result = check_and_compute(aut, jobs, &om);
+    auto result = semi_determinize(aut, cut_det, jobs, &om);
     if (result != parsed_aut->aut)
       if (auto old_n =
           parsed_aut->aut->get_named_prop<std::string>("automaton-name"))
