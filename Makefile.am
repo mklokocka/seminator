@@ -12,6 +12,7 @@ src_libseminator_la_SOURCES =			\
   src/breakpoint_twa.hpp			\
   src/bscc.cpp					\
   src/bscc.hpp					\
+  src/complement.cpp            \
   src/cutdet.cpp				\
   src/cutdet.hpp				\
   src/powerset.cpp				\

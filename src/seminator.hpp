@@ -35,6 +35,19 @@ enum output_type : int {TGBA = 0, TBA = 1, BA = 2};
 spot::twa_graph_ptr check_and_compute(spot::twa_graph_ptr aut, jobs_type jobs,
                                       const spot::option_map* opt);
 
+namespace from_spot {
+  /// \brief Complement a semideterministic TωA
+  ///
+  /// The automaton \a aut should be semideterministic.
+  ///
+  /// Uses the NCSB algorithm described by F. Blahoudek, M. Heizmann,
+  /// S. Schewe, J. Strejček, and MH. Tsai (TACAS'16).
+  /// Implements optimization suggested by YF. Chen, M. Heizmann,
+  /// O. Lengál, Y. Li, MH. Tsai, A. Turrini, and L. Zhang (PLDI'18)
+  spot::twa_graph_ptr
+  complement_semidet(const spot::const_twa_graph_ptr &aut, bool show_names = false);
+}
+
 /**
  * Class running possible multiple types of the transformation
  * and returns the best result. It also handles pre- and post-
