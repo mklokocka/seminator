@@ -122,6 +122,7 @@ if test "x${enable_python:-yes}" = xyes; then
   adl_CHECK_PYTHON
 fi
 
+AC_CHECK_PROG([PERL], [perl], [perl])
 # Debian has a binary for SWIG 3.0 named swig3.0 and they kept swig as
 # an alias for swig-2.0.  Let's use the former when available.
 AC_CHECK_PROGS([SWIG], [swig3.0 swig], [swig])
