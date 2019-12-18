@@ -89,4 +89,15 @@ def semi_determinize(input,
   om.set("postprocess", int(postprocess))
   return semi_determinize_cpp(input, cut_det, jobs, om)
 
+
+def seminator(input, pure=False, highlight=False, **semi_determinize_args):
+  if pure:
+    res = semi_determinize(input, **semi_determinize_args)
+  else:
+    # We should get better defaults than pure.
+    res = semi_determinize(input, **semi_determinize_args)
+  if highlight:
+    highlight_components(res);
+  return res
+
 %}

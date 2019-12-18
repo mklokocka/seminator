@@ -15,7 +15,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#include<cutdet.hpp>
+#include <cutdet.hpp>
 
 static unsigned NONDET_C = 3;
 static unsigned DET_C = 4;
@@ -238,7 +238,7 @@ aut_ptr determinize_first_component(const_aut_ptr src, state_set * to_determiniz
   return res;
 }
 
-void highlight(aut_ptr aut, bool edges, state_set * nondet)
+void highlight_components(aut_ptr aut, bool edges, state_set * nondet)
 {
   assert(spot::is_semi_deterministic(aut));
   bool del = false;

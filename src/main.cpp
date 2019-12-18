@@ -286,7 +286,7 @@ int main(int argc, char* argv[])
 
     if (high)
     {
-      highlight(result);
+      highlight_components(result);
       spot::print_hoa(std::cout, result, "1.1") << '\n';
     } else
       spot::print_hoa(std::cout, result) << '\n';

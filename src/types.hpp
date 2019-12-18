@@ -34,6 +34,8 @@
 #include <spot/twa/bddprint.hh>
 #include <spot/twaalgos/sccinfo.hh>
 
+#include <seminator.hpp>
+
 // Simple and PowerSet in 1st component,
 // BreakPoint and PowerSet in 2nd component
 enum class State_type {SIMPLE1,PS1,BP2,PS2};
@@ -41,7 +43,6 @@ enum class State_type {SIMPLE1,PS1,BP2,PS2};
 
 typedef unsigned state_t;
 typedef spot::twa_graph::edge_storage_t edge_t;
-typedef std::set<state_t> state_set;
 typedef std::vector<state_t> state_vect;
 
 typedef spot::acc_cond::mark_t acc_mark;

@@ -52,3 +52,35 @@ namespace from_spot {
   spot::twa_graph_ptr
   complement_semidet(const spot::const_twa_graph_ptr &aut, bool show_names = false);
 }
+
+typedef std::set<unsigned> state_set;
+
+/**
+ * A function that checks whether a given automaton is cut-deterministic.
+ *
+ * @param[in] aut               The automata to check for cut-determinism.
+ * @param[out] non_det_states   Vector of the states that block cut-determinism.
+ * @return Whether the automaton is cut-deterministic or not.
+ */
+bool is_cut_deterministic(spot::const_twa_graph_ptr aut,
+                          std::set<unsigned>* non_det_states = nullptr);
+
+/**
+* Colors components and cut-edges of the given semi-deterministic automaton
+*
+* @param[in] aut                Semi-deterministic automaton
+* @param[in, optional] nondet   States of the 1st component.
+*                               Will be computed if nullptr (default)
+*/
+void highlight_components(spot::twa_graph_ptr aut,
+                          bool edges = true, state_set * nondet = nullptr);
+
+/**
+* Colors cut-edges of the given semi-deterministic automaton
+*
+* @param[in] aut                Semi-deterministic automaton
+* @param[in, optional] nondet   States of the 1st component.
+*                               Will be computed if nullptr (default)
+*/
+void highlight_cut(spot::twa_graph_ptr aut,
+                   state_set * nondet = nullptr);
