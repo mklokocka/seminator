@@ -29,7 +29,7 @@
 #include <spot/twaalgos/sccfilter.hh>
 #include <spot/twa/bddprint.hh>
 
-static constexpr jobs_type unitjobs[3] = {Onestep, ViaTBA, ViaSBA};
+static constexpr jobs_type unitjobs[3] = {ViaTGBA, ViaTBA, ViaSBA};
 
 /**
  * Class running possible multiple types of the transformation
@@ -47,8 +47,8 @@ public:
   * @param[in] opt (optinial, nullptr) options that tweak transformations
   */
   seminator(spot::twa_graph_ptr input, bool cut_det,
-            jobs_type jobs, const spot::option_map* opt = nullptr)
-    : input_(input), jobs_(jobs), opt_(opt), cut_det_(cut_det)
+            const spot::option_map* opt = nullptr)
+    : input_(input), opt_(opt), cut_det_(cut_det)
   {
     if (!opt)
       opt_ = new const spot::option_map;
@@ -75,10 +75,12 @@ public:
   /**
   * Run the algorithm for all jobs and returns the smallest automaton
   *
-  * @param[in] jobs may specify more jobs, 0 (default) means jobs_
+  * @param[in] jobs may specify more jobs, 0 (default) means AllJobs.
   */
-  spot::twa_graph_ptr run(jobs_type jobs = 0)
+  spot::twa_graph_ptr run(jobs_type jobs)
   {
+    if (jobs == 0)
+      jobs = AllJobs;
     prepare_inputs(jobs);
     return results_[best_from(jobs)];
   }
@@ -86,12 +88,10 @@ public:
   /**
   * Run requested jobs
   *
-  * @param[in] jobs may specify more jobs, 0 (default) means jobs_
+  * @param[in] jobs specifies the jobs to run
   */
-  void run_jobs(jobs_type jobs = 0)
+  void run_jobs(jobs_type jobs)
   {
-    if (!jobs)
-      jobs = jobs_;
     for (auto job : unitjobs)
       {
         if (job & jobs)
@@ -151,13 +151,10 @@ public:
   /**
   * Choose best from given jobs. Run the algo if not done before.
   *
-  * @param[in] jobs may specify more jobs, 0 (default) means jobs_
-  * Returns the job with lowest number of states
+  * @param[in] jobs specifies the jobs to tests
   */
-    jobs_type best_from(jobs_type jobs = 0)
+    jobs_type best_from(jobs_type jobs)
     {
-      if (!jobs)
-        jobs = jobs_;
       jobs_type res = 0;
       for (auto job : unitjobs)
         {
@@ -183,16 +180,13 @@ private:
   /**
   * Prepare input for requested jobs.
   *
-  * @param[in] jobs may specify more jobs, 0 (default) means jobs_
+  * @param[in] jobs specifies the jobs to run
   */
-  void prepare_inputs(jobs_type jobs = 0)
+  void prepare_inputs(jobs_type jobs)
   {
-    if (!jobs)
-      jobs = jobs_;
-
     // TODO check what makes sense
-    if (jobs & Onestep)
-      inputs_.emplace(Onestep, input_);
+    if (jobs & ViaTGBA)
+      inputs_.emplace(ViaTGBA, input_);
     if (jobs & ViaTBA)
       {
         inputs_.emplace(ViaTBA, spot::degeneralize_tba(input_));
@@ -212,7 +206,6 @@ private:
 
 
   spot::twa_graph_ptr input_;
-  jobs_type jobs_;
   const spot::option_map* opt_;
 
   // Intermediate results
@@ -277,8 +270,8 @@ aut_ptr semi_determinize(aut_ptr aut,
     return result;
   }
 
-  seminator sem(aut, cut_det, jobs, opt);
-  return sem.run();
+  seminator sem(aut, cut_det, opt);
+  return sem.run(jobs);
 }
 
 

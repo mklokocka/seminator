@@ -21,10 +21,10 @@
 #include <spot/twaalgos/postproc.hh>
 #include <spot/misc/optionmap.hh>
 
-enum { Onestep = 1,
-       ViaTBA = 2,
-       ViaSBA = 4,
-       AllJobs = Onestep | ViaTBA | ViaSBA};
+enum jobs_type_values { ViaTGBA = 1,
+                        ViaTBA = 2,
+                        ViaSBA = 4,
+                        AllJobs = ViaTGBA | ViaTBA | ViaSBA};
 typedef int jobs_type;
 
 enum output_type : int {TGBA = 0, TBA = 1, BA = 2};

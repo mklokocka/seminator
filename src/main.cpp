@@ -125,7 +125,7 @@ int main(int argc, char* argv[])
             jobs |= ViaTBA;
 
         else if (arg.compare("--via-tgba") == 0)
-            jobs |= Onestep;
+            jobs |= ViaTGBA;
 
         else if (arg.compare("--is-cd") == 0)
             cd_check = true;
