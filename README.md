@@ -39,7 +39,7 @@ If the preview of the notebooks on gitHub does not work, use
 If you would like to run the notebook by yourself, you need to have the
 folowing tools installed in `PATH` on your system.
 
-* [SPOT](https://spot.lrde.epita.fr/) v. 2.4+ with Python bindings
+* [SPOT](https://spot.lrde.epita.fr/) v. 2.8.3+ with Python bindings
 * [Pandas](http://pandas.pydata.org/) Python library v. 0.21.0+
 * [Jupyter](http://jupyter.org/) notebook v 5.0+
 * [R](https://www.r-project.org/) with libraries `ggplot2` and `colorspace`

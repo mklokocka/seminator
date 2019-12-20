@@ -29,17 +29,215 @@
 #include <spot/twaalgos/sccfilter.hh>
 #include <spot/twa/bddprint.hh>
 
+static constexpr jobs_type unitjobs[3] = {ViaTGBA, ViaTBA, ViaSBA};
+
 /**
-* Checks the input automaton if it is of requested type and returns it back.
-* If not, checks for easy cases first and only after that runs seminator.
-*/
-aut_ptr check_and_compute(aut_ptr aut, jobs_type jobs, const_om_ptr opt)
+ * Class running possible multiple types of the transformation
+ * and returns the best result. It also handles pre- and post-
+ * processing of the automata.
+ */
+class seminator {
+
+public:
+  /**
+  * Constructor for seminator.
+  *
+  * @param[in] input the input automaton
+  * @param[in] jobs the jobs to be performed
+  * @param[in] opt (optinial, nullptr) options that tweak transformations
+  */
+  seminator(spot::twa_graph_ptr input, bool cut_det,
+            const spot::option_map* opt = nullptr)
+    : input_(input), opt_(opt), cut_det_(cut_det)
+  {
+    if (!opt)
+      opt_ = new const spot::option_map;
+
+    preproc_  = opt_->get("preprocess",0);
+    postproc_ = opt_->get("postprocess", 1);
+
+    // The deterministic attempt was done in semi_determinize
+    if (preproc_)
+      preprocessor_.set_pref(spot::postprocessor::Small);
+
+    output_  = static_cast<output_type>(opt_->get("output", TGBA));
+
+    // Set postprocess options that preserve cut-determinism
+    if (cut_det)
+    {
+      static spot::option_map extra_options;
+      extra_options.set("ba_simul",1);
+      extra_options.set("simul",1);
+      postprocessor_ = spot::postprocessor(&extra_options);
+    }
+  }
+
+  /**
+  * Run the algorithm for all jobs and returns the smallest automaton
+  *
+  * @param[in] jobs may specify more jobs, 0 (default) means AllJobs.
+  */
+  spot::twa_graph_ptr run(jobs_type jobs)
+  {
+    if (jobs == 0)
+      jobs = AllJobs;
+    prepare_inputs(jobs);
+    return results_[best_from(jobs)];
+  }
+
+  /**
+  * Run requested jobs
+  *
+  * @param[in] jobs specifies the jobs to run
+  */
+  void run_jobs(jobs_type jobs)
+  {
+    for (auto job : unitjobs)
+      {
+        if (job & jobs)
+          {
+            // Prepare the desired input
+            if (!inputs_[job])
+              prepare_inputs(job);
+            assert(inputs_[job]);
+
+            state_set non_det_states;
+            if (spot::is_deterministic(inputs_[job]) ||
+                is_cut_deterministic(inputs_[job], &non_det_states))
+              results_[job] = inputs_[job];
+            else if (spot::is_semi_deterministic(inputs_[job]))
+              {
+                if (!cut_det_)
+                  results_[job] = inputs_[job];
+                else
+                  results_[job] = determinize_first_component(inputs_[job],
+                                                              &non_det_states);
+              }
+            else
+              {
+                // Run the breakpoint algorithm
+                bp_twa resbp(inputs_[job], cut_det_, opt_);
+                results_[job] = resbp.res_aut();
+                results_[job]->purge_dead_states();
+              }
+
+            // Check the result
+            assert(spot::is_semi_deterministic(results_[job]));
+            assert(!cut_det_ || is_cut_deterministic(results_[job]));
+            assert(results_[job]->acc().is_generalized_buchi());
+
+            if (postproc_)
+              results_[job] = postprocessor_.run(results_[job]);
+
+            switch (output_)
+              {
+              case TBA:
+                results_[job] = spot::degeneralize_tba(results_[job]);
+                if (postproc_)
+                  results_[job] = postprocessor_.run(results_[job]);
+                break;
+              case BA:
+                results_[job] = spot::degeneralize(results_[job]);
+                if (postproc_)
+                  results_[job] = postprocessor_.run(results_[job]);
+                break;
+              default:
+                break;
+              }
+          }
+      }
+  }
+
+  /**
+  * Choose best from given jobs. Run the algo if not done before.
+  *
+  * @param[in] jobs specifies the jobs to tests
+  */
+    jobs_type best_from(jobs_type jobs)
+    {
+      jobs_type res = 0;
+      for (auto job : unitjobs)
+        {
+          if (job & jobs)
+            {
+              if (!results_[job])
+                run_jobs(job);
+              if (!res ||
+                  (results_[res]->num_states() > results_[job]->num_states()))
+                res = job;
+            }
+        }
+      return res;
+    }
+
+
+private:
+  /**
+  * Read options from opt into variables
+  */
+  void parse_options();
+
+  /**
+  * Prepare input for requested jobs.
+  *
+  * @param[in] jobs specifies the jobs to run
+  */
+  void prepare_inputs(jobs_type jobs)
+  {
+    // TODO check what makes sense
+    if (jobs & ViaTGBA)
+      inputs_.emplace(ViaTGBA, input_);
+    if (jobs & ViaTBA)
+      {
+        inputs_.emplace(ViaTBA, spot::degeneralize_tba(input_));
+        if (preproc_)
+          inputs_[ViaTBA] = preprocessor_.run(inputs_[ViaTBA]);
+      }
+    if (jobs & ViaSBA)
+      {
+        inputs_.emplace(ViaSBA, spot::degeneralize(input_));
+        if (preproc_)
+          {
+            preprocessor_.set_type(spot::postprocessor::BA);
+            inputs_[ViaSBA] = preprocessor_.run(inputs_[ViaSBA]);
+          }
+      }
+  }
+
+
+  spot::twa_graph_ptr input_;
+  const spot::option_map* opt_;
+
+  // Intermediate results
+  typedef std::map<jobs_type, spot::twa_graph_ptr> aut_ptr_dict;
+  aut_ptr_dict inputs_ = aut_ptr_dict();
+  aut_ptr_dict results_ = aut_ptr_dict();
+  spot::twa_graph_ptr best_ = nullptr;
+
+  // Simplifications options (from opt, see parse_options for defaults)
+  bool postproc_;
+  bool preproc_;
+  bool cut_det_;
+
+  // Prefered output types
+  output_type output_;
+
+  // Spot's postprocesssor
+  spot::postprocessor postprocessor_;
+  spot::postprocessor preprocessor_;
+};
+
+aut_ptr semi_determinize(aut_ptr aut,
+                         bool cut_det,
+                         jobs_type jobs,
+                         const_om_ptr opt)
 {
   if (spot::is_deterministic(aut))
     return aut;
 
-  bool cut_det = opt->get("cut-deterministic",0);
-  bool preproc = opt->get("preprocess",0);
+  bool preproc = false;
+  if (opt)
+    preproc = opt->get("preprocess",0);
 
   if (preproc)
   {
@@ -72,129 +270,9 @@ aut_ptr check_and_compute(aut_ptr aut, jobs_type jobs, const_om_ptr opt)
     return result;
   }
 
-  seminator sem(aut, jobs, opt);
-  return sem.run();
+  seminator sem(aut, cut_det, opt);
+  return sem.run(jobs);
 }
 
-void seminator::prepare_inputs(jobs_type jobs)
-{
-  if (!jobs)
-    jobs = jobs_;
 
-  // TODO check what makes sense
-  if (jobs & Onestep)
-    inputs_.emplace(Onestep, input_);
-  if (jobs & ViaTBA)
-  {
-    inputs_.emplace(ViaTBA, spot::degeneralize_tba(input_));
-    if (preproc_)
-      inputs_[ViaTBA] = preprocessor_.run(inputs_[ViaTBA]);
-  }
-  if (jobs & ViaSBA)
-  {
-    inputs_.emplace(ViaSBA, spot::degeneralize(input_));
-    if (preproc_)
-    {
-      preprocessor_.set_type(spot::postprocessor::BA);
-      inputs_[ViaSBA] = preprocessor_.run(inputs_[ViaSBA]);
-    }
-  }
-}
 
-static constexpr jobs_type unitjobs[3] = {Onestep, ViaTBA, ViaSBA};
-
-void seminator::run_jobs(jobs_type jobs)
-{
-  if (!jobs)
-    jobs = jobs_;
-  for (auto job : unitjobs)
-  {
-    if (job & jobs)
-    {
-      // Prepare the desired input
-      if (!inputs_[job])
-        prepare_inputs(job);
-      assert(inputs_[job]);
-
-      state_set non_det_states;
-      if (spot::is_deterministic(inputs_[job]) ||
-          is_cut_deterministic(inputs_[job], &non_det_states))
-        results_[job] = inputs_[job];
-      else if (spot::is_semi_deterministic(inputs_[job]))
-      {
-        if (!cut_det_)
-          results_[job] = inputs_[job];
-        else
-          results_[job] = determinize_first_component(inputs_[job], &non_det_states);
-      } else
-      {
-        // Run the breakpoint algorithm
-        bp_twa resbp(inputs_[job], opt_);
-        results_[job] = resbp.res_aut();
-        results_[job]->purge_dead_states();
-      }
-
-      // Check the result
-      assert(spot::is_semi_deterministic(results_[job]));
-      assert(!cut_det_ || is_cut_deterministic(results_[job]));
-      assert(results_[job]->acc().is_generalized_buchi());
-
-      if (postproc_)
-        results_[job] = postprocessor_.run(results_[job]);
-
-      switch (output_)
-      {
-      case TBA:
-        results_[job] = spot::degeneralize_tba(results_[job]);
-        if (postproc_)
-          results_[job] = postprocessor_.run(results_[job]);
-        break;
-      case BA:
-        results_[job] = spot::degeneralize(results_[job]);
-        if (postproc_)
-          results_[job] = postprocessor_.run(results_[job]);
-        break;
-      default:
-        break;
-      }
-    }
-  }
-}
-
-jobs_type seminator::best_from(jobs_type jobs)
-{
-  if (!jobs)
-    jobs = jobs_;
-  jobs_type res = 0;
-  for (auto job : unitjobs)
-  {
-    if (job & jobs)
-    {
-      if (!results_[job])
-        run_jobs(job);
-      if (!res ||
-        (results_[res]->num_states() > results_[job]->num_states()))
-          res = job;
-    }
-  }
-  return res;
-}
-
-aut_ptr seminator::run(jobs_type jobs)
-{
-  prepare_inputs(jobs);
-  return results_[best_from(jobs)];
-}
-
-void seminator::parse_options()
-{
-  cut_det_  = opt_->get("cut-deterministic", 0);
-  preproc_  = opt_->get("preprocess",0);
-  postproc_ = opt_->get("postprocess", 1);
-
-  // The deterministic attempt was done in check_and_compute
-  if (preproc_)
-    preprocessor_.set_pref(spot::postprocessor::Small);
-
-  output_  = static_cast<output_type>(opt_->get("output", TGBA));
-}

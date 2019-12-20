@@ -1,4 +1,4 @@
-// Copyright (C) 2017, Fakulta Informatiky Masarykovy univerzity
+// Copyright (C) 2017, 2019, Fakulta Informatiky Masarykovy univerzity
 //
 // This file is a part of Seminator, a tool for semi-determinization of omega automata.
 //
@@ -28,33 +28,6 @@
  */
 aut_ptr determinize_first_component(const_aut_ptr, state_set * to_determinize);
 
-
-/**
- * A function that checks whether a given automaton is cut-deterministic.
- *
- * @param[in] aut               The automata to check for cut-determinism.
- * @param[out] non_det_states   Vector of the states that block cut-determinism.
- * @return Whether the automaton is cut-deterministic or not.
- */
-bool is_cut_deterministic(const_aut_ptr aut, std::set<unsigned>* non_det_states = nullptr);
-
-/**
-* Colors components and cut-edges of the given semi-deterministic automaton
-*
-* @param[in] aut                Semi-deterministic automaton
-* @param[in, optional] nondet   States of the 1st component.
-*                               Will be computed if nullptr (default)
-*/
-void highlight(aut_ptr, bool edges = true, state_set * nondet = nullptr);
-
-/**
-* Colors cut-edges of the given semi-deterministic automaton
-*
-* @param[in] aut                Semi-deterministic automaton
-* @param[in, optional] nondet   States of the 1st component.
-*                               Will be computed if nullptr (default)
-*/
-void highlight_cut(aut_ptr, state_set * nondet = nullptr);
 
 /**
 * Decide whether the given scc is is_deterministic

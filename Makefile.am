@@ -54,8 +54,9 @@ AM_TESTS_ENVIRONMENT =						\
   PATH="$(abs_top_builddir):$$PATH"; export PATH;		\
   abs_top_srcdir="$(abs_top_srcdir)"; export abs_top_srcdir;
 
-TEST_EXTENSIONS = .test .py
+TEST_EXTENSIONS = .test .py .ipynb
 PY_LOG_COMPILER = tests/pyrun
+IPYNB_LOG_COMPILER = tests/pyrun
 
 shell_TESTS =					\
   tests/bscc-avoid.test				\
@@ -70,9 +71,14 @@ shell_TESTS =					\
 python_TESTS =					\
   tests/bindings.py
 
+ipynb_TESTS =					\
+  options_notebooks/Cut-edges.ipynb		\
+  options_notebooks/LevelSkipping.ipynb		\
+  options_notebooks/bSCC.ipynb
+
 TESTS = $(shell_TESTS)
 if USE_PYTHON
-  TESTS += $(python_TESTS)
+  TESTS += $(python_TESTS) $(ipynb_TESTS)
 endif
 
 EXTRA_DIST =					\
@@ -81,6 +87,8 @@ EXTRA_DIST =					\
   formulae/random_sd.ltl			\
   formulae/random_nd.ltl			\
   python/spot-extra/seminator.i			\
+  tests/ipnbdoctest.py				\
   $(shell_TESTS)				\
+  $(ipynb_TESTS)				\
   $(python_TESTS)
 

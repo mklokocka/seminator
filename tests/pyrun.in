@@ -19,7 +19,7 @@ modpath='@abs_top_builddir@/python/spot-extra/.libs'
 modpath="$modpath:@abs_top_builddir@/src/.libs"
 
 
-PATH="@abs_top_builddir@/bin:$PATH"
+PATH="@abs_top_builddir@:$PATH"
 export PATH
 
 top_srcdir='@abs_top_srcdir@'

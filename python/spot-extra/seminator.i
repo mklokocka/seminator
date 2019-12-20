@@ -50,4 +50,54 @@
   }
 }
 
+%rename(semi_determinize_cpp) semi_determinize;
 %include <seminator.hpp>
+
+
+%pythoncode %{
+import spot
+
+def semi_determinize(input,
+                     cut_det=False,
+                     jobs=AllJobs,
+                     scc_aware=True,
+                     powerset_for_weak=False,
+                     powerset_on_cut=False,
+                     remove_prefixes=False,
+                     skip_levels=False,
+                     reuse_good_scc=False,
+                     cut_on_scc_entry=False,
+                     cut_always=False,
+                     bscc_avoid=False,
+                     preprocess=False,
+                     postprocess=True):
+  if type(input) is str:
+    input = spot.automaton(input)
+  if type(input) is spot.formula:
+    input = input.translate('deterministic', 'tgba')
+  om = spot.option_map()
+  om.set("scc-aware", int(scc_aware))
+  om.set("powerset-for-weak", int(powerset_for_weak))
+  om.set("powerset-on-cut", int(powerset_on_cut))
+  om.set("remove-prefixes", int(remove_prefixes))
+  om.set("skip-levels", int(skip_levels))
+  om.set("reuse-SCC", int(reuse_good_scc))
+  om.set("cut-on-SCC-entry", int(cut_on_scc_entry))
+  om.set("cut-always", int(cut_always))
+  om.set("bscc-avoid", int(bscc_avoid))
+  om.set("preprocess", int(preprocess))
+  om.set("postprocess", int(postprocess))
+  return semi_determinize_cpp(input, cut_det, jobs, om)
+
+
+def seminator(input, pure=False, highlight=False, **semi_determinize_args):
+  if pure:
+    res = semi_determinize(input, **semi_determinize_args)
+  else:
+    # We should get better defaults than pure.
+    res = semi_determinize(input, **semi_determinize_args)
+  if highlight:
+    highlight_components(res);
+  return res
+
+%}
