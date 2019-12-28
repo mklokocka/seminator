@@ -101,6 +101,16 @@ Miscellaneous options:
 )";
 }
 
+void check_cout()
+{
+  std::cout.flush();
+  if (!std::cout)
+    {
+      std::cerr << "seminator: error writing to standard output\n";
+      exit(2);
+    }
+}
+
 int main(int argc, char* argv[])
 {
     // Declaration for input options. The rest is in seminator.hpp
@@ -194,7 +204,7 @@ int main(int argc, char* argv[])
         {
             if (argc < i + 1)
             {
-              std::cerr << "Seminator: Option requires an argument -- 'f'\n";
+              std::cerr << "seminator: Option requires an argument -- 'f'\n";
               return 1;
             }
             else
@@ -206,7 +216,8 @@ int main(int argc, char* argv[])
         else if ((arg == "--help") || (arg == "-h"))
         {
             print_help();
-            return 1;
+            check_cout();
+            return 0;
         }
         else if (arg == "--version")
         {
@@ -239,11 +250,10 @@ int main(int argc, char* argv[])
 
     if (path_to_file.empty() && isatty(STDIN_FILENO))
     {
-      std::cerr << "Seminator: No automaton to process? Run\n"
+      std::cerr << "seminator: No automaton to process? Run\n"
         "'seminator --help' for more help\n";
       print_usage(std::cerr);
       return 1;
-
     }
 
     if (jobs == 0)
@@ -268,13 +278,14 @@ int main(int argc, char* argv[])
     // Check if input is TGBA
     if (!aut->acc().is_generalized_buchi())
     {
-      std::cerr << "Seminator: The tool requires a TGBA on input.\n";
+      std::cerr << "seminator: The tool requires a TGBA on input.\n";
       return 1;
     }
 
     if (cd_check)
     {
       std::cout << is_cut_deterministic(aut) << std::endl;
+      check_cout();
       return 0;
     }
 
@@ -294,6 +305,8 @@ int main(int argc, char* argv[])
       spot::print_hoa(std::cout, result, "1.1") << '\n';
     } else
       spot::print_hoa(std::cout, result) << '\n';
+
+    check_cout();
     return 0;
 }
 
