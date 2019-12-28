@@ -118,76 +118,74 @@ int main(int argc, char* argv[])
         std::string arg = argv[i];
 
         // Transformation types
-        if (arg.compare("--via-sba") == 0)
+        if (arg == "--via-sba")
             jobs |= ViaSBA;
 
-        else if (arg.compare("--via-tba") == 0)
+        else if (arg == "--via-tba")
             jobs |= ViaTBA;
 
-        else if (arg.compare("--via-tgba") == 0)
+        else if (arg == "--via-tgba")
             jobs |= ViaTGBA;
 
-        else if (arg.compare("--is-cd") == 0)
+        else if (arg == "--is-cd")
             cd_check = true;
 
         // Cut edges
-        else if (arg.compare("--cut-on-SCC-entry") == 0) {
+        else if (arg == "--cut-on-SCC-entry")
             om.set("cut-on-SCC-entry", true);
-
-        } else if (arg.compare("--cut-always") == 0)
+        else if (arg == "--cut-always")
             om.set("cut-always", true);
-
-        else if (arg.compare("--powerset-on-cut") == 0)
+        else if (arg == "--powerset-on-cut")
             om.set("powerset-on-cut", true);
 
         // Optimizations
-        else if (arg.compare("--powerset-for-weak") == 0)
+        else if (arg == "--powerset-for-weak")
             om.set("powerset-for-weak", true);
-        else if (arg.compare("--remove-prefixes") == 0)
+        else if (arg == "--remove-prefixes")
             om.set("remove-prefixes", true);
-        else if (arg.compare("--bscc-avoid") == 0)
+        else if (arg == "--bscc-avoid")
             om.set("bscc-avoid", true);
-        else if (arg.compare("--reuse-good-SCC") == 0)
+        else if (arg == "--reuse-good-SCC")
             om.set("reuse-SCC", true);
-        else if (arg.compare("--skip-levels") == 0)
+        else if (arg == "--skip-levels")
             om.set("skip-levels", true);
 
-        else if (arg.compare("--scc0") == 0)
+        else if (arg == "--scc0")
             om.set("scc-aware", false);
-        else if (arg.compare("--no-scc-aware") == 0)
+        else if (arg == "--no-scc-aware")
             om.set("scc-aware", false);
-        else if (arg.compare("--scc-aware") == 0)
+        else if (arg == "--scc-aware")
             om.set("scc-aware", true);
 
-        else if (arg.compare("-s0") == 0)
+        else if (arg == "-s0")
             om.set("postprocess", false);
 
-        else if (arg.compare("--no-reductions") == 0)
+        else if (arg == "--no-reductions")
             om.set("postprocess", false);
 
-        else if (arg.compare("--simplify-input") == 0)
+        else if (arg == "--simplify-input")
             om.set("preprocess", true);
 
         // Prefered output
-        else if (arg.compare("--cd") == 0)
+        else if (arg == "--cd")
             cut_det = true;
 
-        else if (arg.compare("--sd") == 0)
+        else if (arg == "--sd")
             cut_det = false;
 
-        else if (arg.compare("--ba") == 0)
+        else if (arg == "--ba")
             om.set("output", BA);
 
-        else if (arg.compare("--tba") == 0)
+        else if (arg == "--tba")
             om.set("output", TBA);
 
-        else if (arg.compare("--tgba") == 0)
+        else if (arg == "--tgba")
             om.set("output", TGBA);
 
-        else if (arg.compare("--highlight") == 0)
+        else if (arg == "--highlight")
             high = true;
 
-        else if (arg.compare("-f") == 0)
+        else if (arg == "-f")
         {
             if (argc < i + 1)
             {
@@ -200,12 +198,12 @@ int main(int argc, char* argv[])
                 i++;
             }
         }
-        else if ((arg.compare("--help") == 0) || (arg.compare("-h") == 0))
+        else if ((arg == "--help") || (arg == "-h"))
         {
             print_help();
             return 1;
         }
-        else if (arg.compare("--version") == 0)
+        else if (arg == "--version")
         {
             std::cout << "Seminator (" << VERSION_TAG <<
             ") compiled with Spot " << SPOT_PACKAGE_VERSION <<  std::endl;
@@ -219,13 +217,13 @@ int main(int argc, char* argv[])
             return 0;
         }
         // removed
-        else if (arg.compare("--cy") == 0)
+        else if (arg == "--cy")
         {
             std::cerr << "Invalid option --cy. Use --via-sba -s0 instead.\n";
             return 2;
         }
         // Detection of unsupported options
-        else if (arg.compare(0, 1, "-") == 0)
+        else if (arg[0] == '-')
         {
           std::cout << "Unsupported option " << arg << std::endl;
           return 2;
