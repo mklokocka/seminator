@@ -1,6 +1,7 @@
 // Copyright (C) 2017, 2019, Fakulta Informatiky Masarykovy univerzity
 //
-// This file is a part of Seminator, a tool for semi-determinization of omega automata.
+// This file is a part of Seminator, a tool for semi-determinization
+// of omega automata.
 //
 // Seminator is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -23,82 +24,81 @@
 #include <spot/twaalgos/hoa.hh>
 #include <spot/twaalgos/sccfilter.hh>
 
-static const char* VERSION_TAG = PACKAGE_VERSION;
-
 
 void print_usage(std::ostream& os) {
-  os << "Usage: seminator [OPTION...] [FILENAME]" << std::endl;
+  os << "Usage: seminator [OPTION...] [FILENAME]\n";
 }
 
 void print_help() {
   print_usage(std::cout);
   std::cout <<
-"The tool transforms TGBA into equivalent semi- or cut-deterministic TBA.\n\n";
+    R"(The tool transforms TGBA into equivalent semi- or cut-deterministic TBA.
 
-  std::cout <<
-  "By default, it reads a generalized Büchi automaton (GBA) from standard input\n"
-  "and converts it into semi-deterministic Büchi automaton (sDBA), runs\n"
-  "Spot's simplifications on it and outputs the result in the HOA format.\n"
-  "The main algorithms are based on breakpoint construction. If the automaton\n"
-  "is already of the requested shape, only the simplifications are run.\n\n";
+By default, it reads a generalized Büchi automaton (GBA) from standard input
+and converts it into semi-deterministic Büchi automaton (sDBA), runs
+Spot's simplifications on it and outputs the result in the HOA format.
+The main algorithms are based on breakpoint construction. If the automaton
+is already of the requested shape, only the simplifications are run.
 
-  std::cout << "Input options:\n";
-  std::cout <<
-  "    -f FILENAME\treads the input from FILENAME instead of stdin\n\n";
+Input options:
+    -f FILENAME reads the input from FILENAME instead of stdin
 
-  std::cout << "Output options: \n"
-  "    --cd       \tcut-deterministic automaton\n"
-  "    --sd       \tsemi-deterministic automaton (default)\n\n"
-  "    --ba       \tSBA output\n"
-  "    --tba      \tTBA output\n"
-  "    --tgba     \tTGBA output (default)\n\n"
+Output options:
+    --cd        cut-deterministic automaton
+    --sd        semi-deterministic automaton (default)
 
-  "    --highlight\tcolor states of 1st component by violet, 2nd by green,\n"
-  "               \tcut-edges by red\n\n"
+    --ba        SBA output
+    --tba       TBA output
+    --tgba      TGBA output (default)
 
-  "    --is-cd    \tdo not run transformation, check whether input is \n"
-  "               \tcut-deterministic. Outputs 1 if it is, 0 otherwise.\n"
-  "               \t(Spot's autfilt offers --is-semideterministic check)\n\n";
+    --highlight color states of 1st component by violet, 2nd by green,
+                cut-edges by red
 
-  std::cout <<
-  "Transformation type (T=transition-based, S=state-based): \n"
-  "    --via-tgba\tone-step semi-determinization: TGBA -> sDBA\n"
-  "    --via-tba\ttwo-steps: TGBA -> TBA -> sDBA\n"
-  "    --via-sba\ttwo-steps: TGBA -> SBA -> sDBA\n\n"
-  "  Multiple translation types can be chosen, the one with smallest\n"
-  "  result will be outputted. If none is chosen, all three are run.\n\n";
+    --is-cd     do not run transformation, check whether input is
+                cut-deterministic. Outputs 1 if it is, 0 otherwise.
+                (Spot's autfilt offers --is-semideterministic check)
 
-  std::cout << "Cut-edges construction:\n"
-  "    --cut-always      \tcut-edges for each edge to an accepting SCC\n"
-  "    --cut-on-SCC-entry\tcut-edges also for edges freshly entering an\n"
-  "                      \taccepting SCC\n"
-  "    --powerset-on-cut \tcreate s -a-> (δ(s),δ_0(s),0) for s -a-> p\n\n"
-  "  Cut-edges are edges between the 1st and 2nd component of the result.\n"
-  "  They are based on edges of the input automaton. By default,\n"
-  "  create cut-edges for edges with the highest mark, for edge\n"
-  "  s -a-> p create cut-edge s -a-> ({p},∅,0).\n\n";
+Transformation type (T=transition-based, S=state-based):
+    --via-tgba  one-step semi-determinization: TGBA -> sDBA
+    --via-tba   two-steps: TGBA -> TBA -> sDBA
+    --via-sba   two-steps: TGBA -> SBA -> sDBA
 
-  std::cout << "Optimizations:\n"
-  "    --bscc-avoid           \tavoid deterministic bottom part of input in 1st\n"
-  "                           \tcomponent and jump directly to 2nd component\n"
-  "    --powerset-for-weak    \tavoid breakpoint construction for\n"
-  "                           \tinherently weak accepting SCCs and use\n"
-  "                           \tpowerset construction instead\n"
-  "    --remove-prefixes      \tremove useless prefixes of second component\n"
-  "    --reuse-good-SCC       \tsimilar as --bscc-avoid, but uses the SCCs\n"
-  "                           \tunmodified with (potentialy) TGBA acceptance\n"
-  "    --skip-levels          \tallow multiple breakpoints on 1 edge; a trick\n"
-  "                           \twell known from degeneralization\n"
-  "    --scc-aware            \tenable scc-aware optimization (default)\n"
-  "    --scc0, --no-scc-aware \tdisable scc-aware optimization\n\n";
+  Multiple translation types can be chosen, the one with smallest
+  result will be outputted. If none is chosen, all three are run.
 
-  std::cout << "Pre- and Post-processing:\n"
-  "    -s0,    --no-reductions\tdisable Spot automata post-reductions\n"
-  "    --simplify-input       \tenable simplification of input automaton\n\n";
+Cut-edges construction:
+    --cut-always        cut-edges for each edge to an accepting SCC
+    --cut-on-SCC-entry  cut-edges also for edges freshly entering an
+                        accepting SCC
+    --powerset-on-cut   create s -a-> (δ(s),δ_0(s),0) for s -a-> p
 
-  std::cout << "Miscellaneous options: \n"
-  "  -h, --help \tprint this help\n"
-  "  --version  \tprint program version" << std::endl;
+  Cut-edges are edges between the 1st and 2nd component of the result.
+  They are based on edges of the input automaton. By default,
+  create cut-edges for edges with the highest mark, for edge
+  s -a-> p create cut-edge s -a-> ({p},∅,0).
+
+Optimizations:
+    --bscc-avoid                avoid deterministic bottom part of input in 1st
+                                component and jump directly to 2nd component
+    --powerset-for-weak         avoid breakpoint construction for
+                                inherently weak accepting SCCs and use
+                                powerset construction instead
+    --remove-prefixes           remove useless prefixes of second component
+    --reuse-good-SCC            similar as --bscc-avoid, but uses the SCCs
+                                unmodified with (potentialy) TGBA acceptance
+    --skip-levels               allow multiple breakpoints on 1 edge; a trick
+                                well known from degeneralization
+    --scc-aware                 enable scc-aware optimization (default)
+    --scc0, --no-scc-aware      disable scc-aware optimization
+
+Pre- and Post-processing:
+    -s0,    --no-reductions     disable Spot automata post-reductions
+    --simplify-input            enable simplification of input automaton
+
+Miscellaneous options:
+  -h, --help    print this help
+  --version     print program version
+)";
 }
 
 int main(int argc, char* argv[])
@@ -115,7 +115,7 @@ int main(int argc, char* argv[])
 
     for (int i = 1; i < argc; i++)
     {
-        std::string arg = argv[i];
+        const std::string& arg = argv[i];
 
         // Transformation types
         if (arg == "--via-sba")
@@ -135,6 +135,11 @@ int main(int argc, char* argv[])
             om.set("cut-on-SCC-entry", true);
         else if (arg == "--cut-always")
             om.set("cut-always", true);
+        else if (arg == "--cut-highest-mark")
+            {
+              om.set("cut-always", false);
+              om.set("cut-on-SCC-entry", false);
+            }
         else if (arg == "--powerset-on-cut")
             om.set("powerset-on-cut", true);
 
@@ -189,8 +194,8 @@ int main(int argc, char* argv[])
         {
             if (argc < i + 1)
             {
-                std::cerr << "Seminator: Option requires an argument -- 'f'" << std::endl;
-                return 1;
+              std::cerr << "Seminator: Option requires an argument -- 'f'\n";
+              return 1;
             }
             else
             {
@@ -205,16 +210,16 @@ int main(int argc, char* argv[])
         }
         else if (arg == "--version")
         {
-            std::cout << "Seminator (" << VERSION_TAG <<
-            ") compiled with Spot " << SPOT_PACKAGE_VERSION <<  std::endl;
-
-            std::cout << "License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>." << std::endl;
-            std::cout << "This is free software: you are free to change and redistribute it." << std::endl;
-            std::cout << "There is NO WARRANTY, to the extent permitted by law." << std::endl;
-
-            std::cout << std::endl;
-
-            return 0;
+          std::cout <<
+            ("Seminator (" PACKAGE_VERSION
+             ") compiled with Spot " SPOT_PACKAGE_VERSION "\n"
+             "License GPLv3+: GNU GPL version 3 or later"
+             " <http://gnu.org/licenses/gpl.html>.\n"
+             "This is free software: you are free to change "
+             "and redistribute it.\n"
+             "There is NO WARRANTY, to the extent permitted by law.\n")
+                    << std::flush;
+          return 0;
         }
         // removed
         else if (arg == "--cy")
@@ -225,7 +230,7 @@ int main(int argc, char* argv[])
         // Detection of unsupported options
         else if (arg[0] == '-')
         {
-          std::cout << "Unsupported option " << arg << std::endl;
+          std::cerr << "Unsupported option " << arg << '\n';
           return 2;
         }
         else if (path_to_file.empty())
@@ -235,7 +240,7 @@ int main(int argc, char* argv[])
     if (path_to_file.empty() && isatty(STDIN_FILENO))
     {
       std::cerr << "Seminator: No automaton to process? Run\n"
-            "'seminator --help' for more help" << std::endl;
+        "'seminator --help' for more help\n";
       print_usage(std::cerr);
       return 1;
 
@@ -256,13 +261,14 @@ int main(int argc, char* argv[])
       return 1;
 
     spot::twa_graph_ptr aut = parsed_aut->aut;
-    // Remove dead and unreachable states and prune accepting conditions in non-accepting SCCs.
+    // Remove dead and unreachable states and prune accepting
+    // conditions in non-accepting SCCs.
     aut = spot::scc_filter(aut, true);
 
     // Check if input is TGBA
     if (!aut->acc().is_generalized_buchi())
     {
-      std::cerr << "Seminator: The tool requires a TGBA on input" << std::endl;
+      std::cerr << "Seminator: The tool requires a TGBA on input.\n";
       return 1;
     }
 
