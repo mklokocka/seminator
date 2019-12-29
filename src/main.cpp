@@ -70,6 +70,7 @@ Cut-edges construction:
     --cut-always        cut-edges for each edge to an accepting SCC
     --cut-on-SCC-entry  cut-edges also for edges freshly entering an
                         accepting SCC
+    --cut-highest-mark  cut-edges on highest marks only (default)
     --powerset-on-cut   create s -a-> (δ(s),δ_0(s),0) for s -a-> p
 
   Cut-edges are edges between the 1st and 2nd component of the result.
@@ -78,22 +79,26 @@ Cut-edges construction:
   s -a-> p create cut-edge s -a-> ({p},∅,0).
 
 Optimizations:
-    --bscc-avoid                avoid deterministic bottom part of input in 1st
+    --bscc-avoid[=0|1]          avoid deterministic bottom part of input in 1st
                                 component and jump directly to 2nd component
-    --powerset-for-weak         avoid breakpoint construction for
+    --powerset-for-weak[=0|1]   avoid breakpoint construction for
                                 inherently weak accepting SCCs and use
                                 powerset construction instead
-    --remove-prefixes           remove useless prefixes of second component
-    --reuse-good-SCC            similar as --bscc-avoid, but uses the SCCs
+    --remove-prefixes[=0|1]     remove useless prefixes of second component
+    --reuse-good-SCC[=0|1]      similar as --bscc-avoid, but uses the SCCs
                                 unmodified with (potentialy) TGBA acceptance
-    --skip-levels               allow multiple breakpoints on 1 edge; a trick
+    --skip-levels[=0|1]         allow multiple breakpoints on 1 edge; a trick
                                 well known from degeneralization
-    --scc-aware                 enable scc-aware optimization (default)
-    --scc0, --no-scc-aware      disable scc-aware optimization
+    --scc-aware[=0|1]           scc-aware optimizations (default)
+    --scc0, --no-scc-aware      same as --scc-aware=0
+
+    Pass 1 (or nothing) to enable, or 0 to disable.
 
 Pre- and Post-processing:
-    -s0,    --no-reductions     disable Spot automata post-reductions
-    --simplify-input            enable simplification of input automaton
+    --preprocess[=0|1], --simplify-input
+                                simplifications of input automaton
+    --postprocess[=0|1]         simplifications of the output automaton
+    -s0, --no-reductions        same as --postprocess=0
 
 Miscellaneous options:
   -h, --help    print this help
@@ -123,136 +128,142 @@ int main(int argc, char* argv[])
     bool cut_det = false;
     jobs_type jobs = 0;
 
+    auto match_opt =
+      [&](const std::string& arg, const std::string& opt)
+      {
+        if (arg.compare(0, opt.size(), opt) == 0)
+          {
+            if (const char* tmp = om.parse_options(arg.c_str() + 2))
+              {
+                std::cerr << "seminator: failed to process option --"
+                          << tmp << '\n';
+                exit(2);
+              }
+            return true;
+          }
+        return false;
+      };
+
     for (int i = 1; i < argc; i++)
-    {
-        const std::string& arg = argv[i];
+      {
+        std::string arg = argv[i];
 
         // Transformation types
         if (arg == "--via-sba")
-            jobs |= ViaSBA;
-
+          jobs |= ViaSBA;
         else if (arg == "--via-tba")
-            jobs |= ViaTBA;
-
+          jobs |= ViaTBA;
         else if (arg == "--via-tgba")
-            jobs |= ViaTGBA;
-
+          jobs |= ViaTGBA;
+        //
         else if (arg == "--is-cd")
-            cd_check = true;
-
+          cd_check = true;
         // Cut edges
         else if (arg == "--cut-on-SCC-entry")
-            om.set("cut-on-SCC-entry", true);
+          om.set("cut-on-SCC-entry", true);
         else if (arg == "--cut-always")
-            om.set("cut-always", true);
+          om.set("cut-always", true);
         else if (arg == "--cut-highest-mark")
-            {
-              om.set("cut-always", false);
-              om.set("cut-on-SCC-entry", false);
-            }
-        else if (arg == "--powerset-on-cut")
-            om.set("powerset-on-cut", true);
-
+          {
+            om.set("cut-always", false);
+            om.set("cut-on-SCC-entry", false);
+          }
         // Optimizations
-        else if (arg == "--powerset-for-weak")
-            om.set("powerset-for-weak", true);
-        else if (arg == "--remove-prefixes")
-            om.set("remove-prefixes", true);
-        else if (arg == "--bscc-avoid")
-            om.set("bscc-avoid", true);
-        else if (arg == "--reuse-good-SCC")
-            om.set("reuse-SCC", true);
-        else if (arg == "--skip-levels")
-            om.set("skip-levels", true);
-
+        else if (match_opt(arg, "--powerset-for-weak")
+                 || match_opt(arg, "--remove-prefixes")
+                 || match_opt(arg, "--bscc-avoid")
+                 || match_opt(arg, "--reuse-good-SCC")
+                 || match_opt(arg, "--skip-levels")
+                 || match_opt(arg, "--scc-aware")
+                 || match_opt(arg, "--powerset-on-cut")
+                 || match_opt(arg, "--preprocess")
+                 || match_opt(arg, "--postprocess"))
+          {
+          }
         else if (arg == "--scc0")
-            om.set("scc-aware", false);
+          om.set("scc-aware", false);
         else if (arg == "--no-scc-aware")
-            om.set("scc-aware", false);
-        else if (arg == "--scc-aware")
-            om.set("scc-aware", true);
+          om.set("scc-aware", false);
 
         else if (arg == "-s0")
-            om.set("postprocess", false);
-
+          om.set("postprocess", false);
         else if (arg == "--no-reductions")
-            om.set("postprocess", false);
-
+          om.set("postprocess", false);
         else if (arg == "--simplify-input")
-            om.set("preprocess", true);
+          om.set("preprocess", true);
 
         // Prefered output
         else if (arg == "--cd")
-            cut_det = true;
+          cut_det = true;
 
         else if (arg == "--sd")
-            cut_det = false;
+          cut_det = false;
 
         else if (arg == "--ba")
-            om.set("output", BA);
+          om.set("output", BA);
 
         else if (arg == "--tba")
-            om.set("output", TBA);
+          om.set("output", TBA);
 
         else if (arg == "--tgba")
-            om.set("output", TGBA);
+          om.set("output", TGBA);
 
         else if (arg == "--highlight")
-            high = true;
+          high = true;
 
         else if (arg == "-f")
-        {
+          {
             if (argc < i + 1)
-            {
-              std::cerr << "seminator: Option -f requires an argument.\n";
-              return 1;
-            }
+              {
+                std::cerr << "seminator: Option -f requires an argument.\n";
+                return 1;
+              }
             else
-            {
+              {
                 path_to_file = argv[i+1];
                 i++;
-            }
-        }
+              }
+          }
         else if ((arg == "--help") || (arg == "-h"))
-        {
+          {
             print_help();
             check_cout();
             return 0;
-        }
+          }
         else if (arg == "--version")
-        {
-          std::cout <<
-            ("Seminator (" PACKAGE_VERSION
-             ") compiled with Spot " SPOT_PACKAGE_VERSION "\n"
-             "License GPLv3+: GNU GPL version 3 or later"
-             " <http://gnu.org/licenses/gpl.html>.\n"
-             "This is free software: you are free to change "
-             "and redistribute it.\n"
-             "There is NO WARRANTY, to the extent permitted by law.\n")
-                    << std::flush;
-          return 0;
-        }
+          {
+            std::cout <<
+              ("Seminator (" PACKAGE_VERSION
+               ") compiled with Spot " SPOT_PACKAGE_VERSION "\n"
+               "License GPLv3+: GNU GPL version 3 or later"
+               " <http://gnu.org/licenses/gpl.html>.\n"
+               "This is free software: you are free to change "
+               "and redistribute it.\n"
+               "There is NO WARRANTY, to the extent permitted by law.\n")
+                      << std::flush;
+            return 0;
+          }
         // removed
         else if (arg == "--cy")
-        {
-          std::cerr << ("seminator: "
-                        "Invalid option --cy. Use --via-sba -s0 instead.\n");
+          {
+            std::cerr << ("seminator: "
+                          "Invalid option --cy. Use --via-sba -s0 instead.\n");
             return 2;
-        }
+          }
         // Detection of unsupported options
         else if (arg[0] == '-')
-        {
-          std::cerr << "seminator: Unsupported option " << arg << '\n';
-          return 2;
-        }
+          {
+            std::cerr << "seminator: Unsupported option " << arg << '\n';
+            return 2;
+          }
         else if (path_to_file.empty())
           path_to_file = argv[i];
         else
-        {
-          std::cerr << "seminator: Multiple inputs specified.\n";
-          return 2;
-        }
-    }
+          {
+            std::cerr << "seminator: Multiple inputs specified.\n";
+            return 2;
+          }
+      }
 
     if (path_to_file.empty() && isatty(STDIN_FILENO))
     {

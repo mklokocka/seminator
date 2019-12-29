@@ -81,7 +81,7 @@ def semi_determinize(input,
   om.set("powerset-on-cut", int(powerset_on_cut))
   om.set("remove-prefixes", int(remove_prefixes))
   om.set("skip-levels", int(skip_levels))
-  om.set("reuse-SCC", int(reuse_good_scc))
+  om.set("reuse-good-SCC", int(reuse_good_scc))
   om.set("cut-on-SCC-entry", int(cut_on_scc_entry))
   om.set("cut-always", int(cut_always))
   om.set("bscc-avoid", int(bscc_avoid))

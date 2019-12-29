@@ -41,7 +41,7 @@ class bp_twa {
         powerset_on_cut_ = om->get("powerset-on-cut",0);
         remove_prefixes_ = om->get("remove-prefixes",0);
         skip_levels_ = om->get("skip-levels",0);
-        reuse_SCC_ = om->get("reuse-SCC",0);
+        reuse_SCC_ = om->get("reuse-good-SCC",0);
         cut_always_ = om->get("cut-always",0);
         cut_on_SCC_entry_ = om->get("cut-on-SCC-entry",0);
         bscc_avoid_ = (om->get("bscc-avoid", 0) || reuse_SCC_) ?
