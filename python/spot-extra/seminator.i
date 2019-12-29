@@ -61,14 +61,14 @@ def semi_determinize(input,
                      cut_det=False,
                      jobs=AllJobs,
                      scc_aware=True,
-                     powerset_for_weak=False,
-                     powerset_on_cut=False,
-                     remove_prefixes=False,
-                     skip_levels=False,
-                     reuse_good_scc=False,
+                     powerset_for_weak=True,
+                     powerset_on_cut=True,
+                     remove_prefixes=True,
+                     skip_levels=True,
+                     reuse_good_scc=True,
                      cut_on_scc_entry=False,
                      cut_always=False,
-                     bscc_avoid=False,
+                     bscc_avoid=True,
                      preprocess=False,
                      postprocess=True):
   if type(input) is str:
@@ -92,10 +92,18 @@ def semi_determinize(input,
 
 def seminator(input, pure=False, highlight=False, **semi_determinize_args):
   if pure:
-    res = semi_determinize(input, **semi_determinize_args)
+    kwargs = { 'powerset_for_weak': False,
+               'powerset_on_cut': False,
+               'remove_prefixes': False,
+               'skip_levels': False,
+               'reuse_good_scc': False,
+               'bscc_avoid': False,
+               'preprocess': False,
+               'postprocess': False }
+    kwargs.update(semi_determinize_args);
   else:
-    # We should get better defaults than pure.
-    res = semi_determinize(input, **semi_determinize_args)
+    kwargs = semi_determinize_args
+  res = semi_determinize(input, **kwargs)
   if highlight:
     highlight_components(res);
   return res
