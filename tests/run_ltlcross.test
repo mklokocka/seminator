@@ -6,14 +6,14 @@ exec ltlcross -D \
          -F ${abs_top_srcdir-.}/formulae/random_nd.ltl \
          --stop-on-error \
          --reference ltl2tgba \
-         'ltl2tgba -D %f | seminator -s0 --cd > %O' \
-         'ltl2tgba -D %f | seminator -s0 > %O' \
-         'ltl2tgba -D %f | seminator -s0 --powerset-for-weak > %O' \
-         'ltl2tgba -D %f | seminator -s0 --cd --cut-on-SCC-entry > %O' \
-         'ltl2tgba -D %f | seminator -s0 --cut-always > %O' \
-         'ltl2tgba -D %f | seminator -s0 --skip-levels > %O' \
-         'ltl2tgba -D %f | seminator -s0 --remove-prefixes > %O' \
-         'ltl2tgba -D %f | seminator -s0 --skip-levels --remove-prefixes > %O' \
-         'ltl2tgba -D %f | seminator -s0 --cut-on-SCC-entry --powerset-for-weak > %O' \
-         'ltl2tgba -D %f | seminator -s0 --cut-on-SCC-entry --simplify-input --powerset-for-weak --bscc-avoid --skip-levels --powerset-on-cut --cd > %O' \
-         'ltl2tgba -D %f | seminator -s0 --cut-on-SCC-entry --simplify-input --powerset-for-weak --reuse-good-SCC --skip-levels --powerset-on-cut --cd > %O'
+         'ltl2tgba -D %f | seminator --pure --cd > %O' \
+         'ltl2tgba -D %f | seminator --pure > %O' \
+         'ltl2tgba -D %f | seminator --pure --powerset-for-weak > %O' \
+         'ltl2tgba -D %f | seminator --pure --cd --cut-on-SCC-entry > %O' \
+         'ltl2tgba -D %f | seminator --pure --cut-always > %O' \
+         'ltl2tgba -D %f | seminator --pure --skip-levels > %O' \
+         'ltl2tgba -D %f | seminator --pure --remove-prefixes > %O' \
+         'ltl2tgba -D %f | seminator --pure --skip-levels --remove-prefixes > %O' \
+         'ltl2tgba -D %f | seminator --pure --cut-on-SCC-entry --powerset-for-weak > %O' \
+         'ltl2tgba -D %f | seminator --pure --cut-on-SCC-entry --simplify-input --powerset-for-weak --bscc-avoid --skip-levels --powerset-on-cut --cd > %O' \
+         'ltl2tgba -D %f | seminator --pure --cut-on-SCC-entry --simplify-input --powerset-for-weak --reuse-good-SCC --skip-levels --powerset-on-cut --cd > %O'

@@ -118,7 +118,7 @@ State: 15 "{2,4} , {2} , 1"
 --END--
 EOF
 
-seminator -s0 --skip-levels skip-levels.hoa > skip-levels.out
+seminator --pure --skip-levels skip-levels.hoa > skip-levels.out
 cat skip-levels.out
 diff skip-levels.out skip-levels.expect
 

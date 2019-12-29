@@ -71,12 +71,9 @@ Cut-edges construction:
     --cut-on-SCC-entry  cut-edges also for edges freshly entering an
                         accepting SCC
     --cut-highest-mark  cut-edges on highest marks only (default)
-    --powerset-on-cut   create s -a-> (δ(s),δ_0(s),0) for s -a-> p
 
   Cut-edges are edges between the 1st and 2nd component of the result.
-  They are based on edges of the input automaton. By default,
-  create cut-edges for edges with the highest mark, for edge
-  s -a-> p create cut-edge s -a-> ({p},∅,0).
+  They are based on edges of the input automaton.
 
 Optimizations:
     --bscc-avoid[=0|1]          avoid deterministic bottom part of input in 1st
@@ -84,21 +81,27 @@ Optimizations:
     --powerset-for-weak[=0|1]   avoid breakpoint construction for
                                 inherently weak accepting SCCs and use
                                 powerset construction instead
+    --powerset-on-cut[=0|1]     if s -a-> p needs a cut, create
+                                s -a-> (δ(s),δ_0(s),0) instead of
+                                s -a-> ({p},∅,0).
     --remove-prefixes[=0|1]     remove useless prefixes of second component
     --reuse-good-SCC[=0|1]      similar as --bscc-avoid, but uses the SCCs
                                 unmodified with (potentialy) TGBA acceptance
     --skip-levels[=0|1]         allow multiple breakpoints on 1 edge; a trick
                                 well known from degeneralization
-    --scc-aware[=0|1]           scc-aware optimizations (default)
+    --scc-aware[=0|1]           scc-aware optimizations
     --scc0, --no-scc-aware      same as --scc-aware=0
+    --pure                      disable all optimizations except --scc-aware,
+                                also disable pre and post processings
 
-    Pass 1 (or nothing) to enable, or 0 to disable.
+  Pass 1 (or nothing) to enable, or 0 to disable.  All optimizations
+  are enabled by default, unless --pure is specified, in which case
+  only --scc-aware is on.
 
 Pre- and Post-processing:
-    --preprocess[=0|1], --simplify-input
-                                simplifications of input automaton
-    --postprocess[=0|1]         simplifications of the output automaton
-    -s0, --no-reductions        same as --postprocess=0
+    --preprocess[=0|1]       simplifications of input automaton
+    --postprocess[=0|1]      simplifications of the output automaton (default)
+    -s0, --no-reductions     same as --postprocess=0 --preprocess=0
 
 Miscellaneous options:
   -h, --help    print this help
@@ -184,11 +187,23 @@ int main(int argc, char* argv[])
           om.set("scc-aware", false);
         else if (arg == "--no-scc-aware")
           om.set("scc-aware", false);
-
-        else if (arg == "-s0")
-          om.set("postprocess", false);
-        else if (arg == "--no-reductions")
-          om.set("postprocess", false);
+        else if (arg == "--pure")
+          {
+            om.set("bscc-avoid", false);
+            om.set("powerset-for-weak", false);
+            om.set("reuse-good-SCC", false);
+            om.set("remove-prefixes", false);
+            om.set("bscc-avoid", false);
+            om.set("skip-levels", false);
+            om.set("powerset-on-cut", false);
+            om.set("postprocess", false);
+            om.set("preprocess", false);
+          }
+        else if (arg == "-s0" || arg == "--no-reductions")
+          {
+            om.set("postprocess", false);
+            om.set("preprocess", false);
+          }
         else if (arg == "--simplify-input")
           om.set("preprocess", true);
 
