@@ -204,7 +204,7 @@ int main(int argc, char* argv[])
         {
             if (argc < i + 1)
             {
-              std::cerr << "seminator: Option requires an argument -- 'f'\n";
+              std::cerr << "seminator: Option -f requires an argument.\n";
               return 1;
             }
             else
@@ -235,23 +235,29 @@ int main(int argc, char* argv[])
         // removed
         else if (arg == "--cy")
         {
-            std::cerr << "Invalid option --cy. Use --via-sba -s0 instead.\n";
+          std::cerr << ("seminator: "
+                        "Invalid option --cy. Use --via-sba -s0 instead.\n");
             return 2;
         }
         // Detection of unsupported options
         else if (arg[0] == '-')
         {
-          std::cerr << "Unsupported option " << arg << '\n';
+          std::cerr << "seminator: Unsupported option " << arg << '\n';
           return 2;
         }
         else if (path_to_file.empty())
-            path_to_file = argv[i];
+          path_to_file = argv[i];
+        else
+        {
+          std::cerr << "seminator: Multiple inputs specified.\n";
+          return 2;
+        }
     }
 
     if (path_to_file.empty() && isatty(STDIN_FILENO))
     {
-      std::cerr << "seminator: No automaton to process? Run\n"
-        "'seminator --help' for more help\n";
+      std::cerr << "seminator: No automaton to process? "
+        "Run 'seminator --help' for more help.\n";
       print_usage(std::cerr);
       return 1;
     }
