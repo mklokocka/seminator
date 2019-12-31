@@ -214,9 +214,9 @@ State: 11
 --END--
 EOF
 
-seminator via.hoa --via-sba > via-sba.out
-seminator via.hoa --via-tba > via-tba.out
-seminator via.hoa --via-tgba > via-tgba.out
+seminator --pure --postprocess via.hoa --via-sba > via-sba.out
+seminator --pure --postprocess via.hoa --via-tba > via-tba.out
+seminator --pure --postprocess via.hoa --via-tgba > via-tgba.out
 cat via-sba.out
 cat via-tba.out
 cat via-tgba.out

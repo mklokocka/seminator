@@ -37,14 +37,14 @@ class bp_twa {
         psb_(new powerset_builder(src_)) {
       if (om) {
         scc_aware_ = om->get("scc-aware",1);
-        powerset_for_weak_ = om->get("powerset-for-weak",0);
-        powerset_on_cut_ = om->get("powerset-on-cut",0);
-        remove_prefixes_ = om->get("remove-prefixes",0);
-        skip_levels_ = om->get("skip-levels",0);
-        reuse_SCC_ = om->get("reuse-SCC",0);
+        powerset_for_weak_ = om->get("powerset-for-weak",1);
+        powerset_on_cut_ = om->get("powerset-on-cut",1);
+        remove_prefixes_ = om->get("remove-prefixes",1);
+        skip_levels_ = om->get("skip-levels",1);
+        reuse_SCC_ = om->get("reuse-good-SCC",1);
         cut_always_ = om->get("cut-always",0);
         cut_on_SCC_entry_ = om->get("cut-on-SCC-entry",0);
-        bscc_avoid_ = (om->get("bscc-avoid", 0) || reuse_SCC_) ?
+        bscc_avoid_ = (om->get("bscc-avoid", 1) || reuse_SCC_) ?
           std::make_unique<bscc_avoid>(src_si_) : nullptr;
       }
 

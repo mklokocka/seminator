@@ -54,7 +54,7 @@ State: 5 "{1} , ∅ , 0"
 --END--
 EOF
 
-seminator -s0 --cut-on-SCC-entry cut-on-scc-entry.hoa > cut-on-scc-entry.out
+seminator --pure --cut-on-SCC-entry cut-on-scc-entry.hoa > cut-on-scc-entry.out
 cat cut-on-scc-entry.out
 diff cut-on-scc-entry.out cut-on-scc-entry.expect
 

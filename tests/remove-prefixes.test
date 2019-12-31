@@ -107,7 +107,7 @@ State: 12 "{2,4} , {2} , 1"
 --END--
 EOF
 
-seminator -s0 --skip-levels --remove-prefixes remove-prefixes.hoa > remove-prefixes.out
+seminator --pure --skip-levels --remove-prefixes remove-prefixes.hoa > remove-prefixes.out
 cat remove-prefixes.out
 diff remove-prefixes.out remove-prefixes.expect
 
