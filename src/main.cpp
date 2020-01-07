@@ -84,7 +84,7 @@ Optimizations:
     --powerset-on-cut[=0|1]     if s -a-> p needs a cut, create
                                 s -a-> (δ(s),δ_0(s),0) instead of
                                 s -a-> ({p},∅,0).
-    --remove-prefixes[=0|1]     remove useless prefixes of second component
+    --jump-to-bottommost[=0|1]     remove useless prefixes of second component
     --reuse-good-SCC[=0|1]      similar as --bscc-avoid, but uses the SCCs
                                 unmodified with (potentialy) TGBA acceptance
     --skip-levels[=0|1]         allow multiple breakpoints on 1 edge; a trick
@@ -173,7 +173,7 @@ int main(int argc, char* argv[])
           }
         // Optimizations
         else if (match_opt(arg, "--powerset-for-weak")
-                 || match_opt(arg, "--remove-prefixes")
+                 || match_opt(arg, "--jump-to-bottommost")
                  || match_opt(arg, "--bscc-avoid")
                  || match_opt(arg, "--reuse-good-SCC")
                  || match_opt(arg, "--skip-levels")
@@ -192,7 +192,7 @@ int main(int argc, char* argv[])
             om.set("bscc-avoid", false);
             om.set("powerset-for-weak", false);
             om.set("reuse-good-SCC", false);
-            om.set("remove-prefixes", false);
+            om.set("jump-to-bottommost", false);
             om.set("bscc-avoid", false);
             om.set("skip-levels", false);
             om.set("powerset-on-cut", false);

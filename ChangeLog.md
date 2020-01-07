@@ -17,7 +17,7 @@ The code was almost completely rewritten.
 * `--no-reduction` is a synonym for `s0` (disables reductions by Spot)
 * `--simplify-input` enables preprocessing of input by Spot
 * `--highlight` colors states regarding the part of sDBA: violet for the 1st (nondeterministic) part, green for the 2nd (deterministic) part. Cut edges are colored by red.
-* `--remove-prefixes` removes states of the form `s=(R,B,l)` if there is some other state (R,B',l') from which `s` cannot be reached
+* `--jump-to-bottommost` removes states of the form `s=(R,B,l)` if there is some other state (R,B',l') from which `s` cannot be reached
 * Seminator now understands `-h` for help.
 * Seminator now detects unsupported options (exits with return status 2)
 * Python bindings

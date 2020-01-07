@@ -63,7 +63,7 @@ def semi_determinize(input,
                      scc_aware=True,
                      powerset_for_weak=True,
                      powerset_on_cut=True,
-                     remove_prefixes=True,
+                     jump_to_bottommost=True,
                      skip_levels=True,
                      reuse_good_scc=True,
                      cut_on_scc_entry=False,
@@ -79,7 +79,7 @@ def semi_determinize(input,
   om.set("scc-aware", int(scc_aware))
   om.set("powerset-for-weak", int(powerset_for_weak))
   om.set("powerset-on-cut", int(powerset_on_cut))
-  om.set("remove-prefixes", int(remove_prefixes))
+  om.set("jump-to-bottommost", int(jump_to_bottommost))
   om.set("skip-levels", int(skip_levels))
   om.set("reuse-good-SCC", int(reuse_good_scc))
   om.set("cut-on-SCC-entry", int(cut_on_scc_entry))
@@ -94,7 +94,7 @@ def seminator(input, pure=False, highlight=False, **semi_determinize_args):
   if pure:
     kwargs = { 'powerset_for_weak': False,
                'powerset_on_cut': False,
-               'remove_prefixes': False,
+               'jump_to_bottommost': False,
                'skip_levels': False,
                'reuse_good_scc': False,
                'bscc_avoid': False,

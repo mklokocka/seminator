@@ -12,8 +12,8 @@ exec ltlcross -D \
          'ltl2tgba -D %f | seminator --pure --cd --cut-on-SCC-entry > %O' \
          'ltl2tgba -D %f | seminator --pure --cut-always > %O' \
          'ltl2tgba -D %f | seminator --pure --skip-levels > %O' \
-         'ltl2tgba -D %f | seminator --pure --remove-prefixes > %O' \
-         'ltl2tgba -D %f | seminator --pure --skip-levels --remove-prefixes > %O' \
+         'ltl2tgba -D %f | seminator --pure --jump-to-bottommost > %O' \
+         'ltl2tgba -D %f | seminator --pure --skip-levels --jump-to-bottommost > %O' \
          'ltl2tgba -D %f | seminator --pure --cut-on-SCC-entry --powerset-for-weak > %O' \
          'ltl2tgba -D %f | seminator --pure --cut-on-SCC-entry --simplify-input --powerset-for-weak --bscc-avoid --skip-levels --powerset-on-cut --cd > %O' \
          'ltl2tgba -D %f | seminator --pure --cut-on-SCC-entry --simplify-input --powerset-for-weak --reuse-good-SCC --skip-levels --powerset-on-cut --cd > %O'

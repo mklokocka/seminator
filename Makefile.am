@@ -62,7 +62,7 @@ shell_TESTS =					\
   tests/bscc-avoid.test				\
   tests/cut-on-scc-entry.test			\
   tests/powerset-on-cut.test			\
-  tests/remove-prefixes.test        \
+  tests/jump-to-bottommost.test        \
   tests/reuse-good-SCC.test			\
   tests/skip-levels.test			\
   tests/via.test				\

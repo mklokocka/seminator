@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-cat >remove-prefixes.hoa <<EOF
+cat >jump-to-bottommost.hoa <<EOF
 HOA: v1
 States: 5
 Start: 0
@@ -33,7 +33,7 @@ State: 4
 --END--
 EOF
 
-cat >remove-prefixes.expect <<EOF
+cat >jump-to-bottommost.expect <<EOF
 HOA: v1
 States: 13
 Start: 0
@@ -107,9 +107,9 @@ State: 12 "{2,4} , {2} , 1"
 --END--
 EOF
 
-seminator --pure --skip-levels --remove-prefixes remove-prefixes.hoa > remove-prefixes.out
-cat remove-prefixes.out
-diff remove-prefixes.out remove-prefixes.expect
+seminator --pure --skip-levels --jump-to-bottommost jump-to-bottommost.hoa > jump-to-bottommost.out
+cat jump-to-bottommost.out
+diff jump-to-bottommost.out jump-to-bottommost.expect
 
-rm -f remove-prefixes.hoa remove-prefixes.out remove-prefixes.expect
+rm -f jump-to-bottommost.hoa jump-to-bottommost.out jump-to-bottommost.expect
 
