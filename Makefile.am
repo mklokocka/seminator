@@ -61,12 +61,13 @@ IPYNB_LOG_COMPILER = tests/pyrun
 shell_TESTS =					\
   tests/bscc-avoid.test				\
   tests/cut-on-scc-entry.test			\
+  tests/jump-to-bottommost.test			\
+  tests/output.test				\
   tests/powerset-on-cut.test			\
-  tests/jump-to-bottommost.test        \
   tests/reuse-good-SCC.test			\
+  tests/run_ltlcross.test			\
   tests/skip-levels.test			\
-  tests/via.test				\
-  tests/run_ltlcross.test
+  tests/via.test
 
 python_TESTS =					\
   tests/bindings.py

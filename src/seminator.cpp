@@ -21,10 +21,10 @@
 #include <bscc.hpp>
 #include <breakpoint_twa.hpp>
 
-#include <spot/twaalgos/stripacc.hh>
 #include <spot/twaalgos/degen.hh>
 #include <spot/twaalgos/isdet.hh>
 #include <spot/twaalgos/sccinfo.hh>
+#include <spot/twaalgos/minimize.hh>
 #include <spot/misc/optionmap.hh>
 #include <spot/twaalgos/sccfilter.hh>
 #include <spot/twa/bddprint.hh>
@@ -46,7 +46,7 @@ public:
   */
   seminator(spot::twa_graph_ptr input, bool cut_det,
             const spot::option_map* opt = nullptr)
-    : input_(input), opt_(opt), cut_det_(cut_det)
+    : input_(spot::scc_filter(input, true)), opt_(opt), cut_det_(cut_det)
   {
     if (!opt)
       opt_ = new const spot::option_map;
@@ -54,9 +54,12 @@ public:
     preproc_  = opt_->get("preprocess",0);
     postproc_ = opt_->get("postprocess", 1);
 
-    // The deterministic attempt was done in semi_determinize
     if (preproc_)
-      preprocessor_.set_pref(spot::postprocessor::Small);
+      preprocessor_.set_pref(spot::postprocessor::Deterministic);
+    else if (input_->acc().is_all())
+      // automata with "t" acceptance can be determinized and minimized
+      // as a DFA.  (The preprocessor will do that if we use it.)
+      input_ = spot::minimize_monitor(input_);
 
     output_  = static_cast<output_type>(opt_->get("output", TGBA));
 
@@ -98,7 +101,8 @@ private:
     switch (job)
       {
       case ViaTGBA:
-        return input_;
+        preprocessor_.set_type(spot::postprocessor::TGBA);
+        return preprocessor_.run(input_);
       case ViaTBA:
         {
           auto out = spot::degeneralize_tba(input_);
@@ -128,6 +132,7 @@ private:
   {
     spot::twa_graph_ptr result;
     state_set non_det_states;
+
     if (spot::is_deterministic(input) ||
         is_cut_deterministic(input, &non_det_states))
       {
@@ -191,16 +196,10 @@ private:
     return aut;
   }
 
-  /**
-  * Read options from opt into variables
-  */
-  void parse_options();
-
-
   spot::twa_graph_ptr input_;
   const spot::option_map* opt_;
 
-  // Simplifications options (from opt, see parse_options for defaults)
+  // Simplifications options
   bool postproc_;
   bool preproc_;
   bool cut_det_;
@@ -218,44 +217,6 @@ aut_ptr semi_determinize(aut_ptr aut,
                          jobs_type jobs,
                          const_om_ptr opt)
 {
-  if (spot::is_deterministic(aut))
-    return aut;
-
-  bool preproc = false;
-  if (opt)
-    preproc = opt->get("preprocess",0);
-
-  if (preproc)
-  {
-    spot::postprocessor preprocessor;
-    preprocessor.set_pref(spot::postprocessor::Deterministic);
-    preprocessor.run(aut);
-  }
-
-  if (spot::is_semi_deterministic(aut))
-  {
-    if (!cut_det)
-      return aut;
-
-    auto non_det_states = new state_set;
-    aut_ptr result;
-
-    if (is_cut_deterministic(aut, non_det_states))
-      result = aut;
-    else
-      result = determinize_first_component(aut, non_det_states);
-    delete non_det_states;
-    return result;
-  }
-
-  // Safety automata can be determinized using powerset construction
-  if (aut->acc().is_all())
-  {
-    auto result = spot::tba_determinize(aut);
-    result->set_acceptance(0, spot::acc_cond::acc_code::t());
-    return result;
-  }
-
   seminator sem(aut, cut_det, opt);
   return sem.run(jobs);
 }

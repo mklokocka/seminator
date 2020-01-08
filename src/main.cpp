@@ -1,4 +1,4 @@
-// Copyright (C) 2017, 2019, Fakulta Informatiky Masarykovy univerzity
+// Copyright (C) 2017, 2019, 2020, Fakulta Informatiky Masarykovy univerzity
 //
 // This file is a part of Seminator, a tool for semi-determinization
 // of omega automata.
@@ -303,9 +303,6 @@ int main(int argc, char* argv[])
       return 1;
 
     spot::twa_graph_ptr aut = parsed_aut->aut;
-    // Remove dead and unreachable states and prune accepting
-    // conditions in non-accepting SCCs.
-    aut = spot::scc_filter(aut, true);
 
     // Check if input is TGBA
     if (!aut->acc().is_generalized_buchi())

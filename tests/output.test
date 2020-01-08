@@ -1,0 +1,20 @@
+#!/bin/sh
+set -e
+
+in=input.hoa
+out=output.hoa
+stats="autfilt --stats=%d.%s.%g"
+
+ltl2tgba 'GFa & GFb' > $in
+test "1.3.Inf(0)" = "`seminator $in --ba | $stats`"
+test "1.2.Inf(0)" = "`seminator $in --tba | $stats`"
+test "1.1.Inf(0)&Inf(1)" = "`seminator $in --tgba | $stats`"
+rm -f $in
+
+ltl2tgba FGa > $in
+seminator $in --ba > ${out}.ba
+seminator $in --tba > ${out}.tba
+seminator $in --tgba > ${out}.tgba
+diff ${out}.ba ${out}.tba
+diff ${out}.ba ${out}.tgba
+rm -f $in ${out}.ba ${out}.tba ${out}.tgba
