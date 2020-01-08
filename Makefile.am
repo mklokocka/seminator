@@ -61,12 +61,14 @@ IPYNB_LOG_COMPILER = tests/pyrun
 shell_TESTS =					\
   tests/bscc-avoid.test				\
   tests/cut-on-scc-entry.test			\
+  tests/complement.test				\
+  tests/jump-to-bottommost.test			\
+  tests/output.test				\
   tests/powerset-on-cut.test			\
-  tests/remove-prefixes.test        \
-  tests/reuse-good-SCC.test			\
+  tests/reuse-deterministic.test		\
+  tests/run_ltlcross.test			\
   tests/skip-levels.test			\
-  tests/via.test				\
-  tests/run_ltlcross.test
+  tests/via.test
 
 python_TESTS =					\
   tests/bindings.py
@@ -74,7 +76,8 @@ python_TESTS =					\
 ipynb_TESTS =					\
   options_notebooks/Cut-edges.ipynb		\
   options_notebooks/LevelSkipping.ipynb		\
-  options_notebooks/bSCC.ipynb
+  options_notebooks/bSCC.ipynb			\
+  options_notebooks/Complement.ipynb
 
 TESTS = $(shell_TESTS)
 if USE_PYTHON

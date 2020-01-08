@@ -1,0 +1,9 @@
+#!/bin/sh
+
+exec ltlcross                                                           \
+  -F ${abs_top_srcdir-.}/formulae/random_sd.ltl                         \
+  -F ${abs_top_srcdir-.}/formulae/random_nd.ltl                         \
+  --stop-on-error                                                       \
+  --reference 'ltl2tgba --negate'                                       \
+  'ltl2tgba %f | seminator --complement=pldi --postprocess-comp=0 >%O'  \
+  'ltl2tgba %f | seminator --complement=spot --postprocess-comp=0 >%O'

@@ -1,7 +1,7 @@
 #!/bin/sh
 set -e
 
-cat >reuse-good-SCC.hoa <<EOF
+cat >reuse-deterministic.hoa <<EOF
 HOA: v1
 States: 7
 Start: 0
@@ -42,7 +42,7 @@ State: 6
 --END--
 EOF
 
-cat >reuse-good-SCC.expect <<EOF
+cat >reuse-deterministic.expect <<EOF
 HOA: v1
 States: 11
 Start: 0
@@ -93,7 +93,7 @@ State: 10 "6"
 --END--
 EOF
 
-cat >reuse-good-SCC.cd.expect <<EOF
+cat >reuse-deterministic.cd.expect <<EOF
 HOA: v1
 States: 11
 Start: 0
@@ -144,12 +144,12 @@ State: 10 "6"
 EOF
 
 
-seminator --pure --reuse-good-SCC reuse-good-SCC.hoa > reuse-good-SCC.out
-seminator --pure --reuse-good-SCC --cd reuse-good-SCC.hoa > reuse-good-SCC.cd.out
-cat reuse-good-SCC.out
-cat reuse-good-SCC.cd.out
-diff reuse-good-SCC.out reuse-good-SCC.expect
-diff reuse-good-SCC.cd.out reuse-good-SCC.cd.expect
+seminator --pure --reuse-deterministic reuse-deterministic.hoa > reuse-deterministic.out
+seminator --pure --reuse-deterministic --cd reuse-deterministic.hoa > reuse-deterministic.cd.out
+cat reuse-deterministic.out
+cat reuse-deterministic.cd.out
+diff reuse-deterministic.out reuse-deterministic.expect
+diff reuse-deterministic.cd.out reuse-deterministic.cd.expect
 
-rm -f reuse-good-SCC.hoa reuse-good-SCC.out reuse-good-SCC.expect reuse-good-SCC.cd.out reuse-good-SCC.cd.expect
+rm -f reuse-deterministic.hoa reuse-deterministic.out reuse-deterministic.expect reuse-deterministic.cd.out reuse-deterministic.cd.expect
 

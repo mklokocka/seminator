@@ -1,4 +1,4 @@
-// Copyright (C) 2017, 2019, Fakulta Informatiky Masarykovy univerzity
+// Copyright (C) 2017, 2019, 2020, Fakulta Informatiky Masarykovy univerzity
 //
 // This file is a part of Seminator, a tool for semi-determinization of omega automata.
 //
@@ -39,10 +39,10 @@ class bp_twa {
         scc_aware_ = om->get("scc-aware",1);
         powerset_for_weak_ = om->get("powerset-for-weak",1);
         powerset_on_cut_ = om->get("powerset-on-cut",1);
-        remove_prefixes_ = om->get("remove-prefixes",1);
+        jump_to_bottommost_ = om->get("jump-to-bottommost",1);
         skip_levels_ = om->get("skip-levels",1);
-        reuse_SCC_ = om->get("reuse-good-SCC",1);
-        cut_always_ = om->get("cut-always",0);
+        reuse_SCC_ = om->get("reuse-deterministic",1);
+        cut_always_ = om->get("cut-always",1);
         cut_on_SCC_entry_ = om->get("cut-on-SCC-entry",0);
         bscc_avoid_ = (om->get("bscc-avoid", 1) || reuse_SCC_) ?
           std::make_unique<bscc_avoid>(src_si_) : nullptr;
@@ -81,7 +81,7 @@ class bp_twa {
 
       res_->merge_edges();
 
-      if(remove_prefixes_) remove_useless_prefixes();
+      if(jump_to_bottommost_) remove_useless_prefixes();
 
 
       // spot::print_hoa(std::cout, src_);
@@ -223,7 +223,7 @@ class bp_twa {
     bool cut_det_ = false; // true if cut-determinism is requested
     bool powerset_for_weak_ = false;
     bool powerset_on_cut_ = false; //start bp already on cut
-    bool remove_prefixes_ = false;
+    bool jump_to_bottommost_ = false;
     bool reuse_SCC_ = false;
     bool scc_aware_ = true;
     bool skip_levels_ = false;

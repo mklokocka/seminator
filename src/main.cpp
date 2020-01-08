@@ -1,4 +1,4 @@
-// Copyright (C) 2017, 2019, Fakulta Informatiky Masarykovy univerzity
+// Copyright (C) 2017, 2019, 2020, Fakulta Informatiky Masarykovy univerzity
 //
 // This file is a part of Seminator, a tool for semi-determinization
 // of omega automata.
@@ -23,7 +23,7 @@
 #include <spot/parseaut/public.hh>
 #include <spot/twaalgos/hoa.hh>
 #include <spot/twaalgos/sccfilter.hh>
-
+#include <spot/twaalgos/complement.hh>
 
 void print_usage(std::ostream& os) {
   os << "Usage: seminator [OPTION...] [FILENAME]\n";
@@ -46,6 +46,10 @@ Input options:
 Output options:
     --cd        cut-deterministic automaton
     --sd        semi-deterministic automaton (default)
+    --complement[=best|spot|pldi]
+                build a semi-deterministic automaton to complement it using
+                the NCSB implementation of Spot, or the PLDI'18 variant
+                implemented in Seminator
 
     --ba        SBA output
     --tba       TBA output
@@ -68,9 +72,10 @@ Transformation type (T=transition-based, S=state-based):
 
 Cut-edges construction:
     --cut-always        cut-edges for each edge to an accepting SCC
+                        (default, unless --pure)
     --cut-on-SCC-entry  cut-edges also for edges freshly entering an
                         accepting SCC
-    --cut-highest-mark  cut-edges on highest marks only (default)
+    --cut-highest-mark  cut-edges on highest marks only (default if --pure)
 
   Cut-edges are edges between the 1st and 2nd component of the result.
   They are based on edges of the input automaton.
@@ -78,30 +83,35 @@ Cut-edges construction:
 Optimizations:
     --bscc-avoid[=0|1]          avoid deterministic bottom part of input in 1st
                                 component and jump directly to 2nd component
+    --jump-to-bottommost[=0|1]  remove useless trivial SCCs of 2nd component
     --powerset-for-weak[=0|1]   avoid breakpoint construction for
                                 inherently weak accepting SCCs and use
                                 powerset construction instead
     --powerset-on-cut[=0|1]     if s -a-> p needs a cut, create
                                 s -a-> (δ(s),δ_0(s),0) instead of
                                 s -a-> ({p},∅,0).
-    --remove-prefixes[=0|1]     remove useless prefixes of second component
-    --reuse-good-SCC[=0|1]      similar as --bscc-avoid, but uses the SCCs
+    --reuse-deterministic[=0|1] similar to --bscc-avoid, but uses the SCCs
                                 unmodified with (potentialy) TGBA acceptance
     --skip-levels[=0|1]         allow multiple breakpoints on 1 edge; a trick
                                 well known from degeneralization
     --scc-aware[=0|1]           scc-aware optimizations
     --scc0, --no-scc-aware      same as --scc-aware=0
     --pure                      disable all optimizations except --scc-aware,
-                                also disable pre and post processings
+                                also disable pre and post processings and
+                                implies --cut-highest-mark by default
 
   Pass 1 (or nothing) to enable, or 0 to disable.  All optimizations
   are enabled by default, unless --pure is specified, in which case
   only --scc-aware is on.
 
 Pre- and Post-processing:
-    --preprocess[=0|1]       simplifications of input automaton
-    --postprocess[=0|1]      simplifications of the output automaton (default)
+    --preprocess[=0|1]       simplify the input automaton
+    --postprocess[=0|1]      simplify the output of the semi-determinization
+                             algorithm (default)
+    --postprocess-comp[=0|1] simplify the output of the complementation
+                             (default)
     -s0, --no-reductions     same as --postprocess=0 --preprocess=0
+                             --postprocess-comp=0
 
 Miscellaneous options:
   -h, --help    print this help
@@ -130,6 +140,9 @@ int main(int argc, char* argv[])
     spot::option_map om;
     bool cut_det = false;
     jobs_type jobs = 0;
+    enum complement_t { NoComplement = 0, NCSBBest, NCSBSpot, NCSBPLDI };
+    complement_t complement = NoComplement;
+    output_type desired_output = TGBA;
 
     auto match_opt =
       [&](const std::string& arg, const std::string& opt)
@@ -173,14 +186,15 @@ int main(int argc, char* argv[])
           }
         // Optimizations
         else if (match_opt(arg, "--powerset-for-weak")
-                 || match_opt(arg, "--remove-prefixes")
+                 || match_opt(arg, "--jump-to-bottommost")
                  || match_opt(arg, "--bscc-avoid")
-                 || match_opt(arg, "--reuse-good-SCC")
+                 || match_opt(arg, "--reuse-deterministic")
                  || match_opt(arg, "--skip-levels")
                  || match_opt(arg, "--scc-aware")
                  || match_opt(arg, "--powerset-on-cut")
                  || match_opt(arg, "--preprocess")
-                 || match_opt(arg, "--postprocess"))
+                 || match_opt(arg, "--postprocess")
+                 || match_opt(arg, "--postprocess-comp"))
           {
           }
         else if (arg == "--scc0")
@@ -191,13 +205,16 @@ int main(int argc, char* argv[])
           {
             om.set("bscc-avoid", false);
             om.set("powerset-for-weak", false);
-            om.set("reuse-good-SCC", false);
-            om.set("remove-prefixes", false);
+            om.set("reuse-deterministic", false);
+            om.set("jump-to-bottommost", false);
             om.set("bscc-avoid", false);
             om.set("skip-levels", false);
             om.set("powerset-on-cut", false);
             om.set("postprocess", false);
+            om.set("postprocess-comp", false);
             om.set("preprocess", false);
+            om.set("cut-always", false);
+            om.set("cut-on-SCC-entry", false);
           }
         else if (arg == "-s0" || arg == "--no-reductions")
           {
@@ -210,18 +227,21 @@ int main(int argc, char* argv[])
         // Prefered output
         else if (arg == "--cd")
           cut_det = true;
-
         else if (arg == "--sd")
           cut_det = false;
+        else if (arg == "--complement" || arg == "--complement=best")
+          complement = NCSBBest;
+        else if (arg == "--complement=spot")
+          complement = NCSBSpot;
+        else if (arg == "--complement=pldi")
+          complement = NCSBPLDI;
 
         else if (arg == "--ba")
-          om.set("output", BA);
-
+          desired_output = BA;
         else if (arg == "--tba")
-          om.set("output", TBA);
-
+          desired_output = TBA;
         else if (arg == "--tgba")
-          om.set("output", TGBA);
+          desired_output = TGBA;
 
         else if (arg == "--highlight")
           high = true;
@@ -288,6 +308,13 @@ int main(int argc, char* argv[])
       return 1;
     }
 
+    if (high && complement)
+      {
+        std::cerr
+          << "seminator --highlight and --complement are incompatible\n";
+        return 1;
+      }
+
     if (jobs == 0)
       jobs = AllJobs;
 
@@ -303,9 +330,6 @@ int main(int argc, char* argv[])
       return 1;
 
     spot::twa_graph_ptr aut = parsed_aut->aut;
-    // Remove dead and unreachable states and prune accepting
-    // conditions in non-accepting SCCs.
-    aut = spot::scc_filter(aut, true);
 
     // Check if input is TGBA
     if (!aut->acc().is_generalized_buchi())
@@ -321,15 +345,50 @@ int main(int argc, char* argv[])
       return 0;
     }
 
+    om.set("output", complement ? TBA : desired_output);
+
     auto result = semi_determinize(aut, cut_det, jobs, &om);
     if (result != parsed_aut->aut)
       if (auto old_n =
           parsed_aut->aut->get_named_prop<std::string>("automaton-name"))
         {
-          auto name = new std::string((om.get("cut-deterministic", 0) ?
-                                       "cDBA for " : "sDBA for ") + *old_n);
+          auto name = new std::string((cut_det ? "cDBA for " : "sDBA for ")
+                                      + *old_n);
           result->set_named_prop("automaton-name", name);
         }
+
+    if (complement)
+      {
+        spot::twa_graph_ptr comp = nullptr;
+        spot::postprocessor postprocessor;
+        // We don't deal with TBA: (1) complement_semidet() returns a
+        // TBA, and (2) in Spot 2.8 spot::postprocessor only knows
+        // about state-based BA and Transition-based GBA.  So TBA/TGBA
+        // are simply simplified as TGBA.
+        postprocessor.set_type(desired_output == BA
+                               ? spot::postprocessor::BA
+                               : spot::postprocessor::TGBA);
+        if (!om.get("postprocess-comp", 1))
+          {
+            // Disable simplifications except acceptance change.
+            postprocessor.set_level(spot::postprocessor::Low);
+            postprocessor.set_pref(spot::postprocessor::Any);
+          }
+
+        if (complement == NCSBSpot || complement == NCSBBest)
+          {
+            comp = spot::complement_semidet(result);
+            comp = postprocessor.run(comp);
+          }
+        if (complement == NCSBPLDI || complement == NCSBBest)
+          {
+            spot::twa_graph_ptr comp2 = from_spot::complement_semidet(result);
+            comp2 = postprocessor.run(comp2);
+            if (!comp || comp->num_states() > comp2->num_states())
+              comp = comp2;
+          }
+        result = comp;
+      }
 
     if (high)
     {
