@@ -76,7 +76,8 @@ python_TESTS =					\
 ipynb_TESTS =					\
   options_notebooks/Cut-edges.ipynb		\
   options_notebooks/LevelSkipping.ipynb		\
-  options_notebooks/bSCC.ipynb
+  options_notebooks/bSCC.ipynb			\
+  options_notebooks/Complement.ipynb
 
 TESTS = $(shell_TESTS)
 if USE_PYTHON
