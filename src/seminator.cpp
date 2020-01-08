@@ -83,6 +83,17 @@ public:
     if (jobs == 0)
       jobs = AllJobs;
 
+    // If the input is already Buchi, there there is no need
+    // for a TGBA job.
+    if (input_->acc().is_buchi() && (jobs & (ViaTBA|ViaSBA)))
+      {
+        jobs &= ~ViaTGBA;
+        // And if the input is already state-based Buchi, there there
+        // is no need for a TBA job.
+        if (input_->prop_state_acc() && (jobs & ViaSBA))
+          jobs &= ~ViaTBA;
+      }
+
     spot::twa_graph_ptr best = nullptr;
     for (auto job : {ViaTGBA, ViaTBA, ViaSBA})
       if (job & jobs)
