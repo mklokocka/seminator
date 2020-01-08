@@ -23,7 +23,7 @@
 #include <spot/parseaut/public.hh>
 #include <spot/twaalgos/hoa.hh>
 #include <spot/twaalgos/sccfilter.hh>
-
+#include <spot/twaalgos/complement.hh>
 
 void print_usage(std::ostream& os) {
   os << "Usage: seminator [OPTION...] [FILENAME]\n";
@@ -46,6 +46,10 @@ Input options:
 Output options:
     --cd        cut-deterministic automaton
     --sd        semi-deterministic automaton (default)
+    --complement[=best|spot|pldi]
+                build a semi-deterministic automaton to complement it using
+                the NCSB implementation of Spot, or the PLDI'18 variant
+                implemented in Seminator
 
     --ba        SBA output
     --tba       TBA output
@@ -99,9 +103,13 @@ Optimizations:
   only --scc-aware is on.
 
 Pre- and Post-processing:
-    --preprocess[=0|1]       simplifications of input automaton
-    --postprocess[=0|1]      simplifications of the output automaton (default)
+    --preprocess[=0|1]       simplify the input automaton
+    --postprocess[=0|1]      simplify the output of the semi-determinization
+                             algorithm (default)
+    --postprocess-comp[=0|1] simplify the output of the complementation
+                             (default)
     -s0, --no-reductions     same as --postprocess=0 --preprocess=0
+                             --postprocess-comp=0
 
 Miscellaneous options:
   -h, --help    print this help
@@ -130,6 +138,9 @@ int main(int argc, char* argv[])
     spot::option_map om;
     bool cut_det = false;
     jobs_type jobs = 0;
+    enum complement_t { NoComplement = 0, NCSBBest, NCSBSpot, NCSBPLDI };
+    complement_t complement = NoComplement;
+    output_type desired_output = TGBA;
 
     auto match_opt =
       [&](const std::string& arg, const std::string& opt)
@@ -180,7 +191,8 @@ int main(int argc, char* argv[])
                  || match_opt(arg, "--scc-aware")
                  || match_opt(arg, "--powerset-on-cut")
                  || match_opt(arg, "--preprocess")
-                 || match_opt(arg, "--postprocess"))
+                 || match_opt(arg, "--postprocess")
+                 || match_opt(arg, "--postprocess-comp"))
           {
           }
         else if (arg == "--scc0")
@@ -197,6 +209,7 @@ int main(int argc, char* argv[])
             om.set("skip-levels", false);
             om.set("powerset-on-cut", false);
             om.set("postprocess", false);
+            om.set("postprocess-comp", false);
             om.set("preprocess", false);
           }
         else if (arg == "-s0" || arg == "--no-reductions")
@@ -210,18 +223,21 @@ int main(int argc, char* argv[])
         // Prefered output
         else if (arg == "--cd")
           cut_det = true;
-
         else if (arg == "--sd")
           cut_det = false;
+        else if (arg == "--complement" || arg == "--complement=best")
+          complement = NCSBBest;
+        else if (arg == "--complement=spot")
+          complement = NCSBSpot;
+        else if (arg == "--complement=pldi")
+          complement = NCSBPLDI;
 
         else if (arg == "--ba")
-          om.set("output", BA);
-
+          desired_output = BA;
         else if (arg == "--tba")
-          om.set("output", TBA);
-
+          desired_output = TBA;
         else if (arg == "--tgba")
-          om.set("output", TGBA);
+          desired_output = TGBA;
 
         else if (arg == "--highlight")
           high = true;
@@ -288,6 +304,13 @@ int main(int argc, char* argv[])
       return 1;
     }
 
+    if (high && complement)
+      {
+        std::cerr
+          << "seminator --highlight and --complement are incompatible\n";
+        return 1;
+      }
+
     if (jobs == 0)
       jobs = AllJobs;
 
@@ -318,15 +341,50 @@ int main(int argc, char* argv[])
       return 0;
     }
 
+    om.set("output", complement ? TBA : desired_output);
+
     auto result = semi_determinize(aut, cut_det, jobs, &om);
     if (result != parsed_aut->aut)
       if (auto old_n =
           parsed_aut->aut->get_named_prop<std::string>("automaton-name"))
         {
-          auto name = new std::string((om.get("cut-deterministic", 0) ?
-                                       "cDBA for " : "sDBA for ") + *old_n);
+          auto name = new std::string((cut_det ? "cDBA for " : "sDBA for ")
+                                      + *old_n);
           result->set_named_prop("automaton-name", name);
         }
+
+    if (complement)
+      {
+        spot::twa_graph_ptr comp = nullptr;
+        spot::postprocessor postprocessor;
+        // We don't deal with TBA: (1) complement_semidet() returns a
+        // TBA, and (2) in Spot 2.8 spot::postprocessor only knows
+        // about state-based BA and Transition-based GBA.  So TBA/TGBA
+        // are simply simplified as TGBA.
+        postprocessor.set_type(desired_output == BA
+                               ? spot::postprocessor::BA
+                               : spot::postprocessor::TGBA);
+        if (!om.get("postprocess-comp", 1))
+          {
+            // Disable simplifications except acceptance change.
+            postprocessor.set_level(spot::postprocessor::Low);
+            postprocessor.set_pref(spot::postprocessor::Any);
+          }
+
+        if (complement == NCSBSpot || complement == NCSBBest)
+          {
+            comp = spot::complement_semidet(result);
+            comp = postprocessor.run(comp);
+          }
+        if (complement == NCSBPLDI || complement == NCSBBest)
+          {
+            spot::twa_graph_ptr comp2 = from_spot::complement_semidet(result);
+            comp2 = postprocessor.run(comp2);
+            if (!comp || comp->num_states() > comp2->num_states())
+              comp = comp2;
+          }
+        result = comp;
+      }
 
     if (high)
     {

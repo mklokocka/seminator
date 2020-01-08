@@ -61,6 +61,7 @@ IPYNB_LOG_COMPILER = tests/pyrun
 shell_TESTS =					\
   tests/bscc-avoid.test				\
   tests/cut-on-scc-entry.test			\
+  tests/complement.test				\
   tests/jump-to-bottommost.test			\
   tests/output.test				\
   tests/powerset-on-cut.test			\
