@@ -64,7 +64,7 @@ shell_TESTS =					\
   tests/jump-to-bottommost.test			\
   tests/output.test				\
   tests/powerset-on-cut.test			\
-  tests/reuse-good-SCC.test			\
+  tests/reuse-deterministic.test		\
   tests/run_ltlcross.test			\
   tests/skip-levels.test			\
   tests/via.test

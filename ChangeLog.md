@@ -8,7 +8,7 @@ The code was almost completely rewritten.
 * `--powerset-on-cut` starts the breakpoint/subset construction already on cut-transitions. For a marked transition s -a-> p build s -a-> (δ(s),δ_0(s),0) instead of s -a-> ({p},∅,0).
 * `--powerset-for-weak` for accepting SCC that is inherently weak in the input automaton, use only simple powerset construction in the deterministic part of the sDBA.
 * `--bscc-avoid` in the 1st component, avoid deterministic SCCs with no nondeterministic successors and rather jump to the 2nd component directly.
-* `--reuse-good-SCC` is similar to `--bscc-avoid`, but reuses the SCCs as they are, potentialy with TGBA acceptance.
+* `--reuse-deterministic` is similar to `--bscc-avoid`, but reuses the SCCs as they are, potentialy with TGBA acceptance.
 * `--skip-levels` enable level-skipping. For 1 edge we can "skip" multiple levels.
 * Multiple transformation types (`--via-sba`, `--via-tba`, `--via-tgba`) can be specified. The one will smallest result will be outputted.
 * `--scc-aware` enables the scc-aware optimization (default on)

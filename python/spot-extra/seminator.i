@@ -65,7 +65,7 @@ def semi_determinize(input,
                      powerset_on_cut=True,
                      jump_to_bottommost=True,
                      skip_levels=True,
-                     reuse_good_scc=True,
+                     reuse_deterministic=True,
                      cut_on_scc_entry=False,
                      cut_always=False,
                      bscc_avoid=True,
@@ -81,7 +81,7 @@ def semi_determinize(input,
   om.set("powerset-on-cut", int(powerset_on_cut))
   om.set("jump-to-bottommost", int(jump_to_bottommost))
   om.set("skip-levels", int(skip_levels))
-  om.set("reuse-good-SCC", int(reuse_good_scc))
+  om.set("reuse-deterministic", int(reuse_deterministic))
   om.set("cut-on-SCC-entry", int(cut_on_scc_entry))
   om.set("cut-always", int(cut_always))
   om.set("bscc-avoid", int(bscc_avoid))
@@ -96,7 +96,7 @@ def seminator(input, pure=False, highlight=False, **semi_determinize_args):
                'powerset_on_cut': False,
                'jump_to_bottommost': False,
                'skip_levels': False,
-               'reuse_good_scc': False,
+               'reuse_deterministic': False,
                'bscc_avoid': False,
                'preprocess': False,
                'postprocess': False }

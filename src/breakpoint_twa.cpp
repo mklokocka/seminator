@@ -134,7 +134,7 @@ bp_twa::create_all_cut_transitions() {
   }
 }
 
-// This is to be used for reused SCC during --reuse-good-SCC
+// This is to be used for reused SCC during --reuse-deterministic
 // Basicaly only copies the edges
 template <> void
 bp_twa::compute_successors<state_t>(state_t old, state_t src,
