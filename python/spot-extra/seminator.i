@@ -67,7 +67,7 @@ def semi_determinize(input,
                      skip_levels=True,
                      reuse_deterministic=True,
                      cut_on_scc_entry=False,
-                     cut_always=False,
+                     cut_always=True,
                      bscc_avoid=True,
                      preprocess=False,
                      postprocess=True,
@@ -105,7 +105,10 @@ def seminator(input, pure=False, highlight=False,
                'reuse_deterministic': False,
                'bscc_avoid': False,
                'preprocess': False,
-               'postprocess': False }
+               'postprocess': False,
+               'cut_always': False,
+               'cut_on_scc_entry': False
+             }
     kwargs.update(semi_determinize_args);
     if postprocess_comp is None:
       postprocess_comp = False

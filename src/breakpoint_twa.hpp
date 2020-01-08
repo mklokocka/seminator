@@ -1,4 +1,4 @@
-// Copyright (C) 2017, 2019, Fakulta Informatiky Masarykovy univerzity
+// Copyright (C) 2017, 2019, 2020, Fakulta Informatiky Masarykovy univerzity
 //
 // This file is a part of Seminator, a tool for semi-determinization of omega automata.
 //
@@ -42,7 +42,7 @@ class bp_twa {
         jump_to_bottommost_ = om->get("jump-to-bottommost",1);
         skip_levels_ = om->get("skip-levels",1);
         reuse_SCC_ = om->get("reuse-deterministic",1);
-        cut_always_ = om->get("cut-always",0);
+        cut_always_ = om->get("cut-always",1);
         cut_on_SCC_entry_ = om->get("cut-on-SCC-entry",0);
         bscc_avoid_ = (om->get("bscc-avoid", 1) || reuse_SCC_) ?
           std::make_unique<bscc_avoid>(src_si_) : nullptr;

@@ -72,9 +72,10 @@ Transformation type (T=transition-based, S=state-based):
 
 Cut-edges construction:
     --cut-always        cut-edges for each edge to an accepting SCC
+                        (default, unless --pure)
     --cut-on-SCC-entry  cut-edges also for edges freshly entering an
                         accepting SCC
-    --cut-highest-mark  cut-edges on highest marks only (default)
+    --cut-highest-mark  cut-edges on highest marks only (default if --pure)
 
   Cut-edges are edges between the 1st and 2nd component of the result.
   They are based on edges of the input automaton.
@@ -96,7 +97,8 @@ Optimizations:
     --scc-aware[=0|1]           scc-aware optimizations
     --scc0, --no-scc-aware      same as --scc-aware=0
     --pure                      disable all optimizations except --scc-aware,
-                                also disable pre and post processings
+                                also disable pre and post processings and
+                                implies --cut-highest-mark by default
 
   Pass 1 (or nothing) to enable, or 0 to disable.  All optimizations
   are enabled by default, unless --pure is specified, in which case
@@ -211,6 +213,8 @@ int main(int argc, char* argv[])
             om.set("postprocess", false);
             om.set("postprocess-comp", false);
             om.set("preprocess", false);
+            om.set("cut-always", false);
+            om.set("cut-on-SCC-entry", false);
           }
         else if (arg == "-s0" || arg == "--no-reductions")
           {
