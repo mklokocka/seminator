@@ -2,42 +2,56 @@
 The code was almost completely rewritten.
 
 ### Added
-* New options that control when cut-transitions (jumps to deterministic component) are created. By default a cut-transition is created when a highest mark occurs in the input automaton.
+* New options control when cut-transitions (jumps to deterministic component) are created:
+  - `--cut-highest-mark`: jump when a highest mark occurs in the input automaton (old default)
   - `--cut-on-SCC-entry`: jump also when freshly entering an accepting SCC
-  - `--cut-always`: jump also for all transitions leading to some accepting SCC
-* `--powerset-on-cut` starts the breakpoint/subset construction already on cut-transitions. For a marked transition s -a-> p build s -a-> (δ(s),δ_0(s),0) instead of s -a-> ({p},∅,0).
-* `--powerset-for-weak` for accepting SCC that is inherently weak in the input automaton, use only simple powerset construction in the deterministic part of the sDBA.
-* `--bscc-avoid` in the 1st component, avoid deterministic SCCs with no nondeterministic successors and rather jump to the 2nd component directly.
-* `--reuse-deterministic` is similar to `--bscc-avoid`, but reuses the SCCs as they are, potentialy with TGBA acceptance.
-* `--skip-levels` enable level-skipping. For 1 edge we can "skip" multiple levels.
-* Multiple transformation types (`--via-sba`, `--via-tba`, `--via-tgba`) can be specified. The one will smallest result will be outputted.
-* `--scc-aware` enables the scc-aware optimization (default on)
-* `--scc0` and `--no-scc-aware` disables the SCC-aware optimization
-* `--sd` option for semi-deterministic output (and not cut-deterministic)
-* `--no-reduction` is a synonym for `s0` (disables reductions by Spot)
-* `--simplify-input` enables preprocessing of input by Spot
+  - `--cut-always`: jump also for all transitions leading to some accepting SCC (new default)
+* New options to control optimizations (all enabled by default):
+  - `--powerset-on-cut` starts the breakpoint/subset construction already on cut-transitions. For a marked transition s -a-> p build s -a-> (δ(s),δ_0(s),0) instead of s -a-> ({p},∅,0).
+  - `--powerset-for-weak` for accepting SCC that is inherently weak in the input automaton, use only simple powerset construction in the deterministic part of the sDBA.
+  - `--bscc-avoid` in the 1st component, avoid deterministic SCCs with no nondeterministic successors and rather jump to the 2nd component directly.
+  - `--reuse-deterministic` is similar to `--bscc-avoid`, but reuses the SCCs as they are, potentialy with TGBA acceptance.
+  - `--skip-levels` enable level-skipping. For 1 edge we can "skip" multiple levels.
+  - `--jump-to-bottommost` removes states of the form `s=(R,B,l)` if there is some other state (R,B',l') from which `s` cannot be reached
+  - `--scc-aware` enables the SCC-aware optimization
+  - `--pure` disable all optimization except `--scc-aware`
+* Multiple transformation types (`--via-sba`, `--via-tba`, `--via-tgba`) can be specified. The one will smallest result will be output.
+* `--complement[=best|spot|pldi]` complement the automaton after semi-determinizing it, using one of two NCSB-based complementation algorithms.
+* Options to control pre- and post-processings:
+  - `--preprocess` simplify the automaton with Spot before semi-determinizing it
+  - `--postprocess` simplify the automaton with Spot after semi-determinizing it
+  - `--postprocess-comp` simplify the automaton with Spot after complementing it
 * `--highlight` colors states regarding the part of sDBA: violet for the 1st (nondeterministic) part, green for the 2nd (deterministic) part. Cut edges are colored by red.
-* `--jump-to-bottommost` removes states of the form `s=(R,B,l)` if there is some other state (R,B',l') from which `s` cannot be reached
 * Seminator now understands `-h` for help.
-* Seminator now detects unsupported options (exits with return status 2)
-* Python bindings
+* Seminator now detects more errors (unsupported options, failure to output, incompatible options, ...)
+* Python bindings are now available as an extension to Spot's bindings:
+  ```
+  import spot.seminator as sem
+  ```
+  will import the following functions
+  ```
+  sem.semi_determinize()
+  sem.complement_semidet()
+  sem.highlight_components()
+  sem.highlight_cut()
+  sem.is_cut_deterministic()
+  sem.seminator()
+  ```
 
 ### Changed
+* seminator now processes a stream of automata instead of only one at time.
+* `--is-cd` now acts like a filter: instead of outputing 0 or 1, it prints the input automaton if it is cut-deterministic, or discard it otherwise (this behavior is more in line with `autfilt --is-semi-deterministic` from Spot)
 * When a breakpoint is reached (R = B), track accepting transitions of the next level in B (it was set to ∅ before).
 * `--version` now also prints version of Spot
 * building process now relies on autotools (`./configure; make`)
 
-#### Evaluation
-* Use the new version of owl for comparison (18.06)
-* Also compare Seminator with the `--cut-on-SCC-entry` option
-* Also compare Seminator with the `--cut-always` option
-
 ### Removed
-* `--cy` option (use --via-tba -s0 instead)
+* `--cy` option (use `--via-tba -s0` instead)
+* files from the experimental evaluation of version 1.2
 
 ### Fixed
 * jumps to the deterministic component after seeing highest mark (instead of 0) also for cut-deterministic automata
-* Handling of stdin; thanks Alexandre Duret-Lutz for the fix.
+* handling of stdin
 
 ## [1.2.0] - 2017-11-06
 ### Added
