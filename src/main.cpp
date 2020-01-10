@@ -361,15 +361,16 @@ int main(int argc, char* argv[])
             else
               {
                 aut = semi_determinize(aut, cut_det, jobs, &om);
-                if (aut != parsed_aut->aut)
-                  if (auto old_n = parsed_aut->aut->get_named_prop<std::string>
-                      ("automaton-name"))
-                    {
-                      auto name =
-                        new std::string((cut_det ? "cDBA for " : "sDBA for ")
-                                        + *old_n);
-                      aut->set_named_prop("automaton-name", name);
-                    }
+                if (auto old_n = parsed_aut->aut->get_named_prop<std::string>
+                    ("automaton-name"))
+                  {
+                    auto name =
+                      new std::string(((aut->num_sets() == 1)
+                                       ? "sDBA for " : "sDGBA for ") + *old_n);
+                    if (cut_det)
+                      (*name)[0] = 'c';
+                    aut->set_named_prop("automaton-name", name);
+                  }
 
                 if (complement)
                   {

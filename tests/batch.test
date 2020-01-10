@@ -53,6 +53,22 @@ State: 0
 State: 1 {0}
 [0] 1
 --END--
+HOA: v1
+name: "G(Fa & Fb)"
+States: 1
+Start: 0
+AP: 2 "a" "b"
+acc-name: generalized-Buchi 2
+Acceptance: 2 Inf(0)&Inf(1)
+properties: trans-labels explicit-labels trans-acc complete
+properties: deterministic stutter-invariant
+--BODY--
+State: 0
+[!0&!1] 0
+[!0&1] 0 {1}
+[0&!1] 0 {0}
+[0&1] 0 {0 1}
+--END--
 EOF
 
 seminator --is-cd batch.hoa > batch.out
@@ -73,6 +89,22 @@ State: 0
 [0] 1
 State: 1 {0}
 [0] 1
+--END--
+HOA: v1
+name: "G(Fa & Fb)"
+States: 1
+Start: 0
+AP: 2 "a" "b"
+acc-name: generalized-Buchi 2
+Acceptance: 2 Inf(0)&Inf(1)
+properties: trans-labels explicit-labels trans-acc complete
+properties: deterministic stutter-invariant
+--BODY--
+State: 0
+[!0&!1] 0
+[!0&1] 0 {1}
+[0&!1] 0 {0}
+[0&1] 0 {0 1}
 --END--
 EOF
 
@@ -96,6 +128,22 @@ State: 0
 [0] 1
 State: 1 {0}
 [0] 1
+--END--
+HOA: v1
+name: "sDGBA for G(Fa & Fb)"
+States: 1
+Start: 0
+AP: 2 "a" "b"
+acc-name: generalized-Buchi 2
+Acceptance: 2 Inf(0)&Inf(1)
+properties: trans-labels explicit-labels trans-acc complete
+properties: deterministic stutter-invariant
+--BODY--
+State: 0
+[!0&!1] 0
+[!0&1] 0 {1}
+[0&!1] 0 {0}
+[0&1] 0 {0 1}
 --END--
 EOF
 
