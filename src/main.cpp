@@ -59,7 +59,7 @@ Output options:
                 cut-edges by red
 
     --is-cd     do not run transformation, check whether input is
-                cut-deterministic. Outputs 1 if it is, 0 otherwise.
+                cut-deterministic. Outputs only the cut-deterministic inputs.
                 (Spot's autfilt offers --is-semideterministic check)
 
 Transformation type (T=transition-based, S=state-based):
@@ -355,62 +355,63 @@ int main(int argc, char* argv[])
 
             if (cd_check)
               {
-                std::cout << is_cut_deterministic(aut) << std::endl;
-                break;
+                if (!is_cut_deterministic(aut))
+                  continue;
               }
-
-            auto result = semi_determinize(aut, cut_det, jobs, &om);
-            if (result != parsed_aut->aut)
-              if (auto old_n = parsed_aut->aut->get_named_prop<std::string>
-                  ("automaton-name"))
-                {
-                  auto name =
-                    new std::string((cut_det ? "cDBA for " : "sDBA for ")
-                                    + *old_n);
-                  result->set_named_prop("automaton-name", name);
-                }
-
-            if (complement)
+            else
               {
-                spot::twa_graph_ptr comp = nullptr;
-                spot::postprocessor postprocessor;
-                // We don't deal with TBA: (1) complement_semidet() returns a
-                // TBA, and (2) in Spot 2.8 spot::postprocessor only knows
-                // about state-based BA and Transition-based GBA.  So TBA/TGBA
-                // are simply simplified as TGBA.
-                postprocessor.set_type(desired_output == BA
-                                       ? spot::postprocessor::BA
-                                       : spot::postprocessor::TGBA);
-                if (!om.get("postprocess-comp", 1))
-                  {
-                    // Disable simplifications except acceptance change.
-                    postprocessor.set_level(spot::postprocessor::Low);
-                    postprocessor.set_pref(spot::postprocessor::Any);
-                  }
+                aut = semi_determinize(aut, cut_det, jobs, &om);
+                if (aut != parsed_aut->aut)
+                  if (auto old_n = parsed_aut->aut->get_named_prop<std::string>
+                      ("automaton-name"))
+                    {
+                      auto name =
+                        new std::string((cut_det ? "cDBA for " : "sDBA for ")
+                                        + *old_n);
+                      aut->set_named_prop("automaton-name", name);
+                    }
 
-                if (complement == NCSBSpot || complement == NCSBBest)
+                if (complement)
                   {
-                    comp = spot::complement_semidet(result);
-                    comp = postprocessor.run(comp);
+                    spot::twa_graph_ptr comp = nullptr;
+                    spot::postprocessor postprocessor;
+                    // We don't deal with TBA: (1) complement_semidet() returns a
+                    // TBA, and (2) in Spot 2.8 spot::postprocessor only knows
+                    // about state-based BA and Transition-based GBA.  So TBA/TGBA
+                    // are simply simplified as TGBA.
+                    postprocessor.set_type(desired_output == BA
+                                           ? spot::postprocessor::BA
+                                           : spot::postprocessor::TGBA);
+                    if (!om.get("postprocess-comp", 1))
+                      {
+                        // Disable simplifications except acceptance change.
+                        postprocessor.set_level(spot::postprocessor::Low);
+                        postprocessor.set_pref(spot::postprocessor::Any);
+                      }
+
+                    if (complement == NCSBSpot || complement == NCSBBest)
+                      {
+                        comp = spot::complement_semidet(aut);
+                        comp = postprocessor.run(comp);
+                      }
+                    if (complement == NCSBPLDI || complement == NCSBBest)
+                      {
+                        spot::twa_graph_ptr comp2 =
+                          from_spot::complement_semidet(aut);
+                        comp2 = postprocessor.run(comp2);
+                        if (!comp || comp->num_states() > comp2->num_states())
+                          comp = comp2;
+                      }
+                    aut = comp;
                   }
-                if (complement == NCSBPLDI || complement == NCSBBest)
-                  {
-                    spot::twa_graph_ptr comp2 =
-                      from_spot::complement_semidet(result);
-                    comp2 = postprocessor.run(comp2);
-                    if (!comp || comp->num_states() > comp2->num_states())
-                      comp = comp2;
-                  }
-                result = comp;
               }
-
             const char* opts = nullptr;
             if (high)
               {
-                highlight_components(result);
+                highlight_components(aut);
                 opts = "1.1";
               }
-            spot::print_hoa(std::cout, result, opts) << '\n';
+            spot::print_hoa(std::cout, aut, opts) << '\n';
           }
       }
 
