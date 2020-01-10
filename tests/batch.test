@@ -1,0 +1,11 @@
+#!/bin/sh
+
+set -e
+
+test 100 = `ltl2tgba -F ${abs_top_srcdir-.}/formulae/random_sd.ltl |
+  seminator | autfilt --is-semi-deterministic --count`
+
+ltl2tgba -F ${abs_top_srcdir-.}/formulae/random_nd.ltl > batch.hoa
+test 100 = `seminator batch.hoa | autfilt --is-semi-deterministic --count`
+
+rm -f batch.hoa
