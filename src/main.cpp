@@ -175,8 +175,10 @@ int main(int argc, char* argv[])
         else if (arg == "--is-cd")
           cd_check = true;
         // Cut edges
-        else if (arg == "--cut-on-SCC-entry")
+        else if (arg == "--cut-on-SCC-entry") {
           om.set("cut-on-SCC-entry", true);
+          om.set("cut-always", false);
+        }
         else if (arg == "--cut-always")
           om.set("cut-always", true);
         else if (arg == "--cut-highest-mark")
