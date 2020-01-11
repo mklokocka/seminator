@@ -46,7 +46,7 @@ The code was almost completely rewritten.
 * building process now relies on autotools (`./configure; make`)
 
 ### Removed
-* `--cy` option (use `--via-tba -s0` instead)
+* `--cy` option (use `--via-tba --pure -scc-aware=0` instead)
 * files from the experimental evaluation of version 1.2
 
 ### Fixed
