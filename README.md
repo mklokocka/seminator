@@ -11,7 +11,7 @@ You may use `./configure --prefix=PREFIXDIR && make && sudo make install` to ins
 ## Basic usage
 The following command translates a possibly nondeterministic transition-based generalized Büchi automaton (TGBA) placed in file `aut.hoa` into a semi-detetrministic Büchi automaton (SDBA) and prints the result int the [HOA format](https://adl.github.io/hoaf/) to the standard output.
 ```
-./seminator -f aut.hoa
+./seminator aut.hoa
 ```
 
 For more information run:
@@ -20,26 +20,15 @@ For more information run:
 ```
 
 ## Experimental evaluation
-Seminator was presented in the paper _František Blahoudek, Alexandre Duret-Lutz, Mikuláš Klokočka, Mojmir Kretinsky and Jan Strejcek. **Seminator: A Tool for Semi-Determinization of Omega-Automata.** In Proceedings of [LPAR-21](http://easychair.org/smart-program/LPAR-21/LPAR-index.html), 2017._
 
-Jupyter notebook [Experimental evaluation](Experimental_evaluation.ipynb)
-will guide you through the steps we used to generete the evaluation presented there.
-It compares Seminator to `ltl2ldba` and `nba2ldba` from the
-[Owl library](https://www7.in.tum.de/~sickert/projects/owl/).
+Version 1.1 of Seminator was presented in the paper _František Blahoudek, Alexandre Duret-Lutz, Mikuláš Klokočka, Mojmir Kretinsky and Jan Strejcek. **Seminator: A Tool for Semi-Determinization of Omega-Automata.** In Proceedings of [LPAR-21](http://easychair.org/smart-program/LPAR-21/LPAR-index.html), 2017.  Version 1.2 add some minor optimizations, and an updated experimental evaluation.  If you want to see those results, check out the source for [version 1.2](https://github.com/adl/seminator/tree/v1.2.0).
 
-However, both Owl and Seminator evolved since the paper was published
-so new in this version of scripts you will find comparison with the
-current version of Seminator and a recent version of Owl.
-
-If the preview of the notebooks on gitHub does not work, use
-[Jupyter nbviewer](https://nbviewer.jupyter.org/github/mklokocka/seminator/blob/master/Experimental_evaluation.ipynb) instead
+Experimental evaluation for version 2.0 is kept separate from this repository, and can be found at *FIXME*.
 
 ### Requirements
 
-If you would like to run the notebook by yourself, you need to have the
-folowing tools installed in `PATH` on your system.
+If you would like to run the notebooks or the test-suite, you need to
+have the folowing tools installed in `PATH` on your system.
 
 * [SPOT](https://spot.lrde.epita.fr/) v. 2.8.3+ with Python bindings
-* [Pandas](http://pandas.pydata.org/) Python library v. 0.21.0+
 * [Jupyter](http://jupyter.org/) notebook v 5.0+
-* [R](https://www.r-project.org/) with libraries `ggplot2` and `colorspace`

@@ -26,7 +26,7 @@
 #include <spot/twaalgos/complement.hh>
 
 void print_usage(std::ostream& os) {
-  os << "Usage: seminator [OPTION...] [FILENAME]\n";
+  os << "Usage: seminator [OPTION...] [FILENAME...]\n";
 }
 
 void print_help() {
@@ -59,7 +59,7 @@ Output options:
                 cut-edges by red
 
     --is-cd     do not run transformation, check whether input is
-                cut-deterministic. Outputs 1 if it is, 0 otherwise.
+                cut-deterministic. Outputs only the cut-deterministic inputs.
                 (Spot's autfilt offers --is-semideterministic check)
 
 Transformation type (T=transition-based, S=state-based):
@@ -135,7 +135,7 @@ int main(int argc, char* argv[])
     // as they need to be included in other files.
     bool cd_check = false;
     bool high = false;
-    std::string path_to_file;
+    std::vector<std::string> path_to_files;
 
     spot::option_map om;
     bool cut_det = false;
@@ -257,7 +257,7 @@ int main(int argc, char* argv[])
               }
             else
               {
-                path_to_file = argv[i+1];
+                path_to_files.emplace_back(argv[i+1]);
                 i++;
               }
           }
@@ -293,21 +293,26 @@ int main(int argc, char* argv[])
             std::cerr << "seminator: Unsupported option " << arg << '\n';
             return 2;
           }
-        else if (path_to_file.empty())
-          path_to_file = argv[i];
         else
           {
-            std::cerr << "seminator: Multiple inputs specified.\n";
-            return 2;
+            path_to_files.emplace_back(argv[i]);
           }
       }
 
-    if (path_to_file.empty() && isatty(STDIN_FILENO))
+    if (path_to_files.empty())
     {
-      std::cerr << "seminator: No automaton to process? "
-        "Run 'seminator --help' for more help.\n";
-      print_usage(std::cerr);
-      return 1;
+      if (isatty(STDIN_FILENO))
+        {
+          std::cerr << "seminator: No automaton to process? "
+            "Run 'seminator --help' for more help.\n";
+          print_usage(std::cerr);
+          return 1;
+        }
+      else
+        {
+          // Process stdin by default.
+          path_to_files.emplace_back("-");
+        }
     }
 
     if (high && complement)
@@ -320,84 +325,98 @@ int main(int argc, char* argv[])
     if (jobs == 0)
       jobs = AllJobs;
 
-    auto dict = spot::make_bdd_dict();
-
-    spot::parsed_aut_ptr parsed_aut;
-
-    if (path_to_file.empty())
-        path_to_file = "-";
-    parsed_aut = parse_aut(path_to_file, dict);
-
-    if (parsed_aut->format_errors(std::cerr))
-      return 1;
-
-    spot::twa_graph_ptr aut = parsed_aut->aut;
-
-    // Check if input is TGBA
-    if (!aut->acc().is_generalized_buchi())
-    {
-      std::cerr << "seminator: The tool requires a TGBA on input.\n";
-      return 1;
-    }
-
-    if (cd_check)
-    {
-      std::cout << is_cut_deterministic(aut) << std::endl;
-      check_cout();
-      return 0;
-    }
-
     om.set("output", complement ? TBA : desired_output);
 
-    auto result = semi_determinize(aut, cut_det, jobs, &om);
-    if (result != parsed_aut->aut)
-      if (auto old_n =
-          parsed_aut->aut->get_named_prop<std::string>("automaton-name"))
-        {
-          auto name = new std::string((cut_det ? "cDBA for " : "sDBA for ")
-                                      + *old_n);
-          result->set_named_prop("automaton-name", name);
-        }
+    auto dict = spot::make_bdd_dict();
 
-    if (complement)
+    for (std::string& path_to_file: path_to_files)
       {
-        spot::twa_graph_ptr comp = nullptr;
-        spot::postprocessor postprocessor;
-        // We don't deal with TBA: (1) complement_semidet() returns a
-        // TBA, and (2) in Spot 2.8 spot::postprocessor only knows
-        // about state-based BA and Transition-based GBA.  So TBA/TGBA
-        // are simply simplified as TGBA.
-        postprocessor.set_type(desired_output == BA
-                               ? spot::postprocessor::BA
-                               : spot::postprocessor::TGBA);
-        if (!om.get("postprocess-comp", 1))
-          {
-            // Disable simplifications except acceptance change.
-            postprocessor.set_level(spot::postprocessor::Low);
-            postprocessor.set_pref(spot::postprocessor::Any);
-          }
+        spot::automaton_stream_parser parser(path_to_file);
 
-        if (complement == NCSBSpot || complement == NCSBBest)
+        for (;;)
           {
-            comp = spot::complement_semidet(result);
-            comp = postprocessor.run(comp);
+            spot::parsed_aut_ptr parsed_aut = parser.parse(dict);
+
+            if (parsed_aut->format_errors(std::cerr))
+              return 1;
+
+            spot::twa_graph_ptr aut = parsed_aut->aut;
+
+            if (!aut)
+              break;
+
+            // Check if input is TGBA
+            if (!aut->acc().is_generalized_buchi())
+              {
+                if (parsed_aut->filename != "-")
+                  std::cerr << parsed_aut->filename << ':';
+                std::cerr << parsed_aut->loc
+                          << ": seminator requires a TGBA on input.\n";
+                return 1;
+              }
+
+            if (cd_check)
+              {
+                if (!is_cut_deterministic(aut))
+                  continue;
+              }
+            else
+              {
+                aut = semi_determinize(aut, cut_det, jobs, &om);
+                if (auto old_n = parsed_aut->aut->get_named_prop<std::string>
+                    ("automaton-name"))
+                  {
+                    auto name =
+                      new std::string(((aut->num_sets() == 1)
+                                       ? "sDBA for " : "sDGBA for ") + *old_n);
+                    if (cut_det)
+                      (*name)[0] = 'c';
+                    aut->set_named_prop("automaton-name", name);
+                  }
+
+                if (complement)
+                  {
+                    spot::twa_graph_ptr comp = nullptr;
+                    spot::postprocessor postprocessor;
+                    // We don't deal with TBA: (1) complement_semidet() returns a
+                    // TBA, and (2) in Spot 2.8 spot::postprocessor only knows
+                    // about state-based BA and Transition-based GBA.  So TBA/TGBA
+                    // are simply simplified as TGBA.
+                    postprocessor.set_type(desired_output == BA
+                                           ? spot::postprocessor::BA
+                                           : spot::postprocessor::TGBA);
+                    if (!om.get("postprocess-comp", 1))
+                      {
+                        // Disable simplifications except acceptance change.
+                        postprocessor.set_level(spot::postprocessor::Low);
+                        postprocessor.set_pref(spot::postprocessor::Any);
+                      }
+
+                    if (complement == NCSBSpot || complement == NCSBBest)
+                      {
+                        comp = spot::complement_semidet(aut);
+                        comp = postprocessor.run(comp);
+                      }
+                    if (complement == NCSBPLDI || complement == NCSBBest)
+                      {
+                        spot::twa_graph_ptr comp2 =
+                          from_spot::complement_semidet(aut);
+                        comp2 = postprocessor.run(comp2);
+                        if (!comp || comp->num_states() > comp2->num_states())
+                          comp = comp2;
+                      }
+                    aut = comp;
+                  }
+              }
+            const char* opts = nullptr;
+            if (high)
+              {
+                highlight_components(aut);
+                opts = "1.1";
+              }
+            spot::print_hoa(std::cout, aut, opts) << '\n';
           }
-        if (complement == NCSBPLDI || complement == NCSBBest)
-          {
-            spot::twa_graph_ptr comp2 = from_spot::complement_semidet(result);
-            comp2 = postprocessor.run(comp2);
-            if (!comp || comp->num_states() > comp2->num_states())
-              comp = comp2;
-          }
-        result = comp;
       }
-
-    if (high)
-    {
-      highlight_components(result);
-      spot::print_hoa(std::cout, result, "1.1") << '\n';
-    } else
-      spot::print_hoa(std::cout, result) << '\n';
 
     check_cout();
     return 0;

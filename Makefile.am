@@ -59,6 +59,7 @@ PY_LOG_COMPILER = tests/pyrun
 IPYNB_LOG_COMPILER = tests/pyrun
 
 shell_TESTS =					\
+  tests/batch.test				\
   tests/bscc-avoid.test				\
   tests/cut-on-scc-entry.test			\
   tests/complement.test				\
