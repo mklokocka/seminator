@@ -1,0 +1,152 @@
+#!/bin/sh
+
+set -e
+
+test 100 = `ltl2tgba -F ${abs_top_srcdir-.}/formulae/random_sd.ltl |
+  seminator | autfilt --is-semi-deterministic --count`
+
+ltl2tgba -F ${abs_top_srcdir-.}/formulae/random_nd.ltl > batch.hoa
+test 100 = `seminator batch.hoa | autfilt --is-semi-deterministic --count`
+
+cat >batch.hoa <<EOF
+HOA: v1
+name: "G(a | F(b & XFc))"
+States: 4
+Start: 0
+AP: 3 "a" "b" "c"
+acc-name: generalized-Buchi 2
+Acceptance: 2 Inf(0)&Inf(1)
+properties: trans-labels explicit-labels trans-acc complete
+--BODY--
+State: 0
+[0] 0 {0 1}
+[!0&1] 1 {0 1}
+[!0] 2 {1}
+State: 1
+[0&2] 0 {0 1}
+[!0&1&2] 1 {0 1}
+[0&!2 | 1&!2] 1 {0}
+[!0&2] 2 {1}
+[!0&!1&!2] 3
+State: 2
+[1] 1 {0 1}
+[t] 2 {1}
+State: 3
+[1&!2] 1 {0}
+[1&2] 1 {0 1}
+[2] 2 {1}
+[!1&!2] 3
+--END--
+HOA: v1
+name: "FGa"
+States: 2
+Start: 0
+AP: 1 "a"
+acc-name: Buchi
+Acceptance: 1 Inf(0)
+properties: trans-labels explicit-labels state-acc stutter-invariant
+properties: very-weak
+--BODY--
+State: 0
+[t] 0
+[0] 1
+State: 1 {0}
+[0] 1
+--END--
+HOA: v1
+name: "G(Fa & Fb)"
+States: 1
+Start: 0
+AP: 2 "a" "b"
+acc-name: generalized-Buchi 2
+Acceptance: 2 Inf(0)&Inf(1)
+properties: trans-labels explicit-labels trans-acc complete
+properties: deterministic stutter-invariant
+--BODY--
+State: 0
+[!0&!1] 0
+[!0&1] 0 {1}
+[0&!1] 0 {0}
+[0&1] 0 {0 1}
+--END--
+EOF
+
+seminator --is-cd batch.hoa > batch.out
+
+cat >batch.exp <<EOF
+HOA: v1
+name: "FGa"
+States: 2
+Start: 0
+AP: 1 "a"
+acc-name: Buchi
+Acceptance: 1 Inf(0)
+properties: trans-labels explicit-labels state-acc semi-deterministic
+properties: stutter-invariant very-weak
+--BODY--
+State: 0
+[t] 0
+[0] 1
+State: 1 {0}
+[0] 1
+--END--
+HOA: v1
+name: "G(Fa & Fb)"
+States: 1
+Start: 0
+AP: 2 "a" "b"
+acc-name: generalized-Buchi 2
+Acceptance: 2 Inf(0)&Inf(1)
+properties: trans-labels explicit-labels trans-acc complete
+properties: deterministic stutter-invariant
+--BODY--
+State: 0
+[!0&!1] 0
+[!0&1] 0 {1}
+[0&!1] 0 {0}
+[0&1] 0 {0 1}
+--END--
+EOF
+
+diff batch.out batch.exp
+
+seminator batch.hoa | seminator --is-cd > batch.out
+
+cat >batch.exp <<EOF
+HOA: v1
+name: "sDBA for FGa"
+States: 2
+Start: 0
+AP: 1 "a"
+acc-name: Buchi
+Acceptance: 1 Inf(0)
+properties: trans-labels explicit-labels state-acc semi-deterministic
+properties: stutter-invariant very-weak
+--BODY--
+State: 0
+[t] 0
+[0] 1
+State: 1 {0}
+[0] 1
+--END--
+HOA: v1
+name: "sDGBA for G(Fa & Fb)"
+States: 1
+Start: 0
+AP: 2 "a" "b"
+acc-name: generalized-Buchi 2
+Acceptance: 2 Inf(0)&Inf(1)
+properties: trans-labels explicit-labels trans-acc complete
+properties: deterministic stutter-invariant
+--BODY--
+State: 0
+[!0&!1] 0
+[!0&1] 0 {1}
+[0&!1] 0 {0}
+[0&1] 0 {0 1}
+--END--
+EOF
+
+diff batch.out batch.exp
+
+rm -f batch.hoa batch.out batch.exp

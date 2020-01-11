@@ -1,4 +1,4 @@
-// Copyright (C) 2017, 2019, Fakulta Informatiky Masarykovy univerzity
+// Copyright (C) 2017, 2019, 2020, Fakulta Informatiky Masarykovy univerzity
 //
 // This file is a part of Seminator, a tool for semi-determinization of omega automata.
 //
@@ -130,6 +130,11 @@ bool is_cut_deterministic(const_aut_ptr aut, std::set<unsigned>* non_det_states)
                 for (unsigned state: si.states_of(scc))
                     non_det_states->insert(state);
 
+    if (cut_det)
+      // Spot has no property for cut-deterministic, but at least
+      // any cut-deterministic automaton is semi-deterministic.
+      std::const_pointer_cast<spot::twa_graph>(aut)
+        ->prop_semi_deterministic(true);
     return cut_det;
 }
 
