@@ -27,6 +27,19 @@ if USE_PYTHON
 sempyexecdir = $(pyexecdir)/spot-extra
 sempyexec_PYTHON = python/spot-extra/seminator.py
 sempyexec_LTLIBRARIES = python/spot-extra/_seminator.la
+
+# Debian has an inconsistency where it requires packages to be
+# installed in .../dist-packages, but its sysconfig return
+# sys-packages.  See
+# https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=911038.  To work
+# around this, we link dist-packages/spot-extra/ to
+# site-package/spot-extra/ when installing in the latter and the
+# former exists.
+pyexecdir2 = $(pyexecdir:site-packages=dist-packages)
+install-exec-local:
+	-case "$(pyexecdir)" in *site-packages)						\
+           test -d "$(pyexecdir2)" && ln -s $(sempyexecdir) $(pyexecdir2)/spot-extra;;	\
+        esac
 endif
 
 MAINTAINERCLEANFILES = python/spot/seminator.cxx
