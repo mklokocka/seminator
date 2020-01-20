@@ -88,6 +88,7 @@ endif
 
 EXTRA_DIST =					\
   README.md					\
+  workflow.svg					\
   ChangeLog.md					\
   formulae/random_sd.ltl			\
   formulae/random_nd.ltl			\

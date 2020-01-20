@@ -19,6 +19,9 @@ For more information run:
 ./seminator --help
 ```
 
+The following picture gives a summary of the different options and how they affect the tool.
+![workflow](workflow.svg)
+
 ## Python bindings
 
 For example of using the Python bindings, see the notebooks in the `notebooks/` directory.  [![nbviewer](https://raw.githubusercontent.com/jupyter/design/master/logos/Badges/nbviewer_badge.svg?sanitize=true)](https://nbviewer.jupyter.org/github/mklokocka/seminator/tree/next/notebooks/)
