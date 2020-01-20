@@ -8,6 +8,8 @@ After Spot is installed you can run `./configure && make` to compile Seminator.
 
 You may use `./configure --prefix=PREFIXDIR && make && sudo make install` to install Seminator in the same place as Spot.  If you need to install Seminator in a different location, use `./configure --prefix=OTHERDIR --with-spot=PREFIXDIR`, replacing `PREFIXDIR` by the directory that was passed to Spot's `--prefix` configuration option.
 
+On Linux, if you installed Seminator with `--prefix=/usr/local` (the default) or `--prefix=/usr`, make sure you run `sudo ldconfig` after `sudo make install` so that the shared library can be found.  If you installed Seminator in another directory, you probably need to set the `LD_LIBRARY_PATH` environment variable to the directory where the shared library was installed.
+
 ## Basic usage
 The following command translates a possibly nondeterministic transition-based generalized Büchi automaton (TGBA) placed in file `aut.hoa` into a semi-detetrministic Büchi automaton (SDBA) and prints the result int the [HOA format](https://adl.github.io/hoaf/) to the standard output.
 ```
