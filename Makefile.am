@@ -75,10 +75,11 @@ python_TESTS =					\
   tests/bindings.py
 
 ipynb_TESTS =					\
-  options_notebooks/Cut-edges.ipynb		\
-  options_notebooks/LevelSkipping.ipynb		\
-  options_notebooks/bSCC.ipynb			\
-  options_notebooks/Complement.ipynb
+  notebooks/bSCC.ipynb				\
+  notebooks/Complement.ipynb			\
+  notebooks/Cut-edges.ipynb			\
+  notebooks/Example.ipynb			\
+  notebooks/LevelSkipping.ipynb
 
 TESTS = $(shell_TESTS)
 if USE_PYTHON
@@ -87,6 +88,7 @@ endif
 
 EXTRA_DIST =					\
   README.md					\
+  workflow.svg					\
   ChangeLog.md					\
   formulae/random_sd.ltl			\
   formulae/random_nd.ltl			\

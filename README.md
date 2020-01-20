@@ -19,6 +19,15 @@ For more information run:
 ./seminator --help
 ```
 
+The following picture gives a summary of the different options and how they affect the tool.
+![workflow](workflow.svg)
+
+## Python bindings
+
+For example of using the Python bindings, see the notebooks in the `notebooks/` directory.  [![nbviewer](https://raw.githubusercontent.com/jupyter/design/master/logos/Badges/nbviewer_badge.svg?sanitize=true)](https://nbviewer.jupyter.org/github/mklokocka/seminator/tree/next/notebooks/)
+
+Unless you have run `make install` to install the `seminator` binary and all the Python bindings, is using the bindings require a bit of setup to make sure that Python finds the correct files.  The easiest way to use the non-installed bindings is use the `tests/pyrun` script: use `tests/pyrun python3` or `tests/pyrun jupyter notebook` for interactive uses, or `tests/pyrun mycript.py` for an actual script.
+
 ## Experimental evaluation
 
 Version 1.1 of Seminator was presented in the paper _František Blahoudek, Alexandre Duret-Lutz, Mikuláš Klokočka, Mojmir Kretinsky and Jan Strejcek. **Seminator: A Tool for Semi-Determinization of Omega-Automata.** In Proceedings of [LPAR-21](http://easychair.org/smart-program/LPAR-21/LPAR-index.html), 2017.  Version 1.2 add some minor optimizations, and an updated experimental evaluation.  If you want to see those results, check out the source for [version 1.2](https://github.com/adl/seminator/tree/v1.2.0).
