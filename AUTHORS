@@ -1,0 +1,10 @@
+- Mikulas Klokocka
+  Implemented the original versions of Seminator (1.0 and 1.1).
+
+- František Blahoudek
+  Added SCC-aware optimizations and an experimental evaluation
+  included in version 1.2.  Rewrote most of the core algorithms,
+  including many new optimizations for version 2.0.
+
+- Alexandre Duret-Lutz
+  Python bindings, cleanups, and packaging for version 2.0..

@@ -1,4 +1,4 @@
-// Copyright (C) 2017, 2019, Fakulta Informatiky Masarykovy univerzity
+// Copyright (c) 2017-2020  The Seminator Authors
 //
 // This file is a part of Seminator, a tool for semi-determinization
 // of omega automata.

@@ -1,6 +1,6 @@
-// Copyright (C) 2017, 2019, UT at Austin
-//
-// This file is a part of Seminator, a tool for semi-determinization of omega automata.
+// Copyright (C) 2017-2019 Laboratoire de Recherche et Développement
+// de l'Epita.
+// Copyright (C) 2020  The Seminator Authors
 //
 // Seminator is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -24,6 +24,9 @@
 
 #include <types.hpp>
 
+// This contains a modified version of Spot 2.8's complement_semidet()
+// function (spot/twaalgos/complement.cc).  It will likely be
+// contributed back to Spot in the future.
 namespace from_spot
 {
     namespace
