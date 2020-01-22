@@ -1,6 +1,5 @@
 // -*- coding: utf-8 -*-
-// Copyright (C) 2019, 2020 Laboratoire de Recherche et Développement
-// de l'Epita (LRDE).
+// Copyright (C) 2019, 2020  The Seminator Authors
 //
 // This file is part of Seminator.
 //

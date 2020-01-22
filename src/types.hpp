@@ -1,6 +1,7 @@
-// Copyright (C) 2017, 2019, Fakulta Informatiky Masarykovy univerzity
+// Copyright (c) 2017-2020  The Seminator Authors
 //
-// This file is a part of Seminator, a tool for semi-determinization of omega automata.
+// This file is a part of Seminator, a tool for semi-determinization
+// of omega automata.
 //
 // Seminator is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
