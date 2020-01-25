@@ -24,6 +24,7 @@
 #include <spot/twaalgos/hoa.hh>
 #include <spot/twaalgos/sccfilter.hh>
 #include <spot/twaalgos/complement.hh>
+#include <spot/misc/version.hh>
 
 void print_usage(std::ostream& os) {
   os << "Usage: seminator [OPTION...] [FILENAME...]\n";
@@ -269,14 +270,14 @@ int main(int argc, char* argv[])
           }
         else if (arg == "--version")
           {
-            std::cout <<
-              ("Seminator (" PACKAGE_VERSION
-               ") compiled with Spot " SPOT_PACKAGE_VERSION "\n"
-               "License GPLv3+: GNU GPL version 3 or later"
-               " <http://gnu.org/licenses/gpl.html>.\n"
-               "This is free software: you are free to change "
-               "and redistribute it.\n"
-               "There is NO WARRANTY, to the extent permitted by law.\n")
+            std::cout << "Seminator " PACKAGE_VERSION
+              " (using Spot " << spot::version() << ")\n\n"
+              "Copyright (C) 2020  The Seminator Authors.\n"
+              "License GPLv3+: GNU GPL version 3 or later"
+              " <http://gnu.org/licenses/gpl.html>.\n"
+              "This is free software: you are free to change "
+              "and redistribute it.\n"
+              "There is NO WARRANTY, to the extent permitted by law.\n"
                       << std::flush;
             return 0;
           }
