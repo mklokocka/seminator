@@ -56,7 +56,7 @@ and in this case you do not need python3-devel installed.])])
 ])
 
 AC_PREREQ([2.63])
-AC_INIT([seminator], [1.99])
+AC_INIT([seminator], [2.0])
 AC_CONFIG_AUX_DIR([tools])
 AM_INIT_AUTOMAKE([1.11 gnu tar-ustar color-tests parallel-tests
                   subdir-objects foreign])

@@ -1,4 +1,4 @@
-## [Unpublished]
+## [2.0] - 2020-01-25
 The code was almost completely rewritten.
 
 ### Added
@@ -80,6 +80,7 @@ The code was almost completely rewritten.
 ### Added
 * Seminator translates input transition-based generalized Büchi automaton into a semi-deterministic or cut-deterministic Büchi automaton.
 
-[Unpublished]: https://github.com/mklokocka/seminator/compare/v1.2.0...HEAD
+[Unpublished]: https://github.com/mklokocka/seminator/compare/v2.0...HEAD
+[2.0]: https://github.com/mklokocka/seminator/compare/v1.2.0...v2.0
 [1.2.0]: https://github.com/mklokocka/seminator/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/mklokocka/seminator/compare/v1.0.0...v1.1.0
