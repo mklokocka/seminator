@@ -20,6 +20,7 @@
 #include <unistd.h>
 #include "seminator.hpp"
 #include "cutdet.hpp"
+#include "slim.hpp"
 #include <spot/parseaut/public.hh>
 #include <spot/twaalgos/hoa.hh>
 #include <spot/twaalgos/sccfilter.hh>
@@ -245,6 +246,8 @@ int main(int argc, char* argv[])
           desired_output = TBA;
         else if (arg == "--tgba")
           desired_output = TGBA;
+        else if (arg == "--slim")
+          desired_output = SLIM;
 
         else if (arg == "--highlight")
           high = true;
@@ -363,7 +366,14 @@ int main(int argc, char* argv[])
               }
             else
               {
-                aut = semi_determinize(aut, cut_det, jobs, &om);
+                if (desired_output!=SLIM) {
+                  aut = semi_determinize(aut, cut_det, jobs, &om);
+                }
+                else
+                {
+                  slim slimak(aut, &om);
+                  break;
+                }
                 if (auto old_n = parsed_aut->aut->get_named_prop<std::string>
                     ("automaton-name"))
                   {
