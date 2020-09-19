@@ -43,7 +43,7 @@ class slim : bp_twa{
       for (state_t sorc = src; sorc < res_->num_states(); ++sorc) {
         auto bops = num2bp_.at(sorc);
         auto intersection = get_and_check_scc(std::get<Bp::P>(bops));
-        compute_successors(bps, sorc, &intersection);
+        compute_successors(bops, sorc, &intersection);
       }
 //      res_->merge_edges();
 //      compute_successors(ps, src, &intersection);
