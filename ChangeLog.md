@@ -1,3 +1,9 @@
+## dev
+
+### Changed
+
+* Seminator now requires a C++17 compiler.
+
 ## [2.0] - 2020-01-25
 The code was almost completely rewritten.
 

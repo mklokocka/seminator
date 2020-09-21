@@ -69,8 +69,8 @@ AC_PROG_CXX
 AM_SILENT_RULES([no])
 AC_LANG(C++)
 
-# Turn on C++14 support
-m4_define([_AX_CXX_COMPILE_STDCXX_14_testbody],
+# Turn on C++17 support
+m4_define([_AX_CXX_COMPILE_STDCXX_17_testbody],
 [AC_LANG_SOURCE([#include <memory>
 #include <string>
 #include <chrono>  // used to fail in C++11 with some installation of clang
@@ -94,16 +94,31 @@ m4_define([_AX_CXX_COMPILE_STDCXX_14_testbody],
     check_type&& cr = static_cast<check_type&&>(c);
 
     auto d = a;
+
+    int aa[[2]] = {1,2};
+    auto [[x,y]] = aa;
 ])])
 
-for f in -std=c++14 '-std=c++14 -stdlib=libc++'
-do
-  AX_CHECK_COMPILE_FLAG([$f], [CXXFLAGS="$CXXFLAGS $f" stdpass=true], [], [],
-                        [_AX_CXX_COMPILE_STDCXX_14_testbody])
-  ${stdpass-false} && break
-done
-if ! "${stdpass-false}"; then
-  AC_ERROR([unable to turn on C++14 mode with this compiler])
+if test x"${enable_20}" = xyes; then
+  for f in -std=c++20 '-std=c++20 -stdlib=libc++' -std=c++2a
+  do
+    AX_CHECK_COMPILE_FLAG([$f], [CXXFLAGS="$CXXFLAGS $f" stdpass=true], [], [],
+                          [_AX_CXX_COMPILE_STDCXX_17_testbody])
+    ${stdpass-false} && break
+  done
+  if ! "${stdpass-false}"; then
+    AC_ERROR([unable to turn on C++20 mode with this compiler])
+  fi
+else
+  for f in -std=c++17 '-std=c++17 -stdlib=libc++' -std=c++1z
+  do
+    AX_CHECK_COMPILE_FLAG([$f], [CXXFLAGS="$CXXFLAGS $f" stdpass=true], [], [],
+                          [_AX_CXX_COMPILE_STDCXX_17_testbody])
+    ${stdpass-false} && break
+  done
+  if ! "${stdpass-false}"; then
+    AC_ERROR([unable to turn on C++17 mode with this compiler])
+  fi
 fi
 
 AC_ARG_WITH([spot],
