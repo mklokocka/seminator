@@ -274,7 +274,7 @@ bp_twa::compute_successors<breakpoint_state>(breakpoint_state bps, state_t src,
     auto acc = spot::acc_cond::mark_t();
 
     breakpoint_state navic;
-    if (slim_) {
+    if (slim_ && p2!=q2) {
       if (q2 != empty_set) {
         std::get<Bp::LEVEL>(navic) = k;
         std::get<Bp::P>(navic) = q2;
