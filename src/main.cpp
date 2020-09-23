@@ -246,13 +246,18 @@ int main(int argc, char* argv[])
           desired_output = TBA;
         else if (arg == "--tgba")
           desired_output = TGBA;
+
         else if (arg == "--slim") {
           om.set("slim", true);
           om.set("scc-aware", false);
         }
+        else if (arg == "--weak") {
+          om.set("weak", true);
+        }
         else if (arg == "--bp") {
           om.set("bp", true);
         }
+
         else if (arg == "--highlight")
           high = true;
 

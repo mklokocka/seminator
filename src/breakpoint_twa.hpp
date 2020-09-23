@@ -30,7 +30,7 @@ std::string bp_name(breakpoint_state);
 
 class bp_twa {
   public:
-    bp_twa(const_aut_ptr src_aut, bool cut_det, const_om_ptr om, bool determinize=true)
+    bp_twa(const_aut_ptr src_aut, bool cut_det, const_om_ptr om)
       : cut_det_(cut_det),
         src_(src_aut),
         src_si_(spot::scc_info(src_aut)),
@@ -46,6 +46,8 @@ class bp_twa {
         cut_always_ = om->get("cut-always",1);
         cut_on_SCC_entry_ = om->get("cut-on-SCC-entry",0);
         slim_ = om->get("slim",0);
+        bp_ = om->get("bp",0);
+        weak_ = om->get("weak", 0);
         bscc_avoid_ = (om->get("bscc-avoid", 1) || reuse_SCC_) ?
           std::make_unique<bscc_avoid>(src_si_) : nullptr;
       }
@@ -61,7 +63,7 @@ class bp_twa {
         res_->set_acceptance(src_->get_acceptance());
       } else
         res_->set_buchi();
-      if (!determinize)
+      if (bp_ || slim_) // different construction algorithm will be used
         return;
       create_first_component();
 
@@ -239,6 +241,8 @@ private:
     const_aut_ptr src_;
 public:
     bool slim_;
+    bool bp_;
+    bool weak_;
     aut_ptr res_;
 private:
 
