@@ -45,6 +45,7 @@ class bp_twa {
         reuse_SCC_ = om->get("reuse-deterministic",1);
         cut_always_ = om->get("cut-always",1);
         cut_on_SCC_entry_ = om->get("cut-on-SCC-entry",0);
+        slim_ = om->get("slim",0);
         bscc_avoid_ = (om->get("bscc-avoid", 1) || reuse_SCC_) ?
           std::make_unique<bscc_avoid>(src_si_) : nullptr;
       }
@@ -237,6 +238,7 @@ private:
     // input and result automata
     const_aut_ptr src_;
 public:
+    bool slim_;
     aut_ptr res_;
 private:
 

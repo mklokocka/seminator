@@ -246,9 +246,13 @@ int main(int argc, char* argv[])
           desired_output = TBA;
         else if (arg == "--tgba")
           desired_output = TGBA;
-        else if (arg == "--slim")
-          desired_output = SLIM;
-
+        else if (arg == "--slim") {
+          om.set("slim", true);
+          om.set("scc-aware", false);
+        }
+        else if (arg == "--bp") {
+          om.set("bp", true);
+        }
         else if (arg == "--highlight")
           high = true;
 
@@ -359,6 +363,10 @@ int main(int argc, char* argv[])
                 return 1;
               }
 
+            if (om.get("slim", 0) || om.get("bp", 0)){
+              slim slimak(aut, &om);
+              continue;
+            }
             if (cd_check)
               {
                 if (!is_cut_deterministic(aut))
@@ -366,14 +374,8 @@ int main(int argc, char* argv[])
               }
             else
               {
-                if (desired_output!=SLIM) {
-                  aut = semi_determinize(aut, cut_det, jobs, &om);
-                }
-                else
-                {
-                  slim slimak(aut, &om);
-                  break;
-                }
+                aut = semi_determinize(aut, cut_det, jobs, &om);
+
                 if (auto old_n = parsed_aut->aut->get_named_prop<std::string>
                     ("automaton-name"))
                   {

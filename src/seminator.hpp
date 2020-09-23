@@ -27,7 +27,7 @@ enum jobs_type_values { ViaTGBA = 1,
                         AllJobs = ViaTGBA | ViaTBA | ViaSBA};
 typedef int jobs_type;
 
-enum output_type : int {TGBA = 0, TBA = 1, BA = 2, SLIM = 3};
+enum output_type : int {TGBA = 0, TBA = 1, BA = 2};
 
 /**
 * Transform the automaton aut into a semi-deterministic equivalent automaton.
