@@ -29,6 +29,7 @@ src_libseminator_la_SOURCES =			\
   src/bscc.cpp					\
   src/bscc.hpp					\
   src/complement.cpp            \
+  src/complement_sd_sd.cpp      \
   src/cutdet.cpp				\
   src/cutdet.hpp				\
   src/powerset.cpp				\

@@ -53,6 +53,17 @@ namespace from_spot {
   complement_semidet(const spot::const_twa_graph_ptr &aut, bool show_names = false);
 }
 
+namespace pncsb_compl{
+  /// \brief Complement a semideterministic TωA
+  ///
+  /// The automaton \a aut should be semideterministic.
+  ///
+  /// Uses algorithm inspired by complementation of
+  /// finitely ambiguous TBA and NCSB complementation.
+  spot::twa_graph_ptr
+  complement_semidet_pncsb(const spot::const_twa_graph_ptr &aut, bool show_names = false);
+}
+
 typedef std::set<unsigned> state_set;
 
 /**

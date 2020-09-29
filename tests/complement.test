@@ -6,4 +6,5 @@ exec ltlcross                                                           \
   --stop-on-error                                                       \
   --reference 'ltl2tgba --negate'                                       \
   'ltl2tgba %f | seminator --complement=pldi --postprocess-comp=0 >%O'  \
-  'ltl2tgba %f | seminator --complement=spot --postprocess-comp=0 >%O'
+  'ltl2tgba %f | seminator --complement=spot --postprocess-comp=0 >%O'  \
+  'ltl2tgba %f | seminator --complement=pncsb --postprocess-comp=0 >%O' \

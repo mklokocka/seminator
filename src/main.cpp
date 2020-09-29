@@ -141,7 +141,7 @@ int main(int argc, char* argv[])
     spot::option_map om;
     bool cut_det = false;
     jobs_type jobs = 0;
-    enum complement_t { NoComplement = 0, NCSBBest, NCSBSpot, NCSBPLDI };
+    enum complement_t { NoComplement = 0, NCSBBest, NCSBSpot, NCSBPLDI, PNCSB };
     complement_t complement = NoComplement;
     output_type desired_output = TGBA;
 
@@ -238,6 +238,8 @@ int main(int argc, char* argv[])
           complement = NCSBSpot;
         else if (arg == "--complement=pldi")
           complement = NCSBPLDI;
+        else if (arg == "--complement=pncsb")
+          complement = PNCSB;
 
         else if (arg == "--ba")
           desired_output = BA;
@@ -405,6 +407,14 @@ int main(int argc, char* argv[])
                         comp2 = postprocessor.run(comp2);
                         if (!comp || comp->num_states() > comp2->num_states())
                           comp = comp2;
+                      }
+                    if (complement == PNCSB || complement == NCSBBest)
+                      {
+                        spot::twa_graph_ptr comp3 =
+                          pncsb_compl::complement_semidet_pncsb(aut);
+                        comp3 = postprocessor.run(comp3);
+                        if (!comp || comp->num_states() > comp3->num_states())
+                          comp = comp3;
                       }
                     aut = comp;
                   }

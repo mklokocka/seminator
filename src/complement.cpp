@@ -24,9 +24,8 @@
 
 #include <types.hpp>
 
-// This contains a modified version of Spot 2.8's complement_semidet()
-// function (spot/twaalgos/complement.cc).  It will likely be
-// contributed back to Spot in the future.
+// This contains a complement_semidet_semidet function based
+// on construction proposed by Yong Li.
 namespace from_spot
 {
     namespace
@@ -34,7 +33,7 @@ namespace from_spot
         enum ncsb
         {
             ncsb_n = 0,       // non deterministic
-            ncsb_c = 2 ,       // needs check
+            ncsb_c = 2 ,      // needs check
             ncsb_cb = 3,      // needs check AND in breakpoint
             ncsb_s = 4,       // safe
             ncsb_m = 1,       // missing

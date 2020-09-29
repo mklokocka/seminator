@@ -124,12 +124,16 @@ def seminator(input, pure=False, highlight=False,
                 "high" if postprocess_comp else "low",
                 "small" if postprocess_comp else "any"]
     comp = None
-    if complement != "pldi":
+    if complement != "pldi" and complement != "pncsb":
        comp = spot.complement_semidet(res).postprocess(*postopts)
-    if complement != "spot":
+    if complement != "spot" and complement != "pncsb":
        comp2 = complement_semidet(res).postprocess(*postopts)
        if comp is None or comp2.num_states() < comp.num_states():
           comp = comp2
+    if complement != "spot" and complement != "pldi":
+      comp2 = complement_semidet_pncsb(res).postprocess(*postopts)
+      if comp is None or comp2.num_states() < comp.num_states():
+        comp = comp2
     res = comp
   return res
 
