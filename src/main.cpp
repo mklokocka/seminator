@@ -25,6 +25,7 @@
 #include <spot/twaalgos/hoa.hh>
 #include <spot/twaalgos/sccfilter.hh>
 #include <spot/twaalgos/complement.hh>
+#include <spot/twaalgos/minimize.hh>
 #include <spot/misc/version.hh>
 
 void print_usage(std::ostream& os) {
@@ -369,8 +370,14 @@ int main(int argc, char* argv[])
               }
 
             if (om.get("slim", 0) || om.get("bp", 0)){
-              slim slimak(aut, &om);
-              continue;
+              if (aut->acc().is_all())
+                // automata with "t" acceptance can be determinized and minimized
+                // as a DFA.  (The preprocessor will do that if we use it.)
+                aut = spot::minimize_monitor(aut);
+              if (aut->prop_universal().is_false()) {
+                slim slimak(aut, &om);
+                continue;
+              }
             }
             if (cd_check)
               {

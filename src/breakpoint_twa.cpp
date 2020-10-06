@@ -277,7 +277,7 @@ bp_twa::compute_successors<breakpoint_state>(breakpoint_state bps, state_t src,
     if (slim_ && p2!=q2) {
       auto slim_successors = weak_?q_succs->at(c):q2;
       if (slim_successors != empty_set) {
-        std::get<Bp::LEVEL>(slim_state) = k;
+        std::get<Bp::LEVEL>(slim_state) = (k2 + 1) % src_->num_sets();
         std::get<Bp::P>(slim_state) = slim_successors;
         std::get<Bp::Q>(slim_state) = empty_set;
         auto dst2 = bp_state(slim_state);
