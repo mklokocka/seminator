@@ -6,5 +6,5 @@ exec ltlcross                                                           \
   --reference 'ltl2tgba'                                                \
   --grind grind.ltl                                                     \
   --save-bogus bogus.ltl                                                     \
-  'ltl2tgba %f | seminator --slim >%O'\
-  'ltl2tgba %f | seminator --slim --weak >%O'
+  'ltl2tgba %f   | seminator --slim --pure >%O'\
+  'ltl2tgba %f  | seminator --slim --pure --weak >%O'

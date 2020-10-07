@@ -16,6 +16,8 @@ class slim : bp_twa{
   public:
     explicit slim(const_aut_ptr src_aut,const_om_ptr om ) : bp_twa(src_aut, false, om) {
       res_->set_named_prop("state-names", names_);
+      auto acc=spot::acc_cond::acc_code("Inf(0)|Inf(1)");
+      res_->set_acceptance(2, acc);
       state_t src;
       breakpoint_state bps;
       auto init_state = src_aut->get_init_state_number();
