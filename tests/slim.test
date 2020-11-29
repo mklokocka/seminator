@@ -1,10 +1,12 @@
 #!/bin/sh
 
 exec ltlcross                                                           \
+  --timeout=60                                                          \
   -F ${abs_top_srcdir-.}/formulae/random_sd.ltl                         \
   -F ${abs_top_srcdir-.}/formulae/random_nd.ltl                         \
   --reference 'ltl2tgba'                                                \
   --grind grind.ltl                                                     \
   --save-bogus bogus.ltl                                                     \
   'ltl2tgba %f   | seminator --slim --pure >%O'\
-  'ltl2tgba %f  | seminator --slim --pure --weak >%O'
+  'ltl2tgba %f  | seminator --slim --pure --weak >%O'\
+  'ltl2tgba %f  | seminator --slim --pure --best >%O'
