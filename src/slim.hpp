@@ -31,6 +31,9 @@ class slim : bp_twa{
         auto bops = num2bp_.at(sorc);
         compute_successors(bops, sorc);
       }
-      spot::print_hoa(std::cout, res_);
+    }
+
+    auto res_aut() {
+      return res_;
     }
 };

@@ -255,6 +255,9 @@ int main(int argc, char* argv[])
         else if (arg == "--weak") {
           om.set("weak", true);
         }
+        else if (arg == "--best") {
+          om.set("best", true);
+        }
         else if (arg == "--bp") {
           om.set("bp", true);
         }
@@ -375,7 +378,25 @@ int main(int argc, char* argv[])
                 // as a DFA.  (The preprocessor will do that if we use it.)
                 aut = spot::minimize_monitor(aut);
               if (aut->prop_universal().is_false()) {
+                bool best = om.get("best", 0);
+                bool slimbest = best && !om.get("bp");
+                if (slimbest) {om.set("weak", 0);}
                 slim slimak(aut, &om);
+                auto result = slimak.res_aut();
+                if (best) {
+                  spot::postprocessor postprocessor;
+                  postprocessor.set_type(spot::postprocessor::TGBA);
+                  result = postprocessor.run(result);
+
+                  if (slimbest) { om.set("weak", 1); }
+                  slim slimak2(aut, &om);
+                  auto result2 = slimak2.res_aut();
+                  result2 = postprocessor.run(result2);
+                  if (result->num_states() > result2->num_states()) {
+                    result = result2;
+                  }
+                }
+                spot::print_hoa(std::cout, result);
                 continue;
               }
             }
