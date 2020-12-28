@@ -7,8 +7,10 @@ exec ltlcross                                                           \
   --reference 'ltl2tgba'                                                \
   --grind grind.ltl                                                     \
   --save-bogus bogus.ltl                                                     \
-  'ltl2tgba %f   | seminator --slim --pure >%O'\
-  'ltl2tgba %f  | seminator --slim --pure --weak >%O'\
-  'ltl2tgba %f  | seminator --slim --pure --best >%O'\
-  'ltl2tgba %f  | seminator --slim --pure --via-tba >%O'\
-  'ltl2tgba %f  | seminator --slim --pure --best --via-tba >%O'
+  'ltl2tgba %f  | seminator --slim >%O'\
+  'ltl2tgba %f  | seminator --slim --weak >%O'\
+  'ltl2tgba %f  | seminator --slim --strong --via-tgba >%O'\
+  'ltl2tgba %f  | seminator --slim --via-tba >%O'\
+  'ltl2tgba %f  | seminator --slim --via-tgba >%O'\
+  'ltl2tgba %f  | seminator --slim --via-tba --weak >%O'\
+  'ltl2tgba %f  | seminator --slim --pure --via-tba >%O'

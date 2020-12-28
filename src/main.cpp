@@ -252,6 +252,20 @@ int main(int argc, char* argv[])
         else if (arg == "--slim") {
           om.set("slim", true);
           om.set("scc-aware", false);
+          // disabling all options from --pure (just not --postprocess, just to be sure
+          om.set("preprocess", false);
+          // these don't seem to break anything, but are disable to be sure
+          om.set("bscc-avoid", false);
+          om.set("powerset-for-weak", false);
+          om.set("reuse-deterministic", false);
+          om.set("postprocess-comp", false);
+          // these must be disabled in current implementation
+          om.set("jump-to-bottommost", false);
+          om.set("bscc-avoid", false);
+          om.set("skip-levels", false);
+          om.set("powerset-on-cut", false);
+          om.set("cut-always", false);
+          om.set("cut-on-SCC-entry", false);
         }
         else if (arg == "--weak") {
           om.set("weak", true);
@@ -402,7 +416,7 @@ int main(int argc, char* argv[])
                   aut_ptr kokoti;
                   if (via_tgba) {
                     slim tomato1(aut, &om);
-                    slimaci.emplace_back(tomato1.res_aut());
+                    slimaci.push_back(tomato1.res_aut());
                   }
                   if (via_tba) {
                     slim tomato2(degeneralized, &om);
@@ -421,13 +435,12 @@ int main(int argc, char* argv[])
                   }
                 }
 
-                bool optimize = true; // nahradit parametrem
                 spot::postprocessor postprocessor;
                 postprocessor.set_type(spot::postprocessor::TGBA);
                 aut_ptr nejlepsi;
                 for (auto skoda: slimaci) {
 
-                  if (optimize) {
+                  if (om.get("postprocess",1)) {
                     skoda = postprocessor.run(skoda);
                   }
                   if (nejlepsi==nullptr || skoda->num_states() < nejlepsi->num_states()) {
@@ -438,7 +451,8 @@ int main(int argc, char* argv[])
                 continue;
 //                bool best = om.get("weak", 0) && om.get("strong",0);
 //
-//                if (slimbest) {om.set("weak", 0);}
+////                if (slimbest) {om.set("weak", 0);}
+//                om.set("weak", 0);
 //                slim slimak(aut, &om);
 //                auto result = slimak.res_aut();
 //                if (best) {
@@ -446,7 +460,8 @@ int main(int argc, char* argv[])
 //                  postprocessor.set_type(spot::postprocessor::TGBA);
 //                  result = postprocessor.run(result);
 //
-//                  if (slimbest) { om.set("weak", 1); }
+////                  if (slimbest) { om.set("weak", 1); }
+//                  om.set("weak", 1);
 //                  slim slimak2(aut, &om);
 //                  auto result2 = slimak2.res_aut();
 //                  result2 = postprocessor.run(result2);
