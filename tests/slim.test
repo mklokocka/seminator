@@ -9,4 +9,6 @@ exec ltlcross                                                           \
   --save-bogus bogus.ltl                                                     \
   'ltl2tgba %f   | seminator --slim --pure >%O'\
   'ltl2tgba %f  | seminator --slim --pure --weak >%O'\
-  'ltl2tgba %f  | seminator --slim --pure --best >%O'
+  'ltl2tgba %f  | seminator --slim --pure --best >%O'\
+  'ltl2tgba %f  | seminator --slim --pure --via-tba >%O'\
+  'ltl2tgba %f  | seminator --slim --pure --best --via-tba >%O'
