@@ -22,6 +22,7 @@
 #include "cutdet.hpp"
 #include "slim.hpp"
 #include <spot/parseaut/public.hh>
+#include <spot/twaalgos/degen.hh>
 #include <spot/twaalgos/hoa.hh>
 #include <spot/twaalgos/sccfilter.hh>
 #include <spot/twaalgos/complement.hh>
@@ -255,8 +256,8 @@ int main(int argc, char* argv[])
         else if (arg == "--weak") {
           om.set("weak", true);
         }
-        else if (arg == "--best") {
-          om.set("best", true);
+        else if (arg == "--strong") {
+          om.set("strong", true);
         }
         else if (arg == "--bp") {
           om.set("bp", true);
@@ -339,7 +340,7 @@ int main(int argc, char* argv[])
         return 1;
       }
 
-    if (jobs == 0)
+    if (jobs == 0 && !om.get("slim",0))
       jobs = AllJobs;
 
     om.set("output", complement ? TBA : desired_output);
@@ -378,26 +379,83 @@ int main(int argc, char* argv[])
                 // as a DFA.  (The preprocessor will do that if we use it.)
                 aut = spot::minimize_monitor(aut);
               if (aut->prop_universal().is_false()) {
-                bool best = om.get("best", 0);
-                bool slimbest = best && !om.get("bp");
-                if (slimbest) {om.set("weak", 0);}
-                slim slimak(aut, &om);
-                auto result = slimak.res_aut();
+                bool weak = om.get("weak", 0);
+                bool strong = om.get("strong",0);
+                bool via_tba=jobs&ViaTBA;
+                bool via_tgba=jobs&ViaTGBA;
+                bool best = !weak && !strong;
                 if (best) {
-                  spot::postprocessor postprocessor;
-                  postprocessor.set_type(spot::postprocessor::TGBA);
-                  result = postprocessor.run(result);
-
-                  if (slimbest) { om.set("weak", 1); }
-                  slim slimak2(aut, &om);
-                  auto result2 = slimak2.res_aut();
-                  result2 = postprocessor.run(result2);
-                  if (result->num_states() > result2->num_states()) {
-                    result = result2;
+                  weak = 1;
+                  strong = 1;
+                }
+                if (!via_tba && !via_tgba) {
+                  via_tba =1;
+                  via_tgba=1;
+                }
+//                bool slimbest = best && !om.get("bp");
+//                if (jobs&ViaTBA) {aut=spot::degeneralize_tba(aut);}
+                auto degeneralized=spot::degeneralize_tba(aut);
+                std::vector<aut_ptr> slimaci;
+                if (weak) {
+                  // weak is 1
+                  om.set("weak",1);
+                  aut_ptr kokoti;
+                  if (via_tgba) {
+                    slim tomato1(aut, &om);
+                    slimaci.emplace_back(tomato1.res_aut());
+                  }
+                  if (via_tba) {
+                    slim tomato2(degeneralized, &om);
+                    slimaci.push_back(tomato2.res_aut());
                   }
                 }
-                spot::print_hoa(std::cout, result);
+                if (strong) {
+                  om.set("weak",0);
+                  if (via_tgba) {
+                    slim tomato3(aut, &om);
+                    slimaci.push_back(tomato3.res_aut());
+                  }
+                  if (via_tba) {
+                    slim tomato4(degeneralized, &om);
+                    slimaci.push_back(tomato4.res_aut());
+                  }
+                }
+
+                bool optimize = true; // nahradit parametrem
+                spot::postprocessor postprocessor;
+                postprocessor.set_type(spot::postprocessor::TGBA);
+                aut_ptr nejlepsi;
+                for (auto skoda: slimaci) {
+
+                  if (optimize) {
+                    skoda = postprocessor.run(skoda);
+                  }
+                  if (nejlepsi==nullptr || skoda->num_states() < nejlepsi->num_states()) {
+                    nejlepsi = skoda;
+                  }
+                }
+                spot::print_hoa(std::cout, nejlepsi);
                 continue;
+//                bool best = om.get("weak", 0) && om.get("strong",0);
+//
+//                if (slimbest) {om.set("weak", 0);}
+//                slim slimak(aut, &om);
+//                auto result = slimak.res_aut();
+//                if (best) {
+//                  spot::postprocessor postprocessor;
+//                  postprocessor.set_type(spot::postprocessor::TGBA);
+//                  result = postprocessor.run(result);
+//
+//                  if (slimbest) { om.set("weak", 1); }
+//                  slim slimak2(aut, &om);
+//                  auto result2 = slimak2.res_aut();
+//                  result2 = postprocessor.run(result2);
+//                  if (result->num_states() > result2->num_states()) {
+//                    result = result2;
+//                  }
+//                }
+//                spot::print_hoa(std::cout, result);
+//                continue;
               }
             }
             if (cd_check)
