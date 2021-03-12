@@ -93,6 +93,7 @@ shell_TESTS =					\
   tests/cut-on-scc-entry.test			\
   tests/complement.test				\
   tests/jump-to-bottommost.test			\
+  tests/no-preprocess.test                      \
   tests/output.test				\
   tests/powerset-on-cut.test			\
   tests/reuse-deterministic.test		\

@@ -113,6 +113,10 @@ private:
     switch (job)
       {
       case ViaTGBA:
+        if (!preproc_)
+          {
+            return input_;
+          }
         preprocessor_.set_type(spot::postprocessor::TGBA);
         return preprocessor_.run(input_);
       case ViaTBA:
@@ -232,6 +236,3 @@ aut_ptr semi_determinize(aut_ptr aut,
   seminator sem(aut, cut_det, opt);
   return sem.run(jobs);
 }
-
-
-

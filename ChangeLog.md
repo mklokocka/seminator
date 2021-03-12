@@ -4,6 +4,10 @@
 
 * Seminator now requires a C++17 compiler.
 
+### Fixed
+
+* `--preprocess=0 --via-tgba` did still preprocess the input automaton (thanks Tobias John for reporting this).
+
 ## [2.0] - 2020-01-25
 The code was almost completely rewritten.
 

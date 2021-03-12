@@ -1,0 +1,31 @@
+#!/bin/sh
+set -e
+
+INPUT=no-preprocess.hoa
+
+cat >$INPUT <<EOF
+HOA: v1
+States: 4
+Start: 0
+AP: 1 "p"
+Acceptance: 1 Inf(0)
+--BODY--
+State: 0
+[ 0] 1
+[ 0] 2
+[!0] 3
+State: 1
+[ 0] 0 {0}
+[ 0] 1
+State: 2
+[!0] 1
+State: 3
+[!0] 1
+--END--
+EOF
+
+seminator $INPUT --pure --via-tgba > $INPUT.out.tgba
+seminator $INPUT --pure --via-tba > $INPUT.out.tba
+diff $INPUT.out.tgba $INPUT.out.tba
+
+rm -f $INPUT $INPUT.out.tgba $INPUT.out.tba
