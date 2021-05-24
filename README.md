@@ -60,6 +60,23 @@ For more information run:
 The following picture gives a summary of the different options and how they affect the tool.
 ![workflow](workflow.svg)
 
+
+To generate slim automata use
+```./seminator --slim ```. 
+		
+`--weak` use only weak slim algorithm
+		
+`--strong` use only strong slim algorithm
+		
+If neither weak nor strong option are specified - try both options  and choose the one with a smaller automaton.
+		
+`--via-tba` transform input automaton to tba \ref{section:tba} first
+		
+`--via-tgba` does not modify input automaton to tba.
+		
+Neither via-tba nor via-tgba: try both options, choose the smallest automaton.
+		
+Postprocess optimizations are enabled by default and Seminator tries all 4 options and chooses the one with smallest result.
 ## Python bindings
 
 For example of using the Python bindings, see the notebooks in the `notebooks/`
