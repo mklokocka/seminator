@@ -406,14 +406,11 @@ int main(int argc, char* argv[])
                   via_tba =1;
                   via_tgba=1;
                 }
-//                bool slimbest = best && !om.get("bp");
-//                if (jobs&ViaTBA) {aut=spot::degeneralize_tba(aut);}
                 auto degeneralized=spot::degeneralize_tba(aut);
                 std::vector<aut_ptr> slimaci;
                 if (weak) {
                   // weak is 1
                   om.set("weak",1);
-                  aut_ptr kokoti;
                   if (via_tgba) {
                     slim tomato1(aut, &om);
                     slimaci.push_back(tomato1.res_aut());
@@ -437,40 +434,18 @@ int main(int argc, char* argv[])
 
                 spot::postprocessor postprocessor;
                 postprocessor.set_type(spot::postprocessor::TGBA);
-                aut_ptr nejlepsi;
+                aut_ptr best_automaton;
                 for (auto skoda: slimaci) {
 
                   if (om.get("postprocess",1)) {
                     skoda = postprocessor.run(skoda);
                   }
-                  if (nejlepsi==nullptr || skoda->num_states() < nejlepsi->num_states()) {
-                    nejlepsi = skoda;
+                  if ( best_automaton==nullptr || skoda->num_states() <  best_automaton->num_states()) {
+                     best_automaton = skoda;
                   }
                 }
-                spot::print_hoa(std::cout, nejlepsi);
+                spot::print_hoa(std::cout,  best_automaton);
                 continue;
-//                bool best = om.get("weak", 0) && om.get("strong",0);
-//
-////                if (slimbest) {om.set("weak", 0);}
-//                om.set("weak", 0);
-//                slim slimak(aut, &om);
-//                auto result = slimak.res_aut();
-//                if (best) {
-//                  spot::postprocessor postprocessor;
-//                  postprocessor.set_type(spot::postprocessor::TGBA);
-//                  result = postprocessor.run(result);
-//
-////                  if (slimbest) { om.set("weak", 1); }
-//                  om.set("weak", 1);
-//                  slim slimak2(aut, &om);
-//                  auto result2 = slimak2.res_aut();
-//                  result2 = postprocessor.run(result2);
-//                  if (result->num_states() > result2->num_states()) {
-//                    result = result2;
-//                  }
-//                }
-//                spot::print_hoa(std::cout, result);
-//                continue;
               }
             }
             if (cd_check)
