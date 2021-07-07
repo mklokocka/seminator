@@ -68,11 +68,11 @@ To generate slim automata use
 		
 `--strong` use only strong slim algorithm
 		
-If neither weak nor strong option are specified - try both options  and choose the one with a smaller automaton.
+If neither weak nor strong option are specified - try both options  and choose the one with a smaller automaton
 		
-`--via-tba` transform input automaton to tba \ref{section:tba} first
+`--via-tba` transform input automaton to tba first
 		
-`--via-tgba` does not modify input automaton to tba.
+`--via-tgba` does not modify input automaton to tba
 		
 Neither via-tba nor via-tgba: try both options, choose the smallest automaton.
 		
