@@ -45,6 +45,9 @@ class bp_twa {
         reuse_SCC_ = om->get("reuse-deterministic",1);
         cut_always_ = om->get("cut-always",1);
         cut_on_SCC_entry_ = om->get("cut-on-SCC-entry",0);
+        slim_ = om->get("slim",0);
+        bp_ = om->get("bp",0);
+        weak_ = om->get("weak", 0);
         bscc_avoid_ = (om->get("bscc-avoid", 1) || reuse_SCC_) ?
           std::make_unique<bscc_avoid>(src_si_) : nullptr;
       }
@@ -60,7 +63,8 @@ class bp_twa {
         res_->set_acceptance(src_->get_acceptance());
       } else
         res_->set_buchi();
-
+      if (bp_ || slim_) // different construction algorithm will be used
+        return;
       create_first_component();
 
       const auto first_comp_size = res_->num_states();
@@ -180,6 +184,7 @@ class bp_twa {
     // Cycles through all states, and computes successors for them. Suitable
     // to use powerset construction for inherently_weak SCC.
     //
+public:
     void finish_second_component(state_t);
 
     // For a state_set S from src_ checks that all states in S are from the same
@@ -213,6 +218,7 @@ class bp_twa {
       }
 
 
+private:
     /**
      * Returns whether a cut transition (jump to the deterministic component)
      * for the current edge should be created.
@@ -233,7 +239,12 @@ class bp_twa {
 
     // input and result automata
     const_aut_ptr src_;
+public:
+    bool slim_;
+    bool bp_;
+    bool weak_;
     aut_ptr res_;
+private:
 
     // scc info of src (needed for scc-aware optimization)
     spot::scc_info src_si_;
@@ -247,10 +258,13 @@ class bp_twa {
     power_map  ps2num1_  = power_map();
     succ_vect  num2ps1_  = succ_vect();
     power_map  ps2num2_  = power_map();
+public:
     succ_vect  num2ps2_  = succ_vect();
+private:
 
     // mapping between states of 2nd comp. of res_ and their content
     breakpoint_map bp2num_ = breakpoint_map();        // bp_state -> state_t
+public:
     std::vector<breakpoint_state>
           num2bp_ = std::vector<breakpoint_state>();  // state_t  -> bp_state
 

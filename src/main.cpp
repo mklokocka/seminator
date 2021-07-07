@@ -20,10 +20,13 @@
 #include <unistd.h>
 #include "seminator.hpp"
 #include "cutdet.hpp"
+#include "slim.hpp"
 #include <spot/parseaut/public.hh>
+#include <spot/twaalgos/degen.hh>
 #include <spot/twaalgos/hoa.hh>
 #include <spot/twaalgos/sccfilter.hh>
 #include <spot/twaalgos/complement.hh>
+#include <spot/twaalgos/minimize.hh>
 #include <spot/misc/version.hh>
 
 void print_usage(std::ostream& os) {
@@ -246,6 +249,34 @@ int main(int argc, char* argv[])
         else if (arg == "--tgba")
           desired_output = TGBA;
 
+        else if (arg == "--slim") {
+          om.set("slim", true);
+          om.set("scc-aware", false);
+          // disabling all options from --pure (just not --postprocess, just to be sure
+          om.set("preprocess", false);
+          // these don't seem to break anything, but are disable to be sure
+          om.set("bscc-avoid", false);
+          om.set("powerset-for-weak", false);
+          om.set("reuse-deterministic", false);
+          om.set("postprocess-comp", false);
+          // these must be disabled in current implementation
+          om.set("jump-to-bottommost", false);
+          om.set("bscc-avoid", false);
+          om.set("skip-levels", false);
+          om.set("powerset-on-cut", false);
+          om.set("cut-always", false);
+          om.set("cut-on-SCC-entry", false);
+        }
+        else if (arg == "--weak") {
+          om.set("weak", true);
+        }
+        else if (arg == "--strong") {
+          om.set("strong", true);
+        }
+        else if (arg == "--bp") {
+          om.set("bp", true);
+        }
+
         else if (arg == "--highlight")
           high = true;
 
@@ -323,7 +354,7 @@ int main(int argc, char* argv[])
         return 1;
       }
 
-    if (jobs == 0)
+    if (jobs == 0 && !om.get("slim",0))
       jobs = AllJobs;
 
     om.set("output", complement ? TBA : desired_output);
@@ -356,6 +387,67 @@ int main(int argc, char* argv[])
                 return 1;
               }
 
+            if (om.get("slim", 0) || om.get("bp", 0)){
+              if (aut->acc().is_all())
+                // automata with "t" acceptance can be determinized and minimized
+                // as a DFA.  (The preprocessor will do that if we use it.)
+                aut = spot::minimize_monitor(aut);
+              if (aut->prop_universal().is_false()) {
+                bool weak = om.get("weak", 0);
+                bool strong = om.get("strong",0);
+                bool via_tba=jobs&ViaTBA;
+                bool via_tgba=jobs&ViaTGBA;
+                bool best = !weak && !strong;
+                if (best) {
+                  weak = 1;
+                  strong = 1;
+                }
+                if (!via_tba && !via_tgba) {
+                  via_tba =1;
+                  via_tgba=1;
+                }
+                auto degeneralized=spot::degeneralize_tba(aut);
+                std::vector<aut_ptr> slimaci;
+                if (weak) {
+                  // weak is 1
+                  om.set("weak",1);
+                  if (via_tgba) {
+                    slim tomato1(aut, &om);
+                    slimaci.push_back(tomato1.res_aut());
+                  }
+                  if (via_tba) {
+                    slim tomato2(degeneralized, &om);
+                    slimaci.push_back(tomato2.res_aut());
+                  }
+                }
+                if (strong) {
+                  om.set("weak",0);
+                  if (via_tgba) {
+                    slim tomato3(aut, &om);
+                    slimaci.push_back(tomato3.res_aut());
+                  }
+                  if (via_tba) {
+                    slim tomato4(degeneralized, &om);
+                    slimaci.push_back(tomato4.res_aut());
+                  }
+                }
+
+                spot::postprocessor postprocessor;
+                postprocessor.set_type(spot::postprocessor::TGBA);
+                aut_ptr best_automaton;
+                for (auto skoda: slimaci) {
+
+                  if (om.get("postprocess",1)) {
+                    skoda = postprocessor.run(skoda);
+                  }
+                  if ( best_automaton==nullptr || skoda->num_states() <  best_automaton->num_states()) {
+                     best_automaton = skoda;
+                  }
+                }
+                spot::print_hoa(std::cout,  best_automaton);
+                continue;
+              }
+            }
             if (cd_check)
               {
                 if (!is_cut_deterministic(aut))
@@ -364,6 +456,7 @@ int main(int argc, char* argv[])
             else
               {
                 aut = semi_determinize(aut, cut_det, jobs, &om);
+
                 if (auto old_n = parsed_aut->aut->get_named_prop<std::string>
                     ("automaton-name"))
                   {

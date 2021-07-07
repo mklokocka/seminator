@@ -99,6 +99,7 @@ shell_TESTS =					\
   tests/reuse-deterministic.test		\
   tests/run_ltlcross.test			\
   tests/skip-levels.test			\
+  tests/slim.test                   \
   tests/via.test
 
 python_TESTS =					\

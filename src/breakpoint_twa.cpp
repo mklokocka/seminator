@@ -272,6 +272,20 @@ bp_twa::compute_successors<breakpoint_state>(breakpoint_state bps, state_t src,
     auto k2 = k;
     // Check p == q
     auto acc = spot::acc_cond::mark_t();
+    auto acc_slim = spot::acc_cond::mark_t({1});
+    state_t dst_slim;
+    bool slimmed = false;
+    breakpoint_state slim_state;
+    if (slim_ && p2!=q2) {
+      auto slim_successors = weak_?q_succs->at(c):q2;
+      if (slim_successors != empty_set) {
+        std::get<Bp::LEVEL>(slim_state) = (k2 + 1) % src_->num_sets();
+        std::get<Bp::P>(slim_state) = slim_successors;
+        std::get<Bp::Q>(slim_state) = empty_set;
+        dst_slim = bp_state(slim_state);
+        slimmed = true;
+      }
+    }
 
     do
     {
@@ -295,9 +309,11 @@ bp_twa::compute_successors<breakpoint_state>(breakpoint_state bps, state_t src,
     std::get<Bp::LEVEL>(bpd) = k2;
     std::get<Bp::P>    (bpd) = p2;
     std::get<Bp::Q>    (bpd) = q2;
-
     auto dst = bp_state(bpd);
     res_->new_edge(src, dst, cond, acc);
+    if (slimmed && dst != dst_slim) {
+      res_->new_edge(src, dst_slim, cond, acc_slim);
+    }
   }
 }
 
